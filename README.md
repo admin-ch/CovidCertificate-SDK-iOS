@@ -40,8 +40,6 @@ public static func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler:
 ```swift
 public static func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void)
 ```
-## Installation
-
 
  ## References
 [[1](https://github.com/ehn-digital-green-development/hcert-spec)] Health Certificate Specification
