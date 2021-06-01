@@ -496,10 +496,56 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
         }
     }
+    
+    func testSanityCheckForDateCalculations() {
+        var dateFormatter: DateFormatter {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = DATE_FORMAT
+            return dateFormatter
+        }
+      
+        let validTestResult = dateFormatter.date(from: "2021-05-08")!
+        let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: validTestResult)!
+        
+        let calculatedValidFrom = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: validTestResult)!
+        
+    
+        let trueValidFrom = dateFormatter.date(from: "2021-05-18")!
+        let dayBeforeValidFrom = Calendar.current.date(byAdding: DateComponents(day:-1), to: trueValidFrom)!
+        let trueValidUntil = dateFormatter.date(from: "2021-11-03")!
+        let dayAfterTrueValidUntil = dateFormatter.date(from: "2021-12-03")!
+        
+        // before validFrom it fails
+        // certificate has entry trueValidFrom
+        // today is dayBeforeValidFrom
+        XCTAssertTrue(trueValidFrom.isAfter(dayBeforeValidFrom))
+        
+        // at trueValidFrom it succeeds
+        // certificate has entry calculatedValidFrom
+        // today is trueValidFrom
+        XCTAssertFalse(calculatedValidFrom.isAfter(trueValidFrom))
+        
+        // at trueValidUntil it succeeds
+        // certificate has entry calculatedValidUntil
+        // today is trueValidUntil
+        XCTAssertFalse(calculatedValidUntil.isBefore(trueValidUntil))
+        
+        
+        // calculated valid from should match
+        XCTAssertTrue(calculatedValidFrom == trueValidFrom)
+        // calculated valid until should match
+        XCTAssertTrue(calculatedValidUntil == trueValidUntil)
+        
+        //the certificate is not valid one day after trueValidUntil
+        // certificate has entry calculatedValidUntil
+        // today is dayAfterTrueValidUntil
+        XCTAssertTrue(calculatedValidUntil.isBefore(dayAfterTrueValidUntil))
+       
+    }
 
     func testCertificateIsValidFor180DaysAfterTestResult() {
-        // The certificate was issued 180 days ago, which means it is still valid today
-        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
+        // The certificate was issued 179 days ago, which means it is still valid today (the 180th day)
+        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -179), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(dgc: hcert) { result in
             switch result {
             case let .success(r):
@@ -509,8 +555,8 @@ final class CovidCertificateSDKTests: XCTestCase {
                 XCTAssertTrue(false)
             }
         }
-        // the certificate should not be valid anymore, since it was issued yesterday 180 days ago (hence now it is 181 day ago)
-        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -181), tg: Disease.SarsCov2.rawValue)
+        // the certificate should not be valid anymore, since it was issued yesterday 179 days ago (hence yesterday was the 180th day)
+        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(dgc: hcert_invalid) { result in
             switch result {
             case let .success(r):

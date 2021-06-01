@@ -14,6 +14,9 @@ import Foundation
 let PCR_TEST_VALIDITY_IN_HOURS = 72
 let RAT_TEST_VALIDITY_IN_HOURS = 24
 let SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS = 15
+// indicated valid until date is always included
+let MAXIMUM_VALIDITY_IN_DAYS = 179
+let INFECTION_VALIDITY_OFFSET_IN_DAYS = 10
 let DATE_FORMAT = "yyyy-MM-dd"
 
 public enum NationalRulesError: Error, Equatable {
