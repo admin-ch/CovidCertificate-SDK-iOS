@@ -189,12 +189,12 @@ public struct Test: Codable {
     }
 
     public var validFromDate: Date? {
-        return ISO8601DateFormatter().date(from: timestampSample)
+        return Date.fromISO8601(timestampSample)
     }
 
     public var resultDate: Date? {
         if let res = timestampResult {
-            return ISO8601DateFormatter().date(from: res)
+            return Date.fromISO8601(res)
         }
 
         return nil
