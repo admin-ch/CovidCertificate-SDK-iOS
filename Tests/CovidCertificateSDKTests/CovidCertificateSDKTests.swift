@@ -505,9 +505,9 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
       
         let validTestResult = dateFormatter.date(from: "2021-05-08")!
-        let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: 179), to: validTestResult)!
+        let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: validTestResult)!
         
-        let calculatedValidFrom = Calendar.current.date(byAdding: DateComponents(day: 10), to: validTestResult)!
+        let calculatedValidFrom = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: validTestResult)!
         
     
         let trueValidFrom = dateFormatter.date(from: "2021-05-18")!
