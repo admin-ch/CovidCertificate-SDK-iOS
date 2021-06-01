@@ -499,7 +499,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
     func testCertificateIsValidFor180DaysAfterTestResult() {
         // The certificate was issued 180 days ago, which means it is still valid today
-        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
+        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -179), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(dgc: hcert) { result in
             switch result {
             case let .success(r):
@@ -510,7 +510,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
         }
         // the certificate should not be valid anymore, since it was issued yesterday 180 days ago (hence now it is 181 day ago)
-        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -181), tg: Disease.SarsCov2.rawValue)
+        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(dgc: hcert_invalid) { result in
             switch result {
             case let .success(r):
