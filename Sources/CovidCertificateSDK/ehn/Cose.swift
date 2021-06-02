@@ -9,6 +9,7 @@ import Foundation
 import Security
 import SwiftCBOR
 
+
 struct Cose {
     private let type: CoseType
     let protectedHeader: CoseHeader
@@ -101,10 +102,11 @@ struct Cose {
     @available(OSX 10.13, *)
     private func verifySignature(key: SecKey, signedData: Data, rawSignature: Data) -> Bool {
         var algorithm: SecKeyAlgorithm
-        let signature = rawSignature
+        var signature = rawSignature
         switch protectedHeader.algorithm {
         case .es256:
-            return false
+            algorithm = .ecdsaSignatureMessageX962SHA256
+            signature = Asn1Encoder().convertRawSignatureIntoAsn1(rawSignature)
         case .ps256:
             algorithm = .rsaSignatureMessagePSSSHA256
         default:
