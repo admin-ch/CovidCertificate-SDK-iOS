@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(name: "Gzip", url: "https://github.com/1024jp/GzipSwift", .upToNextMajor(from: "5.1.1")),
-        .package(url: "https://github.com/unrelentingtech/SwiftCBOR", .upToNextMajor(from: "0.4.3")),
+        .package(url: "https://github.com/eu-digital-green-certificates/SwiftCBOR", .branch("master")),
         .package(url: "https://github.com/ehn-digital-green-development/base45-swift", .branch("main")),
     ],
     targets: [
