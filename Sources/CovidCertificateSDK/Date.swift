@@ -24,7 +24,7 @@ extension Date {
         }
 
         // Retry with fraction
-        formatter.formatOptions = [.withFractionalSeconds]
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let d = formatter.date(from: dateString) {
             return d
         }
