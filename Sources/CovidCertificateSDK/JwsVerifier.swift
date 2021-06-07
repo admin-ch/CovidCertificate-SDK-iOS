@@ -20,18 +20,19 @@ public enum CovidCertJWSError: Error, Equatable {
     case SIGNATURE_INVALID
     case PARSING_ERROR
     case DECODING_ERROR
+    case CERTIFICATE_CHAIN_ERROR
 }
 
 /// A JWT token verifier
 public class CovidCertJWSVerifier {
-    private let jwtVerifier: JWTVerifier
+    private let rootCA: SecCertificate
 
     /// Initializes a verifier with a public key
     ///
     /// - Parameters:
     ///   - publicKey: The public key to verify the JWT signiture
-    public init(publicKey: Data) {
-        jwtVerifier = JWTVerifier.rs256(publicKey: publicKey)
+    public init(rootData: Data) {
+        rootCA = SecCertificateCreateWithData(nil, rootData as CFData)!
     }
     
 
@@ -52,6 +53,46 @@ public class CovidCertJWSVerifier {
             throw CovidCertJWSError.DECODING_ERROR
         }
         do {
+            let unsafeJWT = try JWT<InsecureJwt>(jwtString: jwtString)
+            var chain : [SecCertificate] = []
+            guard let certificates = unsafeJWT.header.x5c else {
+                throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
+            }
+            
+            for cert in certificates {
+                guard let certData = Data(base64Encoded: cert),
+                      let certKey = SecCertificateCreateWithData(nil, certData as CFData)
+                else {
+                    throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
+                }
+                chain.append(certKey)
+            }
+            
+            let completeChain = chain + [rootCA]
+            
+            var optionalTrust: SecTrust?
+            let status = SecTrustCreateWithCertificates(completeChain as AnyObject,
+                                                        SecPolicyCreateBasicX509(),
+                                                        &optionalTrust)
+            guard status == errSecSuccess else { throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR }
+            let secTrust = optionalTrust!    // Safe to force unwrap now
+
+            
+            let anchorStatus = SecTrustSetAnchorCertificates(secTrust, [rootCA] as CFArray)
+            guard anchorStatus == errSecSuccess else {
+                throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
+            }
+            
+           
+            let result = SecTrustEvaluateWithError(secTrust, nil)
+            if result == false {
+                throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
+            }
+            
+            // from here we trust the public key
+            
+            let jwtVerifier = JWTVerifier.rs256(certificate: certificates[0].data(using: .utf8)!)
+            
             let jwt = try JWT<ClaimType>(jwtString: jwtString, verifier: jwtVerifier)
             
             let validationResult = jwt.validateClaims(leeway: 10)
@@ -61,9 +102,14 @@ public class CovidCertJWSVerifier {
 
             return jwt.claims
 
-        } catch {
+        }
+        catch JWTError.invalidJWTString {
+            throw CovidCertJWSError.SIGNATURE_INVALID
+        }
+        catch JWTError.failedVerification{
             throw CovidCertJWSError.PARSING_ERROR
         }
     }
 }
 
+private struct InsecureJwt: Claims {}
