@@ -119,10 +119,7 @@ public struct ChCovidCert {
             }
         }
 
-        // only exactly one certificate is allowed in v1 (one vaccine, one test or one recovery)
-        let certIdentifiers = cose.healthCert.certIdentifiers().count
-
-        if certIdentifiers != 1 {
+        if cose.healthCert.certType == nil {
             completionHandler(.failure(.SIGNATURE_TYPE_INVALID))
             return
         }
