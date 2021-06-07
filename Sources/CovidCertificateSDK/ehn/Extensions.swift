@@ -27,6 +27,15 @@ extension Data {
     }
 }
 
+extension Optional where Wrapped: Collection {
+    /// Check if this optional array is nil or empty
+    func isNilOrEmpty() -> Bool{
+        // if self is nil `self?.isEmpty` is nil and hence the value after the ?? operator is used
+        // otherwise self!.isEmpty checks for an empty array
+        return self?.isEmpty ?? true
+    }
+}
+
 extension Date {
     func isBefore(_ otherDate: Date) -> Bool {
         self < otherDate

@@ -17,20 +17,19 @@ public struct EuHealthCert: Codable {
     public let tests: [Test]?
 
     public var certType: CertType? {
-        if let v = vaccinations, v.count > 0,
-           self.pastInfections == nil,
-           self.tests == nil {
+        if let v = vaccinations, v.count == 1,
+           self.pastInfections.isNilOrEmpty(),
+           self.tests.isNilOrEmpty() {
             return .vaccination
-        } else if let p = pastInfections, p.count > 0,
-                  self.tests == nil,
-                  self.vaccinations == nil {
+        } else if let p = pastInfections, p.count == 1,
+                  self.tests.isNilOrEmpty(),
+                  self.vaccinations.isNilOrEmpty() {
             return .recovery
-        } else if let tests = self.tests, tests.count > 0,
-                  self.pastInfections == nil,
-                  self.vaccinations == nil {
+        } else if let tests = self.tests, tests.count == 1,
+                  self.pastInfections.isNilOrEmpty(),
+                  self.vaccinations.isNilOrEmpty() {
             return .test
         }
-
         return nil
     }
 
