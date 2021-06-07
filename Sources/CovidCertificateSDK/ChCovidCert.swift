@@ -101,13 +101,6 @@ public struct ChCovidCert {
             return .failure(.COSE_DESERIALIZATION_FAILED)
         }
 
-        // only exactly one certificate is allowed in v1 (one vaccine, one test or one recovery)
-        let certIdentifiers = cwt.euHealthCert.certIdentifiers().count
-
-        if certIdentifiers != 1 {
-            return .failure(.HCERT_IS_INVALID)
-        }
-
         return .success(DGCHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
@@ -124,6 +117,14 @@ public struct ChCovidCert {
             if issuedAt.isAfter(Date()) {
                 completionHandler(.failure(.CWT_EXPIRED))
             }
+        }
+
+        // only exactly one certificate is allowed in v1 (one vaccine, one test or one recovery)
+        let certIdentifiers = cose.healthCert.certIdentifiers().count
+
+        if certIdentifiers != 1 {
+            completionHandler(.failure(.SIGNATURE_TYPE_INVALID))
+            return
         }
 
         trustList.key(for: cose.keyId) { result in
