@@ -5,12 +5,17 @@ platform :ios do
   lane :tests do
     # Use xcodebuild directly as Fastlane's scan does not yet support pure SPM projects 
     # See https://github.com/fastlane/fastlane/discussions/17362
-
-    xcodebuild(
+    
+    begin
+      xcodebuild(
         scheme: "CovidCertificateSDK",
         xcargs: "-resultBundlePath ./build/testresults.xcresult test",
         buildlog_path: "./build/"
     )
+    rescue => ex
+      UI.important('xcodebuild failed, but continuing anyway!')
+    end
+    
 
     trainer(
         output_directory: "./build/",
