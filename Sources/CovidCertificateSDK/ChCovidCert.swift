@@ -70,7 +70,7 @@ public struct DGCHolder {
 
 public struct ChCovidCert {
     private let PREFIX = "HC1:"
-    private let trustList : Trustlist
+    private let trustList: Trustlist
     private let nationalRules = NationalRulesVerifier()
 
     public let environment: SDKEnvironment
@@ -108,14 +108,14 @@ public struct ChCovidCert {
     @available(OSX 10.13, *)
     public func checkSignature(cose: DGCHolder, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch cose.cwt.isValid() {
-            case let .success(isValid):
-                    if !isValid {
-                        completionHandler(.failure(.CWT_EXPIRED))
-                        return
-                    }
-            case let .failure(error):
-                completionHandler(.failure(error))
+        case let .success(isValid):
+            if !isValid {
+                completionHandler(.failure(.CWT_EXPIRED))
                 return
+            }
+        case let .failure(error):
+            completionHandler(.failure(error))
+            return
         }
 
         if cose.healthCert.certType == nil {
@@ -125,9 +125,9 @@ public struct ChCovidCert {
 
         trustList.key(for: cose.keyId) { result in
             switch result {
-            case .success(let key):
+            case let .success(key):
                 let isValid = cose.hasValidSignature(for: key)
-                let error : ValidationError? = isValid ? nil : ValidationError.KEY_NOT_IN_TRUST_LIST
+                let error: ValidationError? = isValid ? nil : ValidationError.KEY_NOT_IN_TRUST_LIST
                 completionHandler(.success(ValidationResult(isValid: isValid, payload: cose.healthCert, error: error)))
             case let .failure(error): completionHandler(.failure(error))
             }

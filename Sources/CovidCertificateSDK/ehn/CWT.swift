@@ -13,7 +13,7 @@ public struct CWT {
     let exp: CBOR?
     let iat: CBOR?
     let euHealthCert: EuHealthCert
-    let decodedPayload :  [CBOR: CBOR]
+    let decodedPayload: [CBOR: CBOR]
 
     enum PayloadKeys: Int {
         case iss = 1
@@ -25,10 +25,9 @@ public struct CWT {
             case euHealthCertV1 = 1
         }
     }
-    
+
     func isValid(now: Date = Date()) -> Result<Bool, ValidationError> {
-        if let cwtExp = self.exp
-        {
+        if let cwtExp = exp {
             guard let exp = cwtExp.asNumericDate() else {
                 return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
             }
@@ -37,9 +36,8 @@ public struct CWT {
                 return .success(false)
             }
         }
-        
-        if let cwtIat = self.iat
-        {
+
+        if let cwtIat = iat {
             guard let iat = cwtIat.asNumericDate() else {
                 return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
             }
@@ -56,11 +54,11 @@ public struct CWT {
             return nil
         }
         decodedPayload = decodedPayloadCwt
-        
+
         iss = decodedPayload[PayloadKeys.iss]?.asString()
         exp = decodedPayload[PayloadKeys.exp]
         iat = decodedPayload[PayloadKeys.iat]
-        
+
         guard let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
               let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
               let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) else {
