@@ -27,11 +27,11 @@ class StaticTrustlist : Trustlist {
     func publicKeys() -> [TrustListPublicKey] {
         switch CovidCertificateSDK.currentEnvironment {
         case .dev:
-            return [TrustListPublicKey(keyId: "mmrfzpMU6xc=", withRsaKey: DEV_RSA_ASN1_DER)]
+            return [TrustListPublicKey(keyId: "mmrfzpMU6xc=", withRsaKey: DEV_RSA_ASN1_DER)].compactMap{ $0 }
         case .abn:
-            return [TrustListPublicKey(keyId: "JLxre3vSwyg=", withRsaKey: ABN_RSA_ASN1_DER)]
+            return [TrustListPublicKey(keyId: "JLxre3vSwyg=", withRsaKey: ABN_RSA_ASN1_DER)].compactMap{ $0 }
         case .prod:
-            return [TrustListPublicKey(keyId: "Ll3NP03zOxY=", withRsaKey: PROD_RSA_ASN1_DER)]
+            return [TrustListPublicKey(keyId: "Ll3NP03zOxY=", withRsaKey: PROD_RSA_ASN1_DER)].compactMap{ $0 }
         }
     }
 
@@ -49,22 +49,34 @@ class StaticTrustlist : Trustlist {
 }
 
 class TrustListPublicKey {
-    init(keyId: String, withRsaKey rsaKey: String) {
+    init?(keyId: String, withRsaKey rsaKey: String) {
         let attributes: [CFString: Any] = [kSecAttrKeyClass: kSecAttrKeyClassPublic,
                                            kSecAttrKeyType: kSecAttrKeyTypeRSA,
                                            kSecAttrKeySizeInBits: 2048]
-        self.key =  SecKeyCreateWithData(Data(base64Encoded: rsaKey)! as CFData, attributes as CFDictionary, nil)!
+
+        guard let data = Data(base64Encoded: rsaKey),
+              let key = SecKeyCreateWithData(data as CFData, attributes as CFDictionary, nil) else {
+            return nil
+        }
+
+        self.key = key
         self.keyId = keyId
     }
-    init(keyId: String, withX x: String, andY y: String) {
+
+    init?(keyId: String, withX x: String, andY y: String) {
         let attributes: [CFString: Any] = [kSecAttrKeyClass: kSecAttrKeyClassPublic,
                                            kSecAttrKeyType: kSecAttrKeyTypeEC]
-        let xData = Data(base64Encoded: x)!
-        let yData = Data(base64Encoded: y)!
-        let keyData = Data([0x4] + xData + yData)
-        self.key =  SecKeyCreateWithData(keyData as CFData, attributes as CFDictionary, nil)!
+
+        guard let xData = Data(base64Encoded: x),
+              let yData = Data(base64Encoded: y),
+              let key = SecKeyCreateWithData(Data([0x4] + xData + yData) as CFData, attributes as CFDictionary, nil) else {
+            return nil
+        }
+
+        self.key = key
         self.keyId = keyId
     }
+    
     let keyId : String
     let key: SecKey
 }
