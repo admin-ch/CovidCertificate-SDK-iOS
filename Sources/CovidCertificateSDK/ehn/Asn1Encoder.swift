@@ -9,8 +9,6 @@ import Foundation
 
 public class Asn1Encoder {
 
-    public init() {}
-
     // 32 for ES256
     public func convertRawSignatureIntoAsn1(_ data: Data, _ digestLengthInBytes: Int = 32) -> Data {
         guard data.count >= digestLengthInBytes else {

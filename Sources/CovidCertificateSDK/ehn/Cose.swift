@@ -102,11 +102,11 @@ struct Cose {
     @available(OSX 10.13, *)
     private func verifySignature(key: SecKey, signedData: Data, rawSignature: Data) -> Bool {
         var algorithm: SecKeyAlgorithm
-        var signature = rawSignature
+        var signatureToVerify = rawSignature
         switch protectedHeader.algorithm {
         case .es256:
             algorithm = .ecdsaSignatureMessageX962SHA256
-            signature = Asn1Encoder().convertRawSignatureIntoAsn1(rawSignature)
+            signatureToVerify = Asn1Encoder().convertRawSignatureIntoAsn1(rawSignature)
         case .ps256:
             algorithm = .rsaSignatureMessagePSSSHA256
         default:
@@ -115,7 +115,7 @@ struct Cose {
         }
 
         var error: Unmanaged<CFError>?
-        let result = SecKeyVerifySignature(key, algorithm, signedData as CFData, signature as CFData, &error)
+        let result = SecKeyVerifySignature(key, algorithm, signedData as CFData, signatureToVerify as CFData, &error)
         if let err = error?.takeUnretainedValue().localizedDescription {
             print(err)
         }
