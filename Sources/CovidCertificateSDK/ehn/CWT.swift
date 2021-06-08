@@ -10,6 +10,8 @@ import SwiftCBOR
 
 public struct CWT {
     let iss: String?
+    let exp: CBOR?
+    let iat: CBOR?
     let euHealthCert: EuHealthCert
     let decodedPayload :  [CBOR: CBOR]
 
@@ -25,7 +27,7 @@ public struct CWT {
     }
     
     func isValid(now: Date = Date()) -> Result<Bool, ValidationError> {
-        if let cwtExp = decodedPayload[PayloadKeys.exp]
+        if let cwtExp = self.exp
         {
             guard let exp = cwtExp.asNumericDate() else {
                 return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
@@ -36,7 +38,7 @@ public struct CWT {
             }
         }
         
-        if let cwtIat = decodedPayload[PayloadKeys.iat]
+        if let cwtIat = self.iat
         {
             guard let iat = cwtIat.asNumericDate() else {
                 return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
@@ -56,7 +58,8 @@ public struct CWT {
         decodedPayload = decodedPayloadCwt
         
         iss = decodedPayload[PayloadKeys.iss]?.asString()
-
+        exp = decodedPayload[PayloadKeys.exp]
+        iat = decodedPayload[PayloadKeys.iat]
         
         guard let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
               let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
