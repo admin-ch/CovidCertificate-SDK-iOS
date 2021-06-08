@@ -110,12 +110,14 @@ public struct ChCovidCert {
             let expireDate = Date(timeIntervalSince1970: Double(expiryTimestamp))
             if expireDate.isBefore(Date()) {
                 completionHandler(.failure(.CWT_EXPIRED))
+                return
             }
         }
         if let issuedAtTimestamp = cose.cwt.iat {
             let issuedAt = Date(timeIntervalSince1970: Double(issuedAtTimestamp))
             if issuedAt.isAfter(Date()) {
                 completionHandler(.failure(.CWT_EXPIRED))
+                return
             }
         }
 
