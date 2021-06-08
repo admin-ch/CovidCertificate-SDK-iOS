@@ -44,6 +44,13 @@ public struct DGCHolder {
         return cwt.euHealthCert
     }
 
+    public var issuedAt: Date? {
+        if let i = cwt.iat?.asNumericDate() {
+            return Date(timeIntervalSince1970: i)
+        }
+
+        return nil
+    }
 
     let cose: Cose
     let cwt: CWT
