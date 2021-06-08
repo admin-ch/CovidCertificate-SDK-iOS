@@ -28,7 +28,7 @@ public struct CWT {
         if let cwtExp = decodedPayload[PayloadKeys.exp]
         {
             guard let exp = cwtExp.asNumericDate() else {
-                return .failure(.SIGNATURE_TYPE_INVALID)
+                return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
             }
             let expireDate = Date(timeIntervalSince1970: exp)
             if expireDate.isBefore(now) {
@@ -39,7 +39,7 @@ public struct CWT {
         if let cwtIat = decodedPayload[PayloadKeys.iat]
         {
             guard let iat = cwtIat.asNumericDate() else {
-                return .failure(.SIGNATURE_TYPE_INVALID)
+                return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
             }
             let issuedAt = Date(timeIntervalSince1970: Double(iat))
             if issuedAt.isAfter(now) {

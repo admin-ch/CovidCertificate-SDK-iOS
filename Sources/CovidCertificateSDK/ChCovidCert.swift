@@ -111,7 +111,7 @@ public struct ChCovidCert {
         }
 
         if cose.healthCert.certType == nil {
-            completionHandler(.failure(.SIGNATURE_TYPE_INVALID))
+            completionHandler(.failure(.SIGNATURE_TYPE_INVALID(.CERT_TYPE_AMBIGUOUS)))
             return
         }
 
