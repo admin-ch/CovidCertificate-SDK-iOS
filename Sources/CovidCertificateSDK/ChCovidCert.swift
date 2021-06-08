@@ -136,7 +136,18 @@ public struct ChCovidCert {
 
     public func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         // As long as no revocation list is published yet, return true
-        completionHandler(.success(ValidationResult(isValid: true, payload: dgc, error: nil)))
+        TrustlistManager.shared.revocationListUpdater.addCheckOperation { error in
+
+            if error != nil {
+                completionHandler(.success(ValidationResult(isValid: false, payload: dgc, error: error)))
+            } else {
+                let list = TrustStorage.shared.revokedCertificates()
+                let isRevoked = dgc.certIdentifiers().contains { list.contains($0) }
+                let error : ValidationError? = isRevoked ? .REVOKED : nil
+
+                completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: dgc, error: error)))
+            }
+        }
     }
 
     public func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {

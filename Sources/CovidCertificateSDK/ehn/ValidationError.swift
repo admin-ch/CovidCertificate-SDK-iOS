@@ -41,6 +41,8 @@ public enum ValidationError: Error, Equatable {
     case KEYSTORE_ERROR(cause: String)
     case REVOKED
     case SIGNATURE_TYPE_INVALID(SignatureTypeInvalidError)
+    case NETWORK_ERROR
+    case NETWORK_PARSE_ERROR
 
     public var message: String {
         switch self {
@@ -58,6 +60,8 @@ public enum ValidationError: Error, Equatable {
         case .ISSUED_IN_FUTURE: return "The CWT was issued in the future"
         case .REVOKED: return "Certificate was revoked"
         case .SIGNATURE_TYPE_INVALID: return "The certificate is not valid according to specification"
+        case .NETWORK_ERROR: return ""
+        case .NETWORK_PARSE_ERROR: return ""
         }
     }
 
@@ -77,6 +81,8 @@ public enum ValidationError: Error, Equatable {
         case .ISSUED_IN_FUTURE: return ""
         case .REVOKED: return "R|REV"
         case let .SIGNATURE_TYPE_INVALID(wrapped): return "S|TIV|" + wrapped.errorCode
+        case .NETWORK_ERROR: return "NOCONN"
+        case .NETWORK_PARSE_ERROR: return "PE"
         }
     }
 }

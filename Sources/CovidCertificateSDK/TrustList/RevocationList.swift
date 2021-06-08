@@ -11,8 +11,6 @@
 
 import Foundation
 
-public enum SDKEnvironment {
-    case dev
-    case abn
-    case prod
+class RevocationList : Codable {
+    var revokedCerts: [String] = []
 }
