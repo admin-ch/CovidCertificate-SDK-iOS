@@ -11,9 +11,10 @@ platform :ios do
         scheme: "CovidCertificateSDK",
         xcargs: "-resultBundlePath ./build/testresults.xcresult test",
         buildlog_path: "./build/"
-    )
+      )
     rescue => ex
-      UI.important('xcodebuild failed, but continuing anyway!')
+      # Do not fail directly but mark it for later
+      ENV["BUILD_RESULT"] = "FAILURE"
     end
     
 
@@ -21,5 +22,9 @@ platform :ios do
         output_directory: "./build/",
         path: "./build/",
         fail_build: false)
+    
+    if ENV["BUILD_RESULT"] == "FAILURE"
+      UI.crash!("Build or tests failed during xcodebuild step")
+    end
   end
 end
