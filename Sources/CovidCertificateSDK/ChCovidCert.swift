@@ -44,13 +44,6 @@ public struct DGCHolder {
         return cwt.euHealthCert
     }
 
-    public var issuedAt: Date? {
-        if let i = cwt.iat {
-            return Date(timeIntervalSince1970: TimeInterval(i))
-        }
-
-        return nil
-    }
 
     let cose: Cose
     let cwt: CWT
@@ -106,19 +99,15 @@ public struct ChCovidCert {
 
     @available(OSX 10.13, *)
     public func checkSignature(cose: DGCHolder, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        if let expiryTimestamp = cose.cwt.exp {
-            let expireDate = Date(timeIntervalSince1970: Double(expiryTimestamp))
-            if expireDate.isBefore(Date()) {
-                completionHandler(.failure(.CWT_EXPIRED))
+        switch cose.cwt.isValid() {
+            case let .success(isValid):
+                    if !isValid {
+                        completionHandler(.failure(.CWT_EXPIRED))
+                        return
+                    }
+            case let .failure(error):
+                completionHandler(.failure(error))
                 return
-            }
-        }
-        if let issuedAtTimestamp = cose.cwt.iat {
-            let issuedAt = Date(timeIntervalSince1970: Double(issuedAtTimestamp))
-            if issuedAt.isAfter(Date()) {
-                completionHandler(.failure(.CWT_EXPIRED))
-                return
-            }
         }
 
         if cose.healthCert.certType == nil {
