@@ -27,4 +27,5 @@ public class TrustCertificate : Codable {
 
 public class ActiveTrustCertificates : Codable {
     public var activeKeyIds : [String] = []
+    public var validDuration : Int64
 }

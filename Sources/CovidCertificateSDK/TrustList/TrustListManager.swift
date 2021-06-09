@@ -55,9 +55,7 @@ public class TrustListUpdate {
     }
 
     public func addCheckOperation(checkOperation: @escaping ((ValidationError?) -> ())) {
-        let date = lastUpdate ?? Date(timeIntervalSince1970: 0)
-
-        let updateNeeeded = date < Date().addingTimeInterval(86400)
+        let updateNeeeded = !self.isListStillValid()
         let updateAlreadyRunnning = self.updateOperation != nil
 
         if updateNeeeded && !updateAlreadyRunnning {
@@ -80,6 +78,10 @@ public class TrustListUpdate {
     internal func synchronousUpdate() -> ValidationError? {
         // download data and update local storage
         return nil
+    }
+
+    internal func isListStillValid() -> Bool {
+        return true
     }
 
     private func startUpdate() {

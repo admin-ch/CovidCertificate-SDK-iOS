@@ -9,7 +9,6 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-
 import Foundation
 
 class TrustCertificatesUpdate : TrustListUpdate {
@@ -63,5 +62,9 @@ class TrustCertificatesUpdate : TrustListUpdate {
         }
 
         return nil
+    }
+
+    internal override func isListStillValid() -> Bool {
+        return self.trustStorage.certificateListIsValid()
     }
 }

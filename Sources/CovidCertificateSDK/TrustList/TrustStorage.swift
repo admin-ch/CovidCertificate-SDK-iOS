@@ -14,14 +14,17 @@ import Foundation
 public protocol TrustStorageProtocol {
     func revokedCertificates() -> [String]
     func updateRevocationList(_ list: RevocationList) -> Bool
+    func revocationListIsValid() -> Bool
 
     func activeCertificatePublicKeys() -> [TrustListPublicKey]
     func certificateSince() -> Int64
     func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool
     func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool
+    func certificateListIsValid() -> Bool
 }
 
 class TrustStorage : TrustStorageProtocol, Codable {
+
     // MARK: - Storage
     private static var sharedStorage = Storage()
     private static let secureStorage = SecureStorage<Storage>()
@@ -48,7 +51,16 @@ class TrustStorage : TrustStorageProtocol, Codable {
 
     public func updateRevocationList(_ list: RevocationList) -> Bool {
         Self.sharedStorage.revocationList = list
+        Self.sharedStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+
         return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+    }
+
+    func revocationListIsValid() -> Bool {
+        let stillValidUntil = Self.sharedStorage.lastRevocationListDownload + Self.sharedStorage.revocationList.validDuration
+        let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
+
+        return Date().isBefore(validUntilDate)
     }
 
     // MARK: - Certificate List
@@ -65,6 +77,8 @@ class TrustStorage : TrustStorageProtocol, Codable {
         Self.sharedStorage.activeCertificates.removeAll { c in
             activeCertificates.activeKeyIds.contains(c.keyId)
         }
+
+        Self.sharedStorage.lastCertificateListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
 
         return Self.secureStorage.saveSynchronously(Self.sharedStorage)
     }
@@ -84,11 +98,21 @@ class TrustStorage : TrustStorageProtocol, Codable {
     func certificateSince() -> Int64 {
         return Self.sharedStorage.certificateSince
     }
+
+    func certificateListIsValid() -> Bool {
+        let stillValidUntil = Self.sharedStorage.lastCertificateListDownload + Self.sharedStorage.certificateValidDuration
+        let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
+
+        return Date().isBefore(validUntilDate)
+    }
 }
 
 class Storage : Codable {
     public var revocationList = RevocationList()
+    public var lastRevocationListDownload : Int64 = 0
 
     public var activeCertificates : [TrustCertificate] = []
     public var certificateSince : Int64 = 0
+    public var certificateValidDuration : Int64 = 0
+    public var lastCertificateListDownload : Int64 = 0
 }

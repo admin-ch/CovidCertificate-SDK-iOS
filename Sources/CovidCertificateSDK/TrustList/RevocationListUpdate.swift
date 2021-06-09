@@ -34,4 +34,8 @@ class RevocationListUpdate : TrustListUpdate {
         let _ = self.trustStorage.updateRevocationList(result)
         return nil
     }
+
+    internal override func isListStillValid() -> Bool {
+        return self.trustStorage.revocationListIsValid()
+    }
 }
