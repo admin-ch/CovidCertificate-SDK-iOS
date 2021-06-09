@@ -72,8 +72,10 @@ struct Cose {
 
             unprotectedHeader = nil
             // if not sign1 this is an array of signatures
-            signature = decodedDataList[3].asData()
-
+            guard let sigBytes = decodedDataList[3].asBytes() else {
+                            return nil
+            }
+            signature = Data(sigBytes)
             // TODO: we should also support multiple signatures
             type = .sign1
         }

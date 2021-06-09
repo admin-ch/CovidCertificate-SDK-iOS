@@ -67,6 +67,32 @@ final class CovidCertificateSDKTests: XCTestCase {
         XCTAssertTrue(result)
     }
     
+    //cbor has no exp and no iat and was calculated from rust
+    func testCustomCBOR() {
+            let hcert = "HC1:6BFMY3ZX73PO%203CCBR4OF7NI2*RLLTIKQDKYMW03%MG:GKCDKP-38E9/:N2QIL44RC5WA9+-0*Q3Q56CE0WC6W77K66U$QO37HMG.MO+FLAHV9LP9GK0JL2I989BBCL$G4.R3ITA6URNWLWMLW7H+SSOI8YF5MIP8 6VWK*96PYJ:D3:T0-Y5DLITLUM5K $25QHGJEQ85B54W7B8JCM40-D2R+8T1O2SI2DPYRJO9C5Q1693$58EFQ/%IH*O7JGS+GAV2PYFGYHXC707CGU8/4S5ART-45GHCCRI-9%MH 0BB%4U7VUONPWPBAG4-SDC6T3D 50E+CU+GCTIL64HEHAGUBJD9A3:72S471JOJQBMLPWDI910RH0IUG53SUFBK7RRJH9IC%NRC:AT15OC4%CM19DQZ33APNY9/P9DBWNCC5M6E9I6-0N6M-VR$7P+DQEXOUKMAW8I4VX19VLV6S3JZBJ7P:*I 392*TPPAQ1GGQV61Q:8R1OLE14W6PZLOQFERKJJ9NCMD55DVVF"
+            
+            let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc=", andY: "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM=")
+            let keys : [TrustListPublicKey] = [key].compactMap { $0 }
+            let testTrustList =  TestTrustList(publicKeys: keys)
+            
+            guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+                XCTAssertTrue(false)
+                return
+            }
+            
+            let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
+            customVerifier.checkSignature(cose: dgcHolder) { result in
+                switch result {
+                case let .success(r):
+                    XCTAssertTrue(r.isValid)
+                    break
+                case let .failure(error):
+                    
+                    XCTAssertTrue(false)
+                }
+            }
+        }
+    
     func testEC() {
 //        kid: 2Rk3X8HntrI=
         let key = TrustListPublicKey(keyId: "2Rk3X8HntrI=", withX: "rdVc9a0bltR6jm1BPTA3u0cyJNYKuF1uRk8h7h04+XA=", andY: "USfZGB7fv6Eg18JllyjOnBAp3Jqmis9Q/VMTtRaXQXc=")
