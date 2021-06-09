@@ -9,7 +9,6 @@ import Foundation
 import Security
 import SwiftCBOR
 
-
 struct Cose {
     private let type: CoseType
     let protectedHeader: CoseHeader
@@ -73,7 +72,7 @@ struct Cose {
             unprotectedHeader = nil
             // if not sign1 this is an array of signatures
             guard let sigBytes = decodedDataList[3].asBytes() else {
-                            return nil
+                return nil
             }
             signature = Data(sigBytes)
             // TODO: we should also support multiple signatures

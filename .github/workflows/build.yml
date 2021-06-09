@@ -1,0 +1,35 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build & Tests
+    runs-on: macOS-latest
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - name: Switch to Xcode 12.4
+      run: sudo xcode-select --switch /Applications/Xcode_12.4.app
+
+    - name: Fastlane
+      run: fastlane tests
+
+    - name: Publish Unit Test Results
+      uses: EnricoMi/publish-unit-test-result-action/composite@v1
+      if: always()
+      with:
+        files: build/*.xml
+
+    - name: Archive logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-test-logs
+        path: build
+      
