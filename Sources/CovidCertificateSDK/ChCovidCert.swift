@@ -125,8 +125,8 @@ public struct ChCovidCert {
         }
 
         self.trustListManager.trustCertificateUpdater.addCheckOperation { error in
-            if error != nil {
-                completionHandler(.success(ValidationResult(isValid: false, payload: cose.healthCert, error: error)))
+            if let e = error {
+                completionHandler(.failure(e))
             } else {
                 let list = self.trustListManager.trustStorage.activeCertificatePublicKeys()
                 let validationError = list.hasValidSignature(for: cose)
@@ -140,8 +140,8 @@ public struct ChCovidCert {
         // As long as no revocation list is published yet, return true
         self.trustListManager.revocationListUpdater.addCheckOperation { error in
 
-            if error != nil {
-                completionHandler(.success(ValidationResult(isValid: false, payload: dgc, error: error)))
+            if let e = error {
+                completionHandler(.failure(e))
             } else {
                 let list = self.trustListManager.trustStorage.revokedCertificates()
                 let isRevoked = dgc.certIdentifiers().contains { list.contains($0) }
