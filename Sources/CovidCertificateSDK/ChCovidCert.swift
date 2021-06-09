@@ -45,8 +45,8 @@ public struct DGCHolder {
     }
 
     public var issuedAt: Date? {
-        if let i = cwt.iat {
-            return Date(timeIntervalSince1970: TimeInterval(i))
+        if let i = cwt.iat?.asNumericDate() {
+            return Date(timeIntervalSince1970: i)
         }
 
         return nil
@@ -70,13 +70,14 @@ public struct DGCHolder {
 
 public struct ChCovidCert {
     private let PREFIX = "HC1:"
-    private let trustList = StaticTrustlist()
+    private let trustList: Trustlist
     private let nationalRules = NationalRulesVerifier()
 
     public let environment: SDKEnvironment
 
-    init(environment: SDKEnvironment) {
+    init(environment: SDKEnvironment, trustList: Trustlist) {
         self.environment = environment
+        self.trustList = trustList
     }
 
     public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
@@ -101,36 +102,32 @@ public struct ChCovidCert {
             return .failure(.COSE_DESERIALIZATION_FAILED)
         }
 
-        // only exactly one certificate is allowed in v1 (one vaccine, one test or one recovery)
-        let certIdentifiers = cwt.euHealthCert.certIdentifiers().count
-
-        if certIdentifiers != 1 {
-            return .failure(.HCERT_IS_INVALID)
-        }
-
         return .success(DGCHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
     @available(OSX 10.13, *)
     public func checkSignature(cose: DGCHolder, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        if let expiryTimestamp = cose.cwt.exp {
-            let expireDate = Date(timeIntervalSince1970: Double(expiryTimestamp))
-            if expireDate.isBefore(Date()) {
+        switch cose.cwt.isValid() {
+        case let .success(isValid):
+            if !isValid {
                 completionHandler(.failure(.CWT_EXPIRED))
+                return
             }
+        case let .failure(error):
+            completionHandler(.failure(error))
+            return
         }
-        if let issuedAtTimestamp = cose.cwt.iat {
-            let issuedAt = Date(timeIntervalSince1970: Double(issuedAtTimestamp))
-            if issuedAt.isAfter(Date()) {
-                completionHandler(.failure(.CWT_EXPIRED))
-            }
+
+        if cose.healthCert.certType == nil {
+            completionHandler(.failure(.SIGNATURE_TYPE_INVALID(.CERT_TYPE_AMBIGUOUS)))
+            return
         }
 
         trustList.key(for: cose.keyId) { result in
             switch result {
-            case .success(let key):
+            case let .success(key):
                 let isValid = cose.hasValidSignature(for: key)
-                let error : ValidationError? = isValid ? nil : ValidationError.KEY_NOT_IN_TRUST_LIST
+                let error: ValidationError? = isValid ? nil : ValidationError.KEY_NOT_IN_TRUST_LIST
                 completionHandler(.success(ValidationResult(isValid: isValid, payload: cose.healthCert, error: error)))
             case let .failure(error): completionHandler(.failure(error))
             }

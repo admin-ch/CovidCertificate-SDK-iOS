@@ -11,9 +11,32 @@
  */
 import XCTest
 
+class TestTrustList: Trustlist {
+    func publicKeys() -> [TrustListPublicKey] {
+        return innerPublicKeys
+    }
+
+    func key(for keyId: Data, completionHandler: @escaping (Result<SecKey, ValidationError>) -> Void) {
+        guard let publicKey = publicKeys().first(where: { key in
+            key.keyId == keyId.base64EncodedString()
+        })
+        else {
+            completionHandler(.failure(.KEY_NOT_IN_TRUST_LIST))
+            return
+        }
+
+        completionHandler(.success(publicKey.key))
+    }
+
+    let innerPublicKeys: [TrustListPublicKey]
+    init(publicKeys: [TrustListPublicKey]) {
+        innerPublicKeys = publicKeys
+    }
+}
+
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: ChCovidCert {
-        let ver = ChCovidCert(environment: SDKEnvironment.dev)
+        let ver = ChCovidCert(environment: SDKEnvironment.dev, trustList: StaticTrustlist())
         return ver
     }
 
@@ -42,6 +65,90 @@ final class CovidCertificateSDKTests: XCTestCase {
         error?.release()
         XCTAssertTrue(result)
     }
+
+    // cbor has no exp and no iat and was calculated from rust
+    func testCustomCBOR() {
+        let hcert = "HC1:6BFMY3ZX73PO%203CCBR4OF7NI2*RLLTIKQDKYMW03%MG:GKCDKP-38E9/:N2QIL44RC5WA9+-0*Q3Q56CE0WC6W77K66U$QO37HMG.MO+FLAHV9LP9GK0JL2I989BBCL$G4.R3ITA6URNWLWMLW7H+SSOI8YF5MIP8 6VWK*96PYJ:D3:T0-Y5DLITLUM5K $25QHGJEQ85B54W7B8JCM40-D2R+8T1O2SI2DPYRJO9C5Q1693$58EFQ/%IH*O7JGS+GAV2PYFGYHXC707CGU8/4S5ART-45GHCCRI-9%MH 0BB%4U7VUONPWPBAG4-SDC6T3D 50E+CU+GCTIL64HEHAGUBJD9A3:72S471JOJQBMLPWDI910RH0IUG53SUFBK7RRJH9IC%NRC:AT15OC4%CM19DQZ33APNY9/P9DBWNCC5M6E9I6-0N6M-VR$7P+DQEXOUKMAW8I4VX19VLV6S3JZBJ7P:*I 392*TPPAQ1GGQV61Q:8R1OLE14W6PZLOQFERKJJ9NCMD55DVVF"
+
+        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc=", andY: "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM=")
+        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        let testTrustList = TestTrustList(publicKeys: keys)
+
+        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
+        customVerifier.checkSignature(cose: dgcHolder) { result in
+            switch result {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            case let .failure(error):
+
+                XCTAssertTrue(false)
+            }
+        }
+    }
+
+    func testVariousFloatAndSignedIntCBORDates() {
+        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6LDAI81POIF:0S1E2-I534LRHRXQQHIZC4.OI1RM8ZA*LP$V25$0$/AQ$3H-8R6TU:C//CW$5 -D1$4C5PE/H:Y0D$0M+8H:H00M-$4U/HYE9/MVKQC*LA 436IAXPMHQ1*P1TU12XE %POH6JK5 *JAYUQJATK25M9:OQPAU:IAJ0AGY0OWCR/C+T44%4GIP77TLXKQ/S1E5E6J90J7*KP/S57TT65:9TNIF 35:U47AL+T4 %23NJ.43CGJ8X2+36D-I/2DBAJDAJCNB-43 X4VV2 73-E3GG3V20-7TZD5CC9T0HQ+4CNNG.85$07LPMIH-O92UQKRQT02.MPDB9SH9C9QG3FSZN0/4P/5CA7G6ME1SDQ6CS4:ZJ83B-6THC1G%5TW5A 6YO67N659EWEWJ2T7+VCK19ASG+7G7WH0JSZARUA82WIAQ/+IY%NT2G5+GG 95MD5FN:3VJXRUN3U.LF:HKVTFZIP.4X7GHBBJ17IN6$MQV7SH.5941GPG"
+
+        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTAssertTrue(false)
+            return
+        }
+        verifier.checkSignature(cose: dgcHolder) { result in
+            switch result {
+            case .success:
+                XCTAssertTrue(false)
+            case let .failure(error):
+                // we should fail with CWT expired
+                XCTAssertTrue(error.errorCode == ValidationError.CWT_EXPIRED.errorCode)
+            }
+        }
+    }
+
+    func testInvalidDateInCBORCausesError() {
+        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6RLQI81POIF:0:3BAG1PZIQ+Q%SQXZI3VUD%N/+P.SS  QS+G3WOHVU978MRLQ+Q.OIVTQA+QWQ23E2F/8X*G3M9JUPY0BZW4:.AY73CIBVQFM83IMJTLJ8UJARN*FN4DJV53/G7-43Z23EG3%971IN/AJVC7SP499TVW5KK9+OC+G9QJPNF67J6QW67KQ9G66PP33M/TEJG3LKBXBJFF02JNEJOA+MY55V90*F7$17IK8D:6NY4R35OBA4DN/VM/H5J35 96$ 8BX7/JP9398C5Y47Z.4Z6NC1R4SO* PUHLO$GAHLW 70SO:GOLIROGO3T59YLLYP-HQLTQ9R0+L69/9-3AKI6-Q6R3RX76QW6.V99Q9E$BDZIE9JIRF71A4-9SCA6LFOSNENSUC75HF KP8EFXOTJ.K274M.SY$N/U6ZVA69E$JDVPLW1KD0KCZG-3NKWJ33W6BAO87CAF%OS-WKMY1SQPWPQBMT2IV2CVC16F9U2BQUM9:SV246:%UHII9K4HZB/.U-CW6%L$UJ68NS%D.GTPPQN2PRW8610FNS32"
+
+        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTAssertTrue(false)
+            return
+        }
+        verifier.checkSignature(cose: dgcHolder) { result in
+            switch result {
+            case let .success(r):
+                XCTAssertTrue(false)
+            case let .failure(error):
+                // we should fail with CWT expired
+                XCTAssertTrue(error.errorCode == ValidationError.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR).errorCode)
+            }
+        }
+    }
+
+//    func testEC() {
+    ////        kid: 2Rk3X8HntrI=
+//        let key = TrustListPublicKey(keyId: "2Rk3X8HntrI=", withX: "rdVc9a0bltR6jm1BPTA3u0cyJNYKuF1uRk8h7h04+XA=", andY: "USfZGB7fv6Eg18JllyjOnBAp3Jqmis9Q/VMTtRaXQXc=")
+//        let keys : [TrustListPublicKey] = [key].compactMap { $0 }
+//        let testTrustList =  TestTrustList(publicKeys: keys)
+//
+//        let hcert = "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH-R6IOOP-IZXPQFG4G54$VO%0AT4V22F/8X*G3M9JUPY0BX/KR96R/S09T./0LWTKD33236J3TA3M*4VV2 73-E3GG396B-43O058YIB73A*G3W19UEBY5:PI0EGSP4*2DN43U*0CEBQ/GXQFY73CIBC:G 7376BXBJBAJ UNFMJCRN0H3PQN*E33H3OA70M3FMJIJN523.K5QZ4A+2XEN QT QTHC31M3+E32R44$28A9H0D3ZCL4JMYAZ+S-A5$XKX6T2YC 35H/ITX8GL2-LH/CJTK96L6SR9MU9RFGJA6Q3QR$P2OIC0JVLA8J3ET3:H3A+2+33U SAAUOT3TPTO4UBZIC0JKQTL*QDKBO.AI9BVYTOCFOPS4IJCOT0$89NT2V457U8+9W2KQ-7LF9-DF07U$B97JJ1D7WKP/HLIJLRKF1MFHJP7NVDEBU1J*Z222E.GJ:575JH2E90$6.Q9MEI**SQVFGHPMVLSRB5-FQC3$SDTTHWLUP/JI5N%7UT*T88VNVACATXYPO-Q1L1MWN95TV0R 3T.Y1YNPS/8SNV-10HF2D3"
+//
+//        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+//            XCTAssertTrue(false)
+//            return
+//        }
+//
+//        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
+//        customVerifier.checkSignature(cose: dgcHolder) { result in
+//            if case let .success(r) = result {
+//                XCTAssertTrue(r.isValid)
+//            } else {
+//                XCTAssertFalse(true)
+//            }
+//        }
+//    }
 
     func testCompleteToolchain() {
         let hcert = "HC1:NCFJ60EG0/3WUWGSLKH47GO0KNJ9DSWQIIWT9CK+500XKY-CE59-G80:84F3ZKG%QU2F30GK JEY50.FK6ZK7:EDOLOPCF8F746KG7+59.Q6+A80:6JM8SX8RM8.A8TL6IA7-Q6.Q6JM8WJCT3EYM8XJC +DXJCCWENF6OF63W5$Q69L6%JC+QE$.32%E6VCHQEU$DE44NXOBJE719$QE0/D+8D-ED.24-G8$:8.JCBECB1A-:8$96646AL60A60S6Q$D.UDRYA 96NF6L/5QW6307KQEPD09WEQDD+Q6TW6FA7C466KCN9E%961A6DL6FA7D46JPCT3E5JDJA76L68463W5/A6..DX%DZJC3/DH$9- NTVDWKEI3DK2D4XOXVD1/DLPCG/DU2D4ZA2T9GY8MPCG/DY-CAY81C9XY8O/EZKEZ96446256V50G7AZQ4CUBCD9-FV-.6+OJROVHIBEI3KMU/TLRYPM0FA9DCTID.GQ$NYE3NPBP90/9IQH24YL7WMO0CNV1 SDB1AHX7:O26872.NV/LC+VJ75L%NGF7PT134ERGJ.I0 /49BB6JA7WKY:AL19PB120CUQ37XL1P9505-YEFJHVETB3CB-KE8EN9BPQIMPRTEW*DU+X2STCJ6O6S4XXVJ$UQNJW6IIO0X20D4S3AWSTHTA5FF7I/J9:8ALF/VP 4K1+8QGI:N0H 91QBHPJLSMNSJC BFZC5YSD.9-9E5R8-.IXUB-OG1RRQR7JEH/5T852EA3T7P6 VPFADBFUN0ZD93MQY07/4OH1FKHL9P95LIG841 BM7EXDR/PLCUUE88+-IX:Q"
@@ -497,9 +604,52 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
     }
 
+    func testSanityCheckForDateCalculations() {
+        var dateFormatter: DateFormatter {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = DATE_FORMAT
+            return dateFormatter
+        }
+
+        let validTestResult = dateFormatter.date(from: "2021-05-08")!
+        let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: validTestResult)!
+
+        let calculatedValidFrom = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: validTestResult)!
+
+        let trueValidFrom = dateFormatter.date(from: "2021-05-18")!
+        let dayBeforeValidFrom = Calendar.current.date(byAdding: DateComponents(day: -1), to: trueValidFrom)!
+        let trueValidUntil = dateFormatter.date(from: "2021-11-03")!
+        let dayAfterTrueValidUntil = dateFormatter.date(from: "2021-12-03")!
+
+        // before validFrom it fails
+        // certificate has entry trueValidFrom
+        // today is dayBeforeValidFrom
+        XCTAssertTrue(trueValidFrom.isAfter(dayBeforeValidFrom))
+
+        // at trueValidFrom it succeeds
+        // certificate has entry calculatedValidFrom
+        // today is trueValidFrom
+        XCTAssertFalse(calculatedValidFrom.isAfter(trueValidFrom))
+
+        // at trueValidUntil it succeeds
+        // certificate has entry calculatedValidUntil
+        // today is trueValidUntil
+        XCTAssertFalse(calculatedValidUntil.isBefore(trueValidUntil))
+
+        // calculated valid from should match
+        XCTAssertTrue(calculatedValidFrom == trueValidFrom)
+        // calculated valid until should match
+        XCTAssertTrue(calculatedValidUntil == trueValidUntil)
+
+        // the certificate is not valid one day after trueValidUntil
+        // certificate has entry calculatedValidUntil
+        // today is dayAfterTrueValidUntil
+        XCTAssertTrue(calculatedValidUntil.isBefore(dayAfterTrueValidUntil))
+    }
+
     func testCertificateIsValidFor180DaysAfterTestResult() {
-        // The certificate was issued 180 days ago, which means it is still valid today
-        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
+        // The certificate was issued 179 days ago, which means it is still valid today (the 180th day)
+        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -179), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(dgc: hcert) { result in
             switch result {
             case let .success(r):
@@ -509,8 +659,8 @@ final class CovidCertificateSDKTests: XCTestCase {
                 XCTAssertTrue(false)
             }
         }
-        // the certificate should not be valid anymore, since it was issued yesterday 180 days ago (hence now it is 181 day ago)
-        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -181), tg: Disease.SarsCov2.rawValue)
+        // the certificate should not be valid anymore, since it was issued yesterday 179 days ago (hence yesterday was the 180th day)
+        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(dgc: hcert_invalid) { result in
             switch result {
             case let .success(r):

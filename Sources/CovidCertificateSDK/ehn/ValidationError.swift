@@ -7,6 +7,25 @@
 
 import Foundation
 
+public enum SignatureTypeInvalidError: Error, Equatable {
+    case CWT_HEADER_PARSE_ERROR
+    case CERT_TYPE_AMBIGUOUS
+
+    public var message: String {
+        switch self {
+        case .CERT_TYPE_AMBIGUOUS: return "The certificate type could not be determined"
+        case .CWT_HEADER_PARSE_ERROR: return "The CWT exp/iat headers could not be parsed"
+        }
+    }
+
+    public var errorCode: String {
+        switch self {
+        case .CERT_TYPE_AMBIGUOUS: return "CTA"
+        case .CWT_HEADER_PARSE_ERROR: return "HPE"
+        }
+    }
+}
+
 public enum ValidationError: Error, Equatable {
     case GENERAL_ERROR
     case CBOR_DESERIALIZATION_FAILED
@@ -21,6 +40,7 @@ public enum ValidationError: Error, Equatable {
     case KEY_CREATION_ERROR
     case KEYSTORE_ERROR(cause: String)
     case REVOKED
+    case SIGNATURE_TYPE_INVALID(SignatureTypeInvalidError)
 
     public var message: String {
         switch self {
@@ -37,6 +57,7 @@ public enum ValidationError: Error, Equatable {
         case .CWT_EXPIRED: return "The CWT expiary date has been reached"
         case .ISSUED_IN_FUTURE: return "The CWT was issued in the future"
         case .REVOKED: return "Certificate was revoked"
+        case .SIGNATURE_TYPE_INVALID: return "The certificate is not valid according to specification"
         }
     }
 
@@ -55,6 +76,7 @@ public enum ValidationError: Error, Equatable {
         case .CWT_EXPIRED: return "S|CWTE"
         case .ISSUED_IN_FUTURE: return ""
         case .REVOKED: return "R|REV"
+        case let .SIGNATURE_TYPE_INVALID(wrapped): return "S|TIV|" + wrapped.errorCode
         }
     }
 }

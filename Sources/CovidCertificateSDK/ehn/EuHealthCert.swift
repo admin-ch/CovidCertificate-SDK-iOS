@@ -17,20 +17,19 @@ public struct EuHealthCert: Codable {
     public let tests: [Test]?
 
     public var certType: CertType? {
-        if let v = vaccinations, v.count > 0,
-           self.pastInfections == nil,
-           self.tests == nil {
+        if let v = vaccinations, v.count == 1,
+           self.pastInfections.isNilOrEmpty(),
+           self.tests.isNilOrEmpty() {
             return .vaccination
-        } else if let p = pastInfections, p.count > 0,
-                  self.tests == nil,
-                  self.vaccinations == nil {
+        } else if let p = pastInfections, p.count == 1,
+                  self.tests.isNilOrEmpty(),
+                  self.vaccinations.isNilOrEmpty() {
             return .recovery
-        } else if let tests = self.tests, tests.count > 0,
-                  self.pastInfections == nil,
-                  self.vaccinations == nil {
+        } else if let tests = self.tests, tests.count == 1,
+                  self.pastInfections.isNilOrEmpty(),
+                  self.vaccinations.isNilOrEmpty() {
             return .test
         }
-
         return nil
     }
 
@@ -142,7 +141,7 @@ public struct Vaccination: Codable {
     /// Vaccines are valid for 180 days
     public var validUntilDate: Date? {
         guard let dateOfVaccination = self.dateOfVaccination,
-              let date = Calendar.current.date(byAdding: DateComponents(day: 180), to: dateOfVaccination) else {
+              let date = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: dateOfVaccination) else {
             return nil
         }
         return date
@@ -189,12 +188,12 @@ public struct Test: Codable {
     }
 
     public var validFromDate: Date? {
-        return ISO8601DateFormatter().date(from: timestampSample)
+        return Date.fromISO8601(timestampSample)
     }
 
     public var resultDate: Date? {
         if let res = timestampResult {
-            return ISO8601DateFormatter().date(from: res)
+            return Date.fromISO8601(res)
         }
 
         return nil
@@ -283,7 +282,7 @@ public struct PastInfection: Codable {
 
     public var validFromDate: Date? {
         guard let firstPositiveTestResultDate = self.firstPositiveTestResultDate,
-              let date = Calendar.current.date(byAdding: DateComponents(day: 10), to: firstPositiveTestResultDate) else {
+              let date = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: firstPositiveTestResultDate) else {
             return nil
         }
         return date
@@ -291,7 +290,7 @@ public struct PastInfection: Codable {
 
     public var validUntilDate: Date? {
         guard let firstPositiveTestResultDate = self.firstPositiveTestResultDate,
-              let date = Calendar.current.date(byAdding: DateComponents(day: 180), to: firstPositiveTestResultDate) else {
+              let date = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: firstPositiveTestResultDate) else {
             return nil
         }
         return date

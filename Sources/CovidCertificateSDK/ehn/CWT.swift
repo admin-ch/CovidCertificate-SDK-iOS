@@ -10,9 +10,10 @@ import SwiftCBOR
 
 public struct CWT {
     let iss: String?
-    let exp: UInt64?
-    let iat: UInt64?
+    let exp: CBOR?
+    let iat: CBOR?
     let euHealthCert: EuHealthCert
+    let decodedPayload: [CBOR: CBOR]
 
     enum PayloadKeys: Int {
         case iss = 1
@@ -25,13 +26,39 @@ public struct CWT {
         }
     }
 
+    func isValid(now: Date = Date()) -> Result<Bool, ValidationError> {
+        if let cwtExp = exp {
+            guard let exp = cwtExp.asNumericDate() else {
+                return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
+            }
+            let expireDate = Date(timeIntervalSince1970: exp)
+            if expireDate.isBefore(now) {
+                return .success(false)
+            }
+        }
+
+        if let cwtIat = iat {
+            guard let iat = cwtIat.asNumericDate() else {
+                return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
+            }
+            let issuedAt = Date(timeIntervalSince1970: Double(iat))
+            if issuedAt.isAfter(now) {
+                return .success(false)
+            }
+        }
+        return .success(true)
+    }
+
     init?(from cbor: CBOR) {
-        guard let decodedPayload = cbor.decodeBytestring()?.asMap() else {
+        guard let decodedPayloadCwt = cbor.decodeBytestring()?.asMap() else {
             return nil
         }
+        decodedPayload = decodedPayloadCwt
+
         iss = decodedPayload[PayloadKeys.iss]?.asString()
-        exp = decodedPayload[PayloadKeys.exp]?.asUInt64()
-        iat = decodedPayload[PayloadKeys.iat]?.asUInt64()
+        exp = decodedPayload[PayloadKeys.exp]
+        iat = decodedPayload[PayloadKeys.iat]
+
         guard let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
               let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
               let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) else {

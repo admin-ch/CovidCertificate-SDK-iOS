@@ -71,8 +71,10 @@ struct Cose {
 
             unprotectedHeader = nil
             // if not sign1 this is an array of signatures
-            signature = decodedDataList[3].asData()
-
+            guard let sigBytes = decodedDataList[3].asBytes() else {
+                return nil
+            }
+            signature = Data(sigBytes)
             // TODO: we should also support multiple signatures
             type = .sign1
         }
@@ -101,10 +103,11 @@ struct Cose {
     @available(OSX 10.13, *)
     private func verifySignature(key: SecKey, signedData: Data, rawSignature: Data) -> Bool {
         var algorithm: SecKeyAlgorithm
-        let signature = rawSignature
+        var signatureToVerify = rawSignature
         switch protectedHeader.algorithm {
         case .es256:
-            return false
+            algorithm = .ecdsaSignatureMessageX962SHA256
+            signatureToVerify = Asn1Encoder().convertRawSignatureIntoAsn1(rawSignature)
         case .ps256:
             algorithm = .rsaSignatureMessagePSSSHA256
         default:
@@ -113,7 +116,7 @@ struct Cose {
         }
 
         var error: Unmanaged<CFError>?
-        let result = SecKeyVerifySignature(key, algorithm, signedData as CFData, signature as CFData, &error)
+        let result = SecKeyVerifySignature(key, algorithm, signedData as CFData, signatureToVerify as CFData, &error)
         if let err = error?.takeUnretainedValue().localizedDescription {
             print(err)
         }

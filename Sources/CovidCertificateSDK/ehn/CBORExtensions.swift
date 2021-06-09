@@ -29,6 +29,18 @@ extension CBOR {
         }
     }
 
+    func asNumericDate() -> Double? {
+        switch self {
+        case let .double(value): return Double(value)
+        case let .float(value): return Double(value)
+        case let .half(value): return Double(value)
+        case let .negativeInt(value): return Double(value)
+        case let .unsignedInt(value): return Double(value)
+        default:
+            return nil
+        }
+    }
+
     func asUInt64() -> UInt64? {
         return unwrap() as? UInt64
     }

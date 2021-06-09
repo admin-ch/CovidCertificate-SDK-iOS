@@ -5,8 +5,8 @@
         "package": "base45-swift",
         "repositoryURL": "https://github.com/ehn-digital-green-development/base45-swift",
         "state": {
-          "branch": "distribution/swiftpackage",
-          "revision": "7c5d3e0640c7f0b949bba1905306867d06f2dbb3",
+          "branch": "main",
+          "revision": "db4ccbe535b91d780a08997708c6abf189e98661",
           "version": null
         }
       },
@@ -84,11 +84,11 @@
       },
       {
         "package": "SwiftCBOR",
-        "repositoryURL": "https://github.com/unrelentingtech/SwiftCBOR",
+        "repositoryURL": "https://github.com/eu-digital-green-certificates/SwiftCBOR",
         "state": {
-          "branch": null,
-          "revision": "668c26fc3373d5f1bccbaad7665ca6048797e324",
-          "version": "0.4.3"
+          "branch": "master",
+          "revision": "b76024995f6909e4615f943c7a03268fd29778fc",
+          "version": null
         }
       }
     ]

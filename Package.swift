@@ -7,6 +7,7 @@ let package = Package(
     name: "CovidCertificateSDK",
     platforms: [
         .iOS(.v12),
+        .macOS("10.13")
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -18,9 +19,9 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(name: "Gzip", url: "https://github.com/1024jp/GzipSwift", .upToNextMajor(from: "5.1.1")),
-        .package(url: "https://github.com/unrelentingtech/SwiftCBOR", .upToNextMajor(from: "0.4.3")),
-        .package(url: "https://github.com/ehn-digital-green-development/base45-swift", .branch("distribution/swiftpackage")),
         .package(name: "SwiftJWT", url: "https://github.com/Kitura/Swift-JWT.git", from: "3.6.1")
+        .package(url: "https://github.com/eu-digital-green-certificates/SwiftCBOR", .branch("master")),
+        .package(url: "https://github.com/ehn-digital-green-development/base45-swift", .branch("main")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
