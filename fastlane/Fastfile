@@ -1,0 +1,30 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Run the unit tests."
+  lane :tests do
+    # Use xcodebuild directly as Fastlane's scan does not yet support pure SPM projects 
+    # See https://github.com/fastlane/fastlane/discussions/17362
+    
+    begin
+      xcodebuild(
+        scheme: "CovidCertificateSDK",
+        xcargs: "-resultBundlePath ./build/testresults.xcresult test",
+        buildlog_path: "./build/"
+      )
+    rescue => ex
+      # Do not fail directly but mark it for later
+      ENV["BUILD_RESULT"] = "FAILURE"
+    end
+    
+
+    trainer(
+        output_directory: "./build/",
+        path: "./build/",
+        fail_build: false)
+    
+    if ENV["BUILD_RESULT"] == "FAILURE"
+      UI.crash!("Build or tests failed during xcodebuild step")
+    end
+  end
+end
