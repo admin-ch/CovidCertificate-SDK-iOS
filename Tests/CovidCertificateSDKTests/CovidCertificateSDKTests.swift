@@ -11,27 +11,26 @@
  */
 import XCTest
 
-
-class TestTrustList : Trustlist {
+class TestTrustList: Trustlist {
     func publicKeys() -> [TrustListPublicKey] {
-        return self.innerPublicKeys
+        return innerPublicKeys
     }
-    
+
     func key(for keyId: Data, completionHandler: @escaping (Result<SecKey, ValidationError>) -> Void) {
-        guard let publicKey = self.publicKeys().first(where: { key in
+        guard let publicKey = publicKeys().first(where: { key in
             key.keyId == keyId.base64EncodedString()
         })
         else {
             completionHandler(.failure(.KEY_NOT_IN_TRUST_LIST))
             return
         }
-        
+
         completionHandler(.success(publicKey.key))
     }
-    
-    let innerPublicKeys : [TrustListPublicKey]
+
+    let innerPublicKeys: [TrustListPublicKey]
     init(publicKeys: [TrustListPublicKey]) {
-        self.innerPublicKeys = publicKeys
+        innerPublicKeys = publicKeys
     }
 }
 
@@ -543,51 +542,48 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
         }
     }
-    
+
     func testSanityCheckForDateCalculations() {
         var dateFormatter: DateFormatter {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = DATE_FORMAT
             return dateFormatter
         }
-      
+
         let validTestResult = dateFormatter.date(from: "2021-05-08")!
         let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: validTestResult)!
-        
+
         let calculatedValidFrom = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: validTestResult)!
-        
-    
+
         let trueValidFrom = dateFormatter.date(from: "2021-05-18")!
-        let dayBeforeValidFrom = Calendar.current.date(byAdding: DateComponents(day:-1), to: trueValidFrom)!
+        let dayBeforeValidFrom = Calendar.current.date(byAdding: DateComponents(day: -1), to: trueValidFrom)!
         let trueValidUntil = dateFormatter.date(from: "2021-11-03")!
         let dayAfterTrueValidUntil = dateFormatter.date(from: "2021-12-03")!
-        
+
         // before validFrom it fails
         // certificate has entry trueValidFrom
         // today is dayBeforeValidFrom
         XCTAssertTrue(trueValidFrom.isAfter(dayBeforeValidFrom))
-        
+
         // at trueValidFrom it succeeds
         // certificate has entry calculatedValidFrom
         // today is trueValidFrom
         XCTAssertFalse(calculatedValidFrom.isAfter(trueValidFrom))
-        
+
         // at trueValidUntil it succeeds
         // certificate has entry calculatedValidUntil
         // today is trueValidUntil
         XCTAssertFalse(calculatedValidUntil.isBefore(trueValidUntil))
-        
-        
+
         // calculated valid from should match
         XCTAssertTrue(calculatedValidFrom == trueValidFrom)
         // calculated valid until should match
         XCTAssertTrue(calculatedValidUntil == trueValidUntil)
-        
-        //the certificate is not valid one day after trueValidUntil
+
+        // the certificate is not valid one day after trueValidUntil
         // certificate has entry calculatedValidUntil
         // today is dayAfterTrueValidUntil
         XCTAssertTrue(calculatedValidUntil.isBefore(dayAfterTrueValidUntil))
-       
     }
 
     func testCertificateIsValidFor180DaysAfterTestResult() {

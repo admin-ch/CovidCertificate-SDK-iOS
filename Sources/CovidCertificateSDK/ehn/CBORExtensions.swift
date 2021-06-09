@@ -40,7 +40,7 @@ extension CBOR {
             return nil
         }
     }
-    
+
     func asUInt64() -> UInt64? {
         return unwrap() as? UInt64
     }

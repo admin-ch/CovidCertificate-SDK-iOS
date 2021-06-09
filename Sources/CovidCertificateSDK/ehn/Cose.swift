@@ -9,7 +9,6 @@ import Foundation
 import Security
 import SwiftCBOR
 
-
 struct Cose {
     private let type: CoseType
     let protectedHeader: CoseHeader

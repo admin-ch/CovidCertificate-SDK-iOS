@@ -7,17 +7,17 @@
 
 import Foundation
 
-
 public enum SignatureTypeInvalidError: Error, Equatable {
     case CWT_HEADER_PARSE_ERROR
     case CERT_TYPE_AMBIGUOUS
-    
+
     public var message: String {
         switch self {
         case .CERT_TYPE_AMBIGUOUS: return "The certificate type could not be determined"
-        case.CWT_HEADER_PARSE_ERROR: return "The CWT exp/iat headers could not be parsed"
+        case .CWT_HEADER_PARSE_ERROR: return "The CWT exp/iat headers could not be parsed"
         }
     }
+
     public var errorCode: String {
         switch self {
         case .CERT_TYPE_AMBIGUOUS: return "CTA"
