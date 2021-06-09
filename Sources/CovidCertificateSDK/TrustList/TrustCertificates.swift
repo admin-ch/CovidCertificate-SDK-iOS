@@ -11,20 +11,20 @@
 
 import Foundation
 
-class TrustCertificates : Codable {
-    var certs : [TrustCertificate] = []
+public class TrustCertificates : Codable {
+    public var certs : [TrustCertificate] = []
 }
 
-class TrustCertificate : Codable {
-    var keyId : String
-    var use: String
-    var alg: String
-    var subjectPublicKeyInfo: String
-    var crv : String?
-    var x : String?
-    var y : String?
+public class TrustCertificate : Codable {
+    public var keyId : String
+    public var use: String
+    public var alg: String
+    public var subjectPublicKeyInfo: String?
+    public var crv : String?
+    public var x : String?
+    public var y : String?
 }
 
-class ActiveTrustCertificates : Codable {
-    var activeKeyIds : [String] = []
+public class ActiveTrustCertificates : Codable {
+    public var activeKeyIds : [String] = []
 }

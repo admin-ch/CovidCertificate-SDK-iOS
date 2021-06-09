@@ -70,14 +70,15 @@ public struct DGCHolder {
 
 public struct ChCovidCert {
     private let PREFIX = "HC1:"
-    private let trustList: Trustlist
+
+    private let trustListManager : TrustlistManagerProtocol
     private let nationalRules = NationalRulesVerifier()
 
     public let environment: SDKEnvironment
 
-    init(environment: SDKEnvironment, trustList: Trustlist) {
+    init(environment: SDKEnvironment, trustListManager: TrustlistManagerProtocol) {
         self.environment = environment
-        self.trustList = trustList
+        self.trustListManager = trustListManager
     }
 
     public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
@@ -123,25 +124,26 @@ public struct ChCovidCert {
             return
         }
 
-        trustList.key(for: cose.keyId) { result in
-            switch result {
-            case let .success(key):
-                let isValid = cose.hasValidSignature(for: key)
-                let error: ValidationError? = isValid ? nil : ValidationError.KEY_NOT_IN_TRUST_LIST
-                completionHandler(.success(ValidationResult(isValid: isValid, payload: cose.healthCert, error: error)))
-            case let .failure(error): completionHandler(.failure(error))
+        self.trustListManager.trustCertificateUpdater.addCheckOperation { error in
+            if error != nil {
+                completionHandler(.success(ValidationResult(isValid: false, payload: cose.healthCert, error: error)))
+            } else {
+                let list = self.trustListManager.trustStorage.activeCertificatePublicKeys()
+                let validationError = list.hasValidSignature(for: cose)
+
+                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: cose.healthCert, error: error)))
             }
         }
     }
 
     public func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         // As long as no revocation list is published yet, return true
-        TrustlistManager.shared.revocationListUpdater.addCheckOperation { error in
+        self.trustListManager.revocationListUpdater.addCheckOperation { error in
 
             if error != nil {
                 completionHandler(.success(ValidationResult(isValid: false, payload: dgc, error: error)))
             } else {
-                let list = TrustStorage.shared.revokedCertificates()
+                let list = self.trustListManager.trustStorage.revokedCertificates()
                 let isRevoked = dgc.certIdentifiers().contains { list.contains($0) }
                 let error : ValidationError? = isRevoked ? .REVOKED : nil
 

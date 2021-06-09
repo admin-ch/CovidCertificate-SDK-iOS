@@ -19,7 +19,7 @@ public enum CovidCertificateSDK {
 
     public static func initialize(environment: SDKEnvironment) {
         precondition(instance == nil, "CovidCertificateSDK already initialized")
-        instance = ChCovidCert(environment: environment, trustList: StaticTrustlist())
+        instance = ChCovidCert(environment: environment, trustListManager: TrustlistManager())
     }
 
     public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {

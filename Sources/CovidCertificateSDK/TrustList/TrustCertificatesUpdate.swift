@@ -20,20 +20,6 @@ class TrustCertificatesUpdate : TrustListUpdate {
     // MARK: - Update
 
     internal override func synchronousUpdate() -> ValidationError? {
-        // update trust certificates service
-        let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService.request()
-        let (data, _, error) = session.synchronousDataTask(with: request)
-
-        if error != nil {
-            return .NETWORK_ERROR
-        }
-
-        guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {
-            return .NETWORK_PARSE_ERROR
-        }
-
-        let _ = TrustStorage.shared.updateCertificateList(result)
-
         // update active certificates service
         let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request()
         let (dataActive, _, errorActive) = session.synchronousDataTask(with: requestActive)
@@ -46,7 +32,23 @@ class TrustCertificatesUpdate : TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        let _ = TrustStorage.shared.updateActiveCertificates(result)
+        let _ = self.trustStorage.updateActiveCertificates(result)
+
+        // update trust certificates service
+
+        // TODO: retry until all data is here (check header)
+        let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService.request()
+        let (data, _, error) = session.synchronousDataTask(with: request)
+
+        if error != nil {
+            return .NETWORK_ERROR
+        }
+
+        guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {
+            return .NETWORK_PARSE_ERROR
+        }
+
+        let _ = self.trustStorage.updateCertificateList(result)
 
         return nil
     }

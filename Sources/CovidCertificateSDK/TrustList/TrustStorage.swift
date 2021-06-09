@@ -11,11 +11,17 @@
 
 import Foundation
 
-class TrustStorage : Codable {
+public protocol TrustStorageProtocol {
+    func revokedCertificates() -> [String]
+    func updateRevocationList(_ list: RevocationList) -> Bool
+
+    func activeCertificatePublicKeys() -> [TrustListPublicKey]
+    func updateCertificateList(_ update: TrustCertificates) -> Bool
+    func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool
+}
+
+class TrustStorage : TrustStorageProtocol, Codable {
     // MARK: - Storage
-
-    public static let shared = TrustStorage()
-
     private static var sharedStorage = Storage()
     private static let secureStorage = SecureStorage<Storage>()
 
@@ -42,20 +48,31 @@ class TrustStorage : Codable {
 
     // MARK: - Certificate List
 
-    public func updateCertificateList(_ update: TrustCertificates) -> Bool {
+    func updateCertificateList(_ update: TrustCertificates) -> Bool {
         // add all certificates from update
-        let newCerts = update.certs.filter { c in Self.sharedStorage.activeCertificates.contains { $0.keyId == c.keyId } }
-        Self.sharedStorage.activeCertificates.append(contentsOf: newCerts)
+        Self.sharedStorage.activeCertificates.append(contentsOf: update.certs)
         return Self.secureStorage.saveSynchronously(Self.sharedStorage)
     }
 
-    public func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool {
+    func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool {
         // remove all certificates that are not active
         Self.sharedStorage.activeCertificates.removeAll { c in
             activeCertificates.activeKeyIds.contains(c.keyId)
         }
 
         return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+    }
+
+    func activeCertificatePublicKeys() -> [TrustListPublicKey] {
+        return Self.sharedStorage.activeCertificates.compactMap { t in
+            if t.alg == "RS256" {
+                return TrustListPublicKey(keyId: t.keyId, withRsaKey: t.subjectPublicKeyInfo)
+            } else if t.alg == "ES256" {
+                return TrustListPublicKey(keyId: t.keyId, withX: t.x, andY: t.y)
+            } else {
+                return nil
+            }
+        }
     }
 }
 

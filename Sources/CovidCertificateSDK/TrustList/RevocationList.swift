@@ -11,6 +11,6 @@
 
 import Foundation
 
-class RevocationList : Codable {
-    var revokedCerts: [String] = []
+public class RevocationList : Codable {
+    public var revokedCerts: [String] = []
 }

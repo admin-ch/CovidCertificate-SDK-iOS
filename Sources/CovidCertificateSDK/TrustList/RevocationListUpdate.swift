@@ -31,7 +31,7 @@ class RevocationListUpdate : TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        let _ = TrustStorage.shared.updateRevocationList(result)
+        let _ = self.trustStorage.updateRevocationList(result)
         return nil
     }
 }

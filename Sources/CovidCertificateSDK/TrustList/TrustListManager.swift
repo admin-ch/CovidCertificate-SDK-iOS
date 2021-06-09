@@ -11,19 +11,30 @@
 
 import Foundation
 
-class TrustlistManager {
-    // MARK: - Shared
+public protocol TrustlistManagerProtocol {
+    var revocationListUpdater: TrustListUpdate { get }
+    var trustCertificateUpdater: TrustListUpdate { get }
+    var trustStorage : TrustStorageProtocol { get }
+}
 
-    public static let shared = TrustlistManager()
+class TrustlistManager : TrustlistManagerProtocol {    
 
     // MARK: - Components
 
-    public let revocationListUpdater = RevocationListUpdate()
-    public let trustCertificateUpdater = TrustCertificatesUpdate()
+    var trustStorage : TrustStorageProtocol
+    var revocationListUpdater : TrustListUpdate
+    var trustCertificateUpdater : TrustListUpdate
+
+    // MARK: - Init
+    
+    init() {
+        self.trustStorage = TrustStorage()
+        self.revocationListUpdater = RevocationListUpdate(trustStorage: self.trustStorage)
+        self.trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: self.trustStorage)
+    }
 }
 
-
-class TrustListUpdate {
+public class TrustListUpdate {
     // MARK: - Operation queue handling
 
     private let operationQueue = OperationQueue()
@@ -33,10 +44,13 @@ class TrustListUpdate {
     internal var lastUpdate: Date?
     private var lastError : ValidationError? = nil
 
+    internal let trustStorage : TrustStorageProtocol
+
     // MARK: - Add Check Operation
 
-    init() {
+    init(trustStorage: TrustStorageProtocol) {
         // ensures that the update request is done before the other tasks
+        self.trustStorage = trustStorage
         self.operationQueue.maxConcurrentOperationCount = 1
     }
 
