@@ -66,6 +66,42 @@ final class CovidCertificateSDKTests: XCTestCase {
         XCTAssertTrue(result)
     }
 
+    func testVariousFloatAndSignedIntCBORDates() {
+        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6LDAI81POIF:0S1E2-I534LRHRXQQHIZC4.OI1RM8ZA*LP$V25$0$/AQ$3H-8R6TU:C//CW$5 -D1$4C5PE/H:Y0D$0M+8H:H00M-$4U/HYE9/MVKQC*LA 436IAXPMHQ1*P1TU12XE %POH6JK5 *JAYUQJATK25M9:OQPAU:IAJ0AGY0OWCR/C+T44%4GIP77TLXKQ/S1E5E6J90J7*KP/S57TT65:9TNIF 35:U47AL+T4 %23NJ.43CGJ8X2+36D-I/2DBAJDAJCNB-43 X4VV2 73-E3GG3V20-7TZD5CC9T0HQ+4CNNG.85$07LPMIH-O92UQKRQT02.MPDB9SH9C9QG3FSZN0/4P/5CA7G6ME1SDQ6CS4:ZJ83B-6THC1G%5TW5A 6YO67N659EWEWJ2T7+VCK19ASG+7G7WH0JSZARUA82WIAQ/+IY%NT2G5+GG 95MD5FN:3VJXRUN3U.LF:HKVTFZIP.4X7GHBBJ17IN6$MQV7SH.5941GPG"
+
+        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTAssertTrue(false)
+            return
+        }
+        verifier.checkSignature(cose: dgcHolder) { result in
+            switch result {
+            case .success:
+                XCTAssertTrue(false)
+            case let .failure(error):
+                // we should fail with CWT expired
+                XCTAssertTrue(error.errorCode == ValidationError.CWT_EXPIRED.errorCode)
+            }
+        }
+    }
+
+    func testInvalidDateInCBORCausesError() {
+        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6RLQI81POIF:0:3BAG1PZIQ+Q%SQXZI3VUD%N/+P.SS  QS+G3WOHVU978MRLQ+Q.OIVTQA+QWQ23E2F/8X*G3M9JUPY0BZW4:.AY73CIBVQFM83IMJTLJ8UJARN*FN4DJV53/G7-43Z23EG3%971IN/AJVC7SP499TVW5KK9+OC+G9QJPNF67J6QW67KQ9G66PP33M/TEJG3LKBXBJFF02JNEJOA+MY55V90*F7$17IK8D:6NY4R35OBA4DN/VM/H5J35 96$ 8BX7/JP9398C5Y47Z.4Z6NC1R4SO* PUHLO$GAHLW 70SO:GOLIROGO3T59YLLYP-HQLTQ9R0+L69/9-3AKI6-Q6R3RX76QW6.V99Q9E$BDZIE9JIRF71A4-9SCA6LFOSNENSUC75HF KP8EFXOTJ.K274M.SY$N/U6ZVA69E$JDVPLW1KD0KCZG-3NKWJ33W6BAO87CAF%OS-WKMY1SQPWPQBMT2IV2CVC16F9U2BQUM9:SV246:%UHII9K4HZB/.U-CW6%L$UJ68NS%D.GTPPQN2PRW8610FNS32"
+
+        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTAssertTrue(false)
+            return
+        }
+        verifier.checkSignature(cose: dgcHolder) { result in
+            switch result {
+            case let .success(r):
+                XCTAssertTrue(false)
+            case let .failure(error):
+                // we should fail with CWT expired
+                XCTAssertTrue(error.errorCode == ValidationError.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR).errorCode)
+            }
+        }
+    }
+
 //    func testEC() {
     ////        kid: 2Rk3X8HntrI=
 //        let key = TrustListPublicKey(keyId: "2Rk3X8HntrI=", withX: "rdVc9a0bltR6jm1BPTA3u0cyJNYKuF1uRk8h7h04+XA=", andY: "USfZGB7fv6Eg18JllyjOnBAp3Jqmis9Q/VMTtRaXQXc=")
