@@ -18,21 +18,25 @@ public typealias JWTExtension = Claims
 
 public enum CovidCertJWSError: Error, Equatable {
     case SIGNATURE_INVALID
+    case JWT_CLAIM_VALIDATION_FAILED
     case PARSING_ERROR
     case DECODING_ERROR
     case CERTIFICATE_CHAIN_ERROR
 }
 
 /// A JWT token verifier
-public class CovidCertJWSVerifier {
+public class JWSVerifier {
     private let rootCA: SecCertificate
 
     /// Initializes a verifier with a public key
     ///
     /// - Parameters:
     ///   - publicKey: The public key to verify the JWT signiture
-    public init(rootData: Data) {
-        rootCA = SecCertificateCreateWithData(nil, rootData as CFData)!
+    public init?(rootData: Data) {
+        guard let rootFromData = SecCertificateCreateWithData(nil, rootData as CFData) else{
+            return nil
+        }
+        rootCA = rootFromData
     }
     
 
@@ -77,13 +81,13 @@ public class CovidCertJWSVerifier {
             guard status == errSecSuccess else { throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR }
             let secTrust = optionalTrust!    // Safe to force unwrap now
 
-            
+            // Since we only want to trust OUR root CA we overwrite all default trust certificates with our rootCA
             let anchorStatus = SecTrustSetAnchorCertificates(secTrust, [rootCA] as CFArray)
             guard anchorStatus == errSecSuccess else {
                 throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
             }
             
-           
+            // Since we use each time a new trust object, this call should be safe
             let result = SecTrustEvaluateWithError(secTrust, nil)
             if result == false {
                 throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
@@ -91,13 +95,16 @@ public class CovidCertJWSVerifier {
             
             // from here we trust the public key
             
-            let jwtVerifier = JWTVerifier.rs256(certificate: certificates[0].data(using: .utf8)!)
+            guard let leafCertificate = certificates[0].data(using: .utf8) else {
+                throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
+            }
+            let jwtVerifier = JWTVerifier.rs256(certificate: leafCertificate)
             
             let jwt = try JWT<ClaimType>(jwtString: jwtString, verifier: jwtVerifier)
             
             let validationResult = jwt.validateClaims(leeway: 10)
             guard validationResult == .success else {
-                throw CovidCertJWSError.SIGNATURE_INVALID
+                throw CovidCertJWSError.JWT_CLAIM_VALIDATION_FAILED
             }
 
             return jwt.claims
