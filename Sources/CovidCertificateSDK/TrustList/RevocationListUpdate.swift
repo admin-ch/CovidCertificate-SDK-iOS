@@ -24,7 +24,7 @@ class RevocationListUpdate : TrustListUpdate {
         let (data, _, error) = session.synchronousDataTask(with: request)
 
         if error != nil {
-            return .NETWORK_ERROR
+            return error?.asValidationError()
         }
 
         guard let d = data, let result = try? JSONDecoder().decode(RevocationList.self, from: d) else {

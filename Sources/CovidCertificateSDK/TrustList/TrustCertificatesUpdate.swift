@@ -24,7 +24,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
         let (dataActive, _, errorActive) = session.synchronousDataTask(with: requestActive)
 
         if errorActive != nil {
-            return .NETWORK_ERROR
+            return errorActive?.asValidationError()
         }
 
         guard let d = dataActive, let result = try? JSONDecoder().decode(ActiveTrustCertificates.self, from: d) else {
@@ -41,7 +41,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
             let (data, response, error) = session.synchronousDataTask(with: request)
 
             if error != nil {
-                return .NETWORK_ERROR
+                return error?.asValidationError()
             }
 
             // get the x-next-since, save it as well and pass to the next request
