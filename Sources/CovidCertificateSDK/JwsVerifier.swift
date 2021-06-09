@@ -9,7 +9,6 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-
 import Foundation
 import SwiftJWT
 
@@ -33,12 +32,11 @@ public class JWSVerifier {
     /// - Parameters:
     ///   - publicKey: The public key to verify the JWT signiture
     public init?(rootData: Data) {
-        guard let rootFromData = SecCertificateCreateWithData(nil, rootData as CFData) else{
+        guard let rootFromData = SecCertificateCreateWithData(nil, rootData as CFData) else {
             return nil
         }
         rootCA = rootFromData
     }
-    
 
     /// Verify and return the claims from the JWT token
     ///
@@ -58,12 +56,12 @@ public class JWSVerifier {
         }
         do {
             let unsafeJWT = try JWT<InsecureJwt>(jwtString: jwtString)
-            var chain : [SecCertificate] = []
+            var chain: [SecCertificate] = []
             guard let certificates = unsafeJWT.header.x5c else {
                 completionHandler(.failure(JWSError.CERTIFICATE_CHAIN_ERROR))
                 return
             }
-            
+
             for cert in certificates {
                 guard let certData = Data(base64Encoded: cert),
                       let certKey = SecCertificateCreateWithData(nil, certData as CFData)
@@ -73,7 +71,7 @@ public class JWSVerifier {
                 }
                 chain.append(certKey)
             }
-            
+
             var optionalTrust: SecTrust?
             let status = SecTrustCreateWithCertificates(chain as AnyObject,
                                                         SecPolicyCreateBasicX509(),
@@ -82,7 +80,7 @@ public class JWSVerifier {
                 completionHandler(.failure(JWSError.CERTIFICATE_CHAIN_ERROR))
                 return
             }
-            let secTrust = optionalTrust!    // Safe to force unwrap now
+            let secTrust = optionalTrust! // Safe to force unwrap now
 
             // Since we only want to trust OUR root CA we overwrite all default trust certificates with our rootCA
             let anchorStatus = SecTrustSetAnchorCertificates(secTrust, [rootCA] as CFArray)
@@ -90,11 +88,11 @@ public class JWSVerifier {
                 completionHandler(.failure(JWSError.CERTIFICATE_CHAIN_ERROR))
                 return
             }
-            
+
             // Since we use each time a new trust object, this call should be safe
-            if #available(iOS 13.0,macOS 10.15, *) {
+            if #available(iOS 13.0, macOS 10.15, *) {
                 DispatchQueue.global().async {
-                    SecTrustEvaluateAsyncWithError(secTrust, DispatchQueue.global()) { trust, result, error in
+                    SecTrustEvaluateAsyncWithError(secTrust, DispatchQueue.global()) { _, result, _ in
                         if result {
                             self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
                         } else {
@@ -103,32 +101,25 @@ public class JWSVerifier {
                     }
                 }
             } else {
-                SecTrustEvaluateAsync(secTrust, DispatchQueue.global()) {trust, result in
+                SecTrustEvaluateAsync(secTrust, DispatchQueue.global()) { _, result in
                     if result == .proceed {
-                    self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
+                        self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
                     } else {
                         completionHandler(.failure(.SIGNATURE_INVALID))
                     }
                 }
             }
-        
-        }
-        catch JWTError.invalidJWTString {
+        } catch JWTError.invalidJWTString {
             completionHandler(.failure(JWSError.SIGNATURE_INVALID))
-            return
-        }
-        catch JWTError.failedVerification{
+        } catch JWTError.failedVerification {
             completionHandler(.failure(JWSError.PARSING_ERROR))
-            return
-        }
-        catch {
+        } catch {
             completionHandler(.failure(JWSError.DECODING_ERROR))
             return
         }
-        
     }
-    
-    private func verifySignature<ClaimType: JWTExtension>(jwtString: String, leafCertificateData: Data?, _ completionHandler: @escaping (_ claims: Result<ClaimType,JWSError> ) -> Void) {
+
+    private func verifySignature<ClaimType: JWTExtension>(jwtString: String, leafCertificateData: Data?, _ completionHandler: @escaping (_ claims: Result<ClaimType, JWSError>) -> Void) {
         guard let leafCertificate = leafCertificateData else {
             completionHandler(.failure(JWSError.CERTIFICATE_CHAIN_ERROR))
             return
@@ -136,7 +127,7 @@ public class JWSVerifier {
         let jwtVerifier = JWTVerifier.rs256(certificate: leafCertificate)
         do {
             let jwt = try JWT<ClaimType>(jwtString: jwtString, verifier: jwtVerifier)
-            
+
             let validationResult = jwt.validateClaims(leeway: 10)
             guard validationResult == .success else {
                 completionHandler(.failure(JWSError.JWT_CLAIM_VALIDATION_FAILED))
@@ -144,16 +135,11 @@ public class JWSVerifier {
             }
             completionHandler(.success(jwt.claims))
             return
-        }
-        catch JWTError.invalidJWTString {
+        } catch JWTError.invalidJWTString {
             completionHandler(.failure(JWSError.SIGNATURE_INVALID))
-            return
-        }
-        catch JWTError.failedVerification{
+        } catch JWTError.failedVerification {
             completionHandler(.failure(JWSError.PARSING_ERROR))
-            return
-        }
-        catch {
+        } catch {
             completionHandler(.failure(JWSError.DECODING_ERROR))
             return
         }
