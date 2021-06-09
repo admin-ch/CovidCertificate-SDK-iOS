@@ -31,7 +31,7 @@ class TestTrustlistManager : TrustlistManagerProtocol {
 class TestTrustListUpdate : TrustListUpdate {
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> ValidationError? {
+    internal override func synchronousUpdate() -> NetworkError? {
         // update active certificates service
         sleep(1)
         return nil
@@ -84,10 +84,23 @@ class TestTrustStorage : TrustStorageProtocol {
     func certificateListIsValid() -> Bool {
         return true
     }
+
+    // MARK: - National rules
+
+    func nationalRulesListIsStillValid() -> Bool {
+        return true
+    }
+
+    func updateNationalRules(_ update: NationalRulesList) -> Bool {
+        return true
+    }
+
+    func nationalRules() -> NationalRulesList {
+        return NationalRulesList()
+    }
 }
 
 class StaticTestTrustList {
-
     // MARK: - RSA
 
     private let DEV_RSA_ASN1_DER = "MIIBCgKCAQEA4uZO4/7tneZ3XD5OAiTyoANOohQZC+DzZ4YC0AoLnEO+Z3PcTialCuRKS1zHfujNPI0GGG09DRVVXdv+tcKNXFDt/nRU1zlWDGFf4/63l5RIjkWFD3JFKqR8IlcJjrYYxstuZs3May3SGQJ+kZaeH5GFZMRvE0waHqMxbfwakvjf8qyBXCrZ1WsK+XJf7iYbJS2dO1a5HnegxPuRA7Zz8ikO7QRzmSongqOlkejEaIkFjx7gLGTUsOrBPYa5sdZqinDwmnjtKi52HLWarMXs+t1MN4etIp7GE7/zarjBNxk1Efiiwl+RdcwJ2uVwfrgzxfv3/TekZF8IUykV2Geu3QIDAQAB"

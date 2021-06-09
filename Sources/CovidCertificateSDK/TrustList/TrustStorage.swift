@@ -21,6 +21,10 @@ public protocol TrustStorageProtocol {
     func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool
     func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool
     func certificateListIsValid() -> Bool
+
+    func nationalRulesListIsStillValid() -> Bool
+    func updateNationalRules(_ update: NationalRulesList) -> Bool
+    func nationalRules() -> NationalRulesList
 }
 
 class TrustStorage : TrustStorageProtocol, Codable {
@@ -57,10 +61,7 @@ class TrustStorage : TrustStorageProtocol, Codable {
     }
 
     func revocationListIsValid() -> Bool {
-        let stillValidUntil = Self.sharedStorage.lastRevocationListDownload + Self.sharedStorage.revocationList.validDuration
-        let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
-
-        return Date().isBefore(validUntilDate)
+        return isStillValid(lastDownloadTimeStamp: Self.sharedStorage.lastRevocationListDownload, validDuration: Self.sharedStorage.revocationList.validDuration)
     }
 
     // MARK: - Certificate List
@@ -100,7 +101,29 @@ class TrustStorage : TrustStorageProtocol, Codable {
     }
 
     func certificateListIsValid() -> Bool {
-        let stillValidUntil = Self.sharedStorage.lastCertificateListDownload + Self.sharedStorage.certificateValidDuration
+        return isStillValid(lastDownloadTimeStamp: Self.sharedStorage.lastCertificateListDownload, validDuration: Self.sharedStorage.certificateValidDuration)
+    }
+
+    // MARK: - National rules
+
+    func nationalRulesListIsStillValid() -> Bool {
+        return isStillValid(lastDownloadTimeStamp: Self.sharedStorage.lastNationalRulesListDownload, validDuration: Self.sharedStorage.nationalRulesList.validDuration)
+    }
+
+    func updateNationalRules(_ update: NationalRulesList) -> Bool {
+        Self.sharedStorage.nationalRulesList = update
+        Self.sharedStorage.lastNationalRulesListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+        return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+    }
+
+    func nationalRules() -> NationalRulesList {
+        return Self.sharedStorage.nationalRulesList
+    }
+
+    // MARK: - Validity
+
+    private func isStillValid(lastDownloadTimeStamp: Int64, validDuration: Int64) -> Bool {
+        let stillValidUntil = lastDownloadTimeStamp + validDuration
         let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
 
         return Date().isBefore(validUntilDate)
@@ -115,4 +138,7 @@ class Storage : Codable {
     public var certificateSince : Int64 = 0
     public var certificateValidDuration : Int64 = 0
     public var lastCertificateListDownload : Int64 = 0
+
+    public var nationalRulesList = NationalRulesList()
+    public var lastNationalRulesListDownload : Int64 = 0
 }

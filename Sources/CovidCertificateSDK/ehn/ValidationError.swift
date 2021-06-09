@@ -86,17 +86,3 @@ public enum ValidationError: Error, Equatable {
         }
     }
 }
-
-extension Error {
-    func asValidationError() -> ValidationError {
-        guard let e = self as? URLError else {
-            return .NETWORK_ERROR(errorCode: "")
-        }
-
-        switch e.errorCode {
-            case -1009: return .NETWORK_NO_INTERNET_CONNECTION
-            default:
-                return .NETWORK_ERROR(errorCode: "\(e.errorCode)")
-        }
-    }
-}

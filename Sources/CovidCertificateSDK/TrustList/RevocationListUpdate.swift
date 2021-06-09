@@ -18,13 +18,13 @@ class RevocationListUpdate : TrustListUpdate {
 
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> ValidationError? {
+    internal override func synchronousUpdate() -> NetworkError? {
         // download data and update local storage
         let request = CovidCertificateSDK.currentEnvironment.revocationListService.request()
         let (data, _, error) = session.synchronousDataTask(with: request)
 
         if error != nil {
-            return error?.asValidationError()
+            return error?.asNetworkError()
         }
 
         guard let d = data, let result = try? JSONDecoder().decode(RevocationList.self, from: d) else {

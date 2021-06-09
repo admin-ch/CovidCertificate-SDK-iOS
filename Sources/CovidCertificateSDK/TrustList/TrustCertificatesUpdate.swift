@@ -18,13 +18,13 @@ class TrustCertificatesUpdate : TrustListUpdate {
 
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> ValidationError? {
+    internal override func synchronousUpdate() -> NetworkError? {
         // update active certificates service
         let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request()
         let (dataActive, _, errorActive) = session.synchronousDataTask(with: requestActive)
 
         if errorActive != nil {
-            return errorActive?.asValidationError()
+            return errorActive?.asNetworkError()
         }
 
         guard let d = dataActive, let result = try? JSONDecoder().decode(ActiveTrustCertificates.self, from: d) else {
@@ -41,7 +41,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
             let (data, response, error) = session.synchronousDataTask(with: request)
 
             if error != nil {
-                return error?.asValidationError()
+                return error?.asNetworkError()
             }
 
             // get the x-next-since, save it as well and pass to the next request

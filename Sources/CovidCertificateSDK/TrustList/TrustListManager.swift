@@ -14,6 +14,8 @@ import Foundation
 public protocol TrustlistManagerProtocol {
     var revocationListUpdater: TrustListUpdate { get }
     var trustCertificateUpdater: TrustListUpdate { get }
+    var nationalRulesListUpdater: TrustListUpdate { get }
+
     var trustStorage : TrustStorageProtocol { get }
 }
 
@@ -24,11 +26,13 @@ class TrustlistManager : TrustlistManagerProtocol {
     var trustStorage : TrustStorageProtocol
     var revocationListUpdater : TrustListUpdate
     var trustCertificateUpdater : TrustListUpdate
+    var nationalRulesListUpdater : TrustListUpdate
 
     // MARK: - Init
     
     init() {
         self.trustStorage = TrustStorage()
+        self.nationalRulesListUpdater = NationalRulesListUpdate(trustStorage: self.trustStorage)
         self.revocationListUpdater = RevocationListUpdate(trustStorage: self.trustStorage)
         self.trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: self.trustStorage)
     }
@@ -42,7 +46,7 @@ public class TrustListUpdate {
     private var updateOperation : Operation? = nil
 
     internal var lastUpdate: Date?
-    private var lastError : ValidationError? = nil
+    private var lastError : NetworkError? = nil
 
     internal let trustStorage : TrustStorageProtocol
 
@@ -54,7 +58,7 @@ public class TrustListUpdate {
         self.operationQueue.maxConcurrentOperationCount = 1
     }
 
-    public func addCheckOperation(checkOperation: @escaping ((ValidationError?) -> ())) {
+    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> ())) {
         let updateNeeeded = !self.isListStillValid()
         let updateAlreadyRunnning = self.updateOperation != nil
 
@@ -75,7 +79,7 @@ public class TrustListUpdate {
 
     // MARK: - Update
 
-    internal func synchronousUpdate() -> ValidationError? {
+    internal func synchronousUpdate() -> NetworkError? {
         // download data and update local storage
         return nil
     }
