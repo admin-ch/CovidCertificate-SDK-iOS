@@ -52,7 +52,7 @@ public class JWSVerifier {
     /// - Throws: `CovidCertJWSError` in case of validation failures
     /// - Returns: The verified claims
     @discardableResult
-    public func verifyAndDecode<ClaimType: JWTExtension>(claimType: ClaimType.Type, httpBody: Data, claimsLeeway _: TimeInterval = 10) throws -> ClaimType {
+    public func verifyAndDecode<ClaimType: JWTExtension>(httpBody: Data, claimsLeeway _: TimeInterval = 10) throws -> ClaimType {
         guard let jwtString = String(data: httpBody, encoding: .utf8) else {
             throw CovidCertJWSError.DECODING_ERROR
         }
@@ -89,7 +89,8 @@ public class JWSVerifier {
             
             // Since we use each time a new trust object, this call should be safe
             let result = SecTrustEvaluateWithError(secTrust, nil)
-            if result == false {
+            // if result is false the certificate chain could not be validated
+            if !result {
                 throw CovidCertJWSError.CERTIFICATE_CHAIN_ERROR
             }
             
