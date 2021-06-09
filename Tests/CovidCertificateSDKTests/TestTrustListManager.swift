@@ -46,6 +46,8 @@ class TestTrustStorage : TrustStorageProtocol {
         self.publicKeys = publicKeys
     }
 
+    // MARK: - Revocation list
+
     func revokedCertificates() -> [String] {
         return []
     }
@@ -55,17 +57,31 @@ class TestTrustStorage : TrustStorageProtocol {
         return true
     }
 
+    func revocationListIsValid() -> Bool {
+        return true
+    }
+
+    // MARK: - Active Certificates
+
     func activeCertificatePublicKeys() -> [TrustListPublicKey] {
         return self.publicKeys
     }
 
-    func updateCertificateList(_ update: TrustCertificates) -> Bool {
+    func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool {
         // do nothing
         return true
     }
 
     func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool {
         // do nothing
+        return true
+    }
+
+    func certificateSince() -> Int64 {
+        return 0
+    }
+
+    func certificateListIsValid() -> Bool {
         return true
     }
 }
