@@ -1,0 +1,21 @@
+name: Codequality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  codequality:
+    name: Codequality
+    runs-on: macOS-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Switch to Xcode 12.4
+      run: sudo xcode-select --switch /Applications/Xcode_12.4.app
+
+    - name: swiftformat
+      run: swiftformat Sources,Tests --lint
+
