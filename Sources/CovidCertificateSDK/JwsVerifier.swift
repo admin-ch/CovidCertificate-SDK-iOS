@@ -99,7 +99,6 @@ public class JWSVerifier {
                             self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
                         } else {
                             completionHandler(.failure(.SIGNATURE_INVALID))
-                            return
                         }
                     }
                 }
@@ -109,7 +108,6 @@ public class JWSVerifier {
                     self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
                     } else {
                         completionHandler(.failure(.SIGNATURE_INVALID))
-                        return
                     }
                 }
             }
