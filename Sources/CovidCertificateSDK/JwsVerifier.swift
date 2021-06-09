@@ -92,7 +92,7 @@ public class JWSVerifier {
             }
             
             // Since we use each time a new trust object, this call should be safe
-            if #available(iOS 13.0, *) {
+            if #available(iOS 13.0,macOS 10.15, *) {
                 DispatchQueue.global().async {
                     SecTrustEvaluateAsyncWithError(secTrust, DispatchQueue.global()) { trust, result, error in
                         if result {
