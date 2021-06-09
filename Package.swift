@@ -19,6 +19,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(name: "Gzip", url: "https://github.com/1024jp/GzipSwift", .upToNextMajor(from: "5.1.1")),
+        .package(name: "SwiftJWT", url: "https://github.com/Kitura/Swift-JWT.git", from: "3.6.1"),
         .package(url: "https://github.com/eu-digital-green-certificates/SwiftCBOR", .branch("master")),
         .package(url: "https://github.com/ehn-digital-green-development/base45-swift", .branch("main")),
     ],
@@ -27,7 +28,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "CovidCertificateSDK",
-            dependencies: ["Gzip", "SwiftCBOR", "base45-swift"],
+            dependencies: ["Gzip", "SwiftCBOR", "base45-swift", "SwiftJWT"],
             exclude: ["ehn/LICENSE.txt"],
             resources: [
                 .process("Resources"),
