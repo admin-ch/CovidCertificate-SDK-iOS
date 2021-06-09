@@ -66,6 +66,31 @@ final class CovidCertificateSDKTests: XCTestCase {
         XCTAssertTrue(result)
     }
 
+    // cbor has no exp and no iat and was calculated from rust
+    func testCustomCBOR() {
+        let hcert = "HC1:6BFMY3ZX73PO%203CCBR4OF7NI2*RLLTIKQDKYMW03%MG:GKCDKP-38E9/:N2QIL44RC5WA9+-0*Q3Q56CE0WC6W77K66U$QO37HMG.MO+FLAHV9LP9GK0JL2I989BBCL$G4.R3ITA6URNWLWMLW7H+SSOI8YF5MIP8 6VWK*96PYJ:D3:T0-Y5DLITLUM5K $25QHGJEQ85B54W7B8JCM40-D2R+8T1O2SI2DPYRJO9C5Q1693$58EFQ/%IH*O7JGS+GAV2PYFGYHXC707CGU8/4S5ART-45GHCCRI-9%MH 0BB%4U7VUONPWPBAG4-SDC6T3D 50E+CU+GCTIL64HEHAGUBJD9A3:72S471JOJQBMLPWDI910RH0IUG53SUFBK7RRJH9IC%NRC:AT15OC4%CM19DQZ33APNY9/P9DBWNCC5M6E9I6-0N6M-VR$7P+DQEXOUKMAW8I4VX19VLV6S3JZBJ7P:*I 392*TPPAQ1GGQV61Q:8R1OLE14W6PZLOQFERKJJ9NCMD55DVVF"
+
+        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc=", andY: "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM=")
+        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        let testTrustList = TestTrustList(publicKeys: keys)
+
+        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
+        customVerifier.checkSignature(cose: dgcHolder) { result in
+            switch result {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            case let .failure(error):
+
+                XCTAssertTrue(false)
+            }
+        }
+    }
+
     func testVariousFloatAndSignedIntCBORDates() {
         let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6LDAI81POIF:0S1E2-I534LRHRXQQHIZC4.OI1RM8ZA*LP$V25$0$/AQ$3H-8R6TU:C//CW$5 -D1$4C5PE/H:Y0D$0M+8H:H00M-$4U/HYE9/MVKQC*LA 436IAXPMHQ1*P1TU12XE %POH6JK5 *JAYUQJATK25M9:OQPAU:IAJ0AGY0OWCR/C+T44%4GIP77TLXKQ/S1E5E6J90J7*KP/S57TT65:9TNIF 35:U47AL+T4 %23NJ.43CGJ8X2+36D-I/2DBAJDAJCNB-43 X4VV2 73-E3GG3V20-7TZD5CC9T0HQ+4CNNG.85$07LPMIH-O92UQKRQT02.MPDB9SH9C9QG3FSZN0/4P/5CA7G6ME1SDQ6CS4:ZJ83B-6THC1G%5TW5A 6YO67N659EWEWJ2T7+VCK19ASG+7G7WH0JSZARUA82WIAQ/+IY%NT2G5+GG 95MD5FN:3VJXRUN3U.LF:HKVTFZIP.4X7GHBBJ17IN6$MQV7SH.5941GPG"
 
