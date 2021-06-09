@@ -35,8 +35,6 @@ class TrustCertificatesUpdate : TrustListUpdate {
         let _ = self.trustStorage.updateActiveCertificates(result)
 
         // update trust certificates service
-
-        // TODO: retry until all data is here (check header)
         var listNeedsUpdate = true
 
         while(listNeedsUpdate) {
@@ -47,9 +45,10 @@ class TrustCertificatesUpdate : TrustListUpdate {
                 return .NETWORK_ERROR
             }
 
+            // get the x-next-since, save it as well and pass to the next request
             var nextSinceHeader : Int64 = 0
-            if let r = response as? HTTPURLResponse,
-               let nextHeader = r.allHeaderFields["X-Next-Since"] as? Int64 {
+            if let s = (response as? HTTPURLResponse)?.allHeaderFields["x-next-since"] as? String,
+               let nextHeader = Int64(s) {
                 nextSinceHeader = nextHeader
             }
 
@@ -59,6 +58,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
 
             let _ = self.trustStorage.updateCertificateList(result, since: nextSinceHeader)
 
+            // start another request, as long as certificates are coming in
             listNeedsUpdate = result.certs.count > 0
         }
 

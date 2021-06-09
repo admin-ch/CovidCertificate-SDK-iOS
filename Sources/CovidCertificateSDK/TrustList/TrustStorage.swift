@@ -36,6 +36,10 @@ class TrustStorage : TrustStorageProtocol, Codable {
         }
     }
 
+    init() {
+        self.initialize()
+    }
+
     // MARK: - Revocation List
 
     public func revokedCertificates() -> [String] {
