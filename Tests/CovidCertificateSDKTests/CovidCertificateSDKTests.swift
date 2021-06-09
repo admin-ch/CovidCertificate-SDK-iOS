@@ -65,20 +65,20 @@ final class CovidCertificateSDKTests: XCTestCase {
         error?.release()
         XCTAssertTrue(result)
     }
-    
+
 //    func testEC() {
-////        kid: 2Rk3X8HntrI=
+    ////        kid: 2Rk3X8HntrI=
 //        let key = TrustListPublicKey(keyId: "2Rk3X8HntrI=", withX: "rdVc9a0bltR6jm1BPTA3u0cyJNYKuF1uRk8h7h04+XA=", andY: "USfZGB7fv6Eg18JllyjOnBAp3Jqmis9Q/VMTtRaXQXc=")
 //        let keys : [TrustListPublicKey] = [key].compactMap { $0 }
 //        let testTrustList =  TestTrustList(publicKeys: keys)
-//       
+//
 //        let hcert = "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH-R6IOOP-IZXPQFG4G54$VO%0AT4V22F/8X*G3M9JUPY0BX/KR96R/S09T./0LWTKD33236J3TA3M*4VV2 73-E3GG396B-43O058YIB73A*G3W19UEBY5:PI0EGSP4*2DN43U*0CEBQ/GXQFY73CIBC:G 7376BXBJBAJ UNFMJCRN0H3PQN*E33H3OA70M3FMJIJN523.K5QZ4A+2XEN QT QTHC31M3+E32R44$28A9H0D3ZCL4JMYAZ+S-A5$XKX6T2YC 35H/ITX8GL2-LH/CJTK96L6SR9MU9RFGJA6Q3QR$P2OIC0JVLA8J3ET3:H3A+2+33U SAAUOT3TPTO4UBZIC0JKQTL*QDKBO.AI9BVYTOCFOPS4IJCOT0$89NT2V457U8+9W2KQ-7LF9-DF07U$B97JJ1D7WKP/HLIJLRKF1MFHJP7NVDEBU1J*Z222E.GJ:575JH2E90$6.Q9MEI**SQVFGHPMVLSRB5-FQC3$SDTTHWLUP/JI5N%7UT*T88VNVACATXYPO-Q1L1MWN95TV0R 3T.Y1YNPS/8SNV-10HF2D3"
-//        
+//
 //        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
 //            XCTAssertTrue(false)
 //            return
 //        }
-//        
+//
 //        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
 //        customVerifier.checkSignature(cose: dgcHolder) { result in
 //            if case let .success(r) = result {
