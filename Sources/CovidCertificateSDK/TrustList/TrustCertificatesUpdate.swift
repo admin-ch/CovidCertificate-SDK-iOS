@@ -37,18 +37,30 @@ class TrustCertificatesUpdate : TrustListUpdate {
         // update trust certificates service
 
         // TODO: retry until all data is here (check header)
-        let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService.request()
-        let (data, _, error) = session.synchronousDataTask(with: request)
+        var listNeedsUpdate = true
 
-        if error != nil {
-            return .NETWORK_ERROR
+        while(listNeedsUpdate) {
+            let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: self.trustStorage.certificateSince()).request()
+            let (data, response, error) = session.synchronousDataTask(with: request)
+
+            if error != nil {
+                return .NETWORK_ERROR
+            }
+
+            var nextSinceHeader : Int64 = 0
+            if let r = response as? HTTPURLResponse,
+               let nextHeader = r.allHeaderFields["X-Next-Since"] as? Int64 {
+                nextSinceHeader = nextHeader
+            }
+
+            guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {
+                return .NETWORK_PARSE_ERROR
+            }
+
+            let _ = self.trustStorage.updateCertificateList(result, since: nextSinceHeader)
+
+            listNeedsUpdate = result.certs.count > 0
         }
-
-        guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {
-            return .NETWORK_PARSE_ERROR
-        }
-
-        let _ = self.trustStorage.updateCertificateList(result)
 
         return nil
     }

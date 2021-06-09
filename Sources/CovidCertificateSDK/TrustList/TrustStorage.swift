@@ -16,7 +16,8 @@ public protocol TrustStorageProtocol {
     func updateRevocationList(_ list: RevocationList) -> Bool
 
     func activeCertificatePublicKeys() -> [TrustListPublicKey]
-    func updateCertificateList(_ update: TrustCertificates) -> Bool
+    func certificateSince() -> Int64
+    func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool
     func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool
 }
 
@@ -48,8 +49,9 @@ class TrustStorage : TrustStorageProtocol, Codable {
 
     // MARK: - Certificate List
 
-    func updateCertificateList(_ update: TrustCertificates) -> Bool {
+    func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool {
         // add all certificates from update
+        Self.sharedStorage.certificateSince = since
         Self.sharedStorage.activeCertificates.append(contentsOf: update.certs)
         return Self.secureStorage.saveSynchronously(Self.sharedStorage)
     }
@@ -74,9 +76,15 @@ class TrustStorage : TrustStorageProtocol, Codable {
             }
         }
     }
+
+    func certificateSince() -> Int64 {
+        return Self.sharedStorage.certificateSince
+    }
 }
 
 class Storage : Codable {
     public var revocationList = RevocationList()
+
     public var activeCertificates : [TrustCertificate] = []
+    public var certificateSince : Int64 = 0
 }
