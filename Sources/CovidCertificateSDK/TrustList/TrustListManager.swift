@@ -56,9 +56,9 @@ class TrustlistManager: TrustlistManagerProtocol {
         for updater in [revocationListUpdater, trustCertificateUpdater] {
             group.enter()
 
-            updater.addCheckOperation(checkOperation: { _ in
+            updater.forceUpdate {
                 group.leave()
-            }, forceUpdate: true)
+            }
         }
 
         group.notify(queue: .main) {
@@ -71,10 +71,11 @@ public class TrustListUpdate {
     // MARK: - Operation queue handling
 
     private let operationQueue = OperationQueue()
+    private let forceUpdateQueue = OperationQueue()
 
     private var updateOperation: Operation?
+    private var forceUpdateOperation: Operation?
 
-    internal var lastUpdate: Date?
     private var lastError: NetworkError?
 
     internal let trustStorage: TrustStorageProtocol
@@ -87,8 +88,26 @@ public class TrustListUpdate {
         operationQueue.maxConcurrentOperationCount = 1
     }
 
-    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> Void), forceUpdate: Bool = false) {
-        let updateNeeeded = !isListStillValid() || forceUpdate
+    public func forceUpdate(completion: @escaping (() -> Void)) {
+        let updateAlreadyRunnning = forceUpdateOperation != nil
+
+        if !updateAlreadyRunnning {
+            forceUpdateOperation = BlockOperation(block: { [weak self] in
+                guard let strongSelf = self else { return }
+                strongSelf.startForceUpdate()
+            })
+
+            // !: initialized just above
+            forceUpdateQueue.addOperation(updateOperation!)
+        }
+
+        forceUpdateQueue.addOperation {
+            completion()
+        }
+    }
+
+    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> Void)) {
+        let updateNeeeded = !isListStillValid()
         let updateAlreadyRunnning = updateOperation != nil
 
         if updateNeeeded, !updateAlreadyRunnning {
@@ -120,12 +139,10 @@ public class TrustListUpdate {
     private func startUpdate() {
         lastError = synchronousUpdate()
 
-        if lastError == nil {
-            lastUpdate = Date()
-        }
-
         updateOperation = nil
     }
 
-    private func forceUpdate() {}
+    private func startForceUpdate() {
+        _ = synchronousUpdate()
+    }
 }
