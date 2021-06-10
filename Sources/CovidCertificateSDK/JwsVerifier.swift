@@ -21,21 +21,24 @@ public enum JWSError: Error, Equatable {
     case PARSING_ERROR
     case DECODING_ERROR
     case CERTIFICATE_CHAIN_ERROR
+    case COMMON_NAME_MISMATCH
 }
 
 /// A JWT token verifier
 public class JWSVerifier {
     private let rootCA: SecCertificate
+    private let leafCommonName : String?
 
     /// Initializes a verifier with a public key
     ///
     /// - Parameters:
     ///   - publicKey: The public key to verify the JWT signiture
-    public init?(rootData: Data) {
+    public init?(rootData: Data, leafCertMustMatch leafCN: String? = nil ) {
         guard let rootFromData = SecCertificateCreateWithData(nil, rootData as CFData) else {
             return nil
         }
         rootCA = rootFromData
+        leafCommonName = leafCN
     }
 
     /// Verify and return the claims from the JWT token
@@ -73,6 +76,7 @@ public class JWSVerifier {
             }
 
             var optionalTrust: SecTrust?
+            
             let status = SecTrustCreateWithCertificates(chain as AnyObject,
                                                         SecPolicyCreateBasicX509(),
                                                         &optionalTrust)
@@ -93,20 +97,33 @@ public class JWSVerifier {
             if #available(iOS 13.0, macOS 10.15, *) {
                 DispatchQueue.global().async {
                     SecTrustEvaluateAsyncWithError(secTrust, DispatchQueue.global()) { _, result, _ in
-                        if result {
-                            self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
-                        } else {
+                        if !result {
                             completionHandler(.failure(.SIGNATURE_INVALID))
+                            return
                         }
+                        if self.leafCommonName != nil,
+                           !self.isLeafCertificateValid(leafCertificate: chain[0]) {
+                            completionHandler(.failure(.COMMON_NAME_MISMATCH))
+                            return
+                        }
+                        
+                        self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
                     }
                 }
             } else {
                 SecTrustEvaluateAsync(secTrust, DispatchQueue.global()) { _, result in
-                    if result == .proceed {
-                        self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
-                    } else {
+                    if result != .proceed {
                         completionHandler(.failure(.SIGNATURE_INVALID))
+                        return
                     }
+                    
+                    if self.leafCommonName != nil,
+                       !self.isLeafCertificateValid(leafCertificate: chain[0]) {
+                        completionHandler(.failure(.COMMON_NAME_MISMATCH))
+                        return
+                    }
+                    
+                    self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
                 }
             }
         } catch JWTError.invalidJWTString {
@@ -117,6 +134,19 @@ public class JWSVerifier {
             completionHandler(.failure(JWSError.DECODING_ERROR))
             return
         }
+    }
+    
+    private func isLeafCertificateValid(leafCertificate: SecCertificate) -> Bool {
+        var commonName: CFString?
+        let result = SecCertificateCopyCommonName(leafCertificate, &commonName)
+        if result != errSecSuccess {
+            return false
+        }
+        guard let cfName = commonName
+        else {
+            return false
+        }
+        return (cfName as String) == leafCommonName
     }
 
     private func verifySignature<ClaimType: JWTExtension>(jwtString: String, leafCertificateData: Data?, _ completionHandler: @escaping (_ claims: Result<ClaimType, JWSError>) -> Void) {
