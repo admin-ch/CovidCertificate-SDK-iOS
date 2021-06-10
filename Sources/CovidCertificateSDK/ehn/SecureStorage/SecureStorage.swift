@@ -1,5 +1,5 @@
 //
-/*-
+/* -
  * ---license-start
  * eu-digital-green-certificates / dgca-app-core-ios
  * ---
@@ -18,73 +18,73 @@
  * limitations under the License.
  * ---license-end
  */
-//  
+//
 //  SecureStorage.swift
 //
-//  
+//
 //  Created by Yannick Spreen on 4/25/21.
-//  
+//
 
 import Foundation
 
 struct SecureDB: Codable {
-  let data: Data
-  let signature: Data
+    let data: Data
+    let signature: Data
 }
 
 public struct SecureStorage<T: Codable> {
-  let documents: URL! = try? FileManager.default.url(
-    for: .documentDirectory,
-    in: .userDomainMask,
-    appropriateFor: nil,
-    create: true
-  )
-  var path: URL! { URL(string: documents.absoluteString + "secure.db") }
-  let secureStorageKey = Enclave.loadOrGenerateKey(with: "secureStorageKey")
+    let documents: URL! = try? FileManager.default.url(
+        for: .documentDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+    )
+    var path: URL! { URL(string: documents.absoluteString + "secure.db") }
+    let secureStorageKey = Enclave.loadOrGenerateKey(with: "secureStorageKey")
 
-  public init() {}
+    public init() {}
 
-  /**
-   Loads encrypted db and overrides it with an empty one if that fails.
-   */
-  public func loadOverride(fallback: T, completion: ((T?) -> Void)? = nil) {
-    load { result in
-      if result != nil {
-        completion?(result)
-        return
-      }
-      save(fallback) { _ in
-        load(completion: completion)
-      }
-    }
-  }
-
-  public func load(completion: ((T?) -> Void)? = nil) {
-    if !FileManager.default.fileExists(atPath: path.path) {
-      completion?(nil)
-      return
+    /**
+     Loads encrypted db and overrides it with an empty one if that fails.
+     */
+    public func loadOverride(fallback: T, completion: ((T?) -> Void)? = nil) {
+        load { result in
+            if result != nil {
+                completion?(result)
+                return
+            }
+            save(fallback) { _ in
+                load(completion: completion)
+            }
+        }
     }
 
-    guard
-      let (data, signature) = read(),
-      let key = secureStorageKey,
-      Enclave.verify(data: data, signature: signature, with: key).0
-    else {
-      completion?(nil)
-      return
+    public func load(completion: ((T?) -> Void)? = nil) {
+        if !FileManager.default.fileExists(atPath: path.path) {
+            completion?(nil)
+            return
+        }
+
+        guard
+            let (data, signature) = read(),
+            let key = secureStorageKey,
+            Enclave.verify(data: data, signature: signature, with: key).0
+        else {
+            completion?(nil)
+            return
+        }
+        Enclave.decrypt(data: data, with: key) { decrypted, err in
+            guard
+                let decrypted = decrypted,
+                err == nil,
+                let data = try? JSONDecoder().decode(T.self, from: decrypted)
+            else {
+                completion?(nil)
+                return
+            }
+            completion?(data)
+        }
     }
-    Enclave.decrypt(data: data, with: key) { decrypted, err in
-      guard
-        let decrypted = decrypted,
-        err == nil,
-        let data = try? JSONDecoder().decode(T.self, from: decrypted)
-      else {
-        completion?(nil)
-        return
-      }
-      completion?(data)
-    }
-  }
 
     public func saveSynchronously(_ instance: T) -> Bool {
         let semaphore = DispatchSemaphore(value: 0)
@@ -98,45 +98,45 @@ public struct SecureStorage<T: Codable> {
         return outcome
     }
 
-  public func save(_ instance: T, completion: ((Bool) -> Void)? = nil) {
-    guard
-      let data = try? JSONEncoder().encode(instance),
-      let key = secureStorageKey,
-      let encrypted = Enclave.encrypt(data: data, with: key).0
-    else {
-      completion?(false)
-      return
+    public func save(_ instance: T, completion: ((Bool) -> Void)? = nil) {
+        guard
+            let data = try? JSONEncoder().encode(instance),
+            let key = secureStorageKey,
+            let encrypted = Enclave.encrypt(data: data, with: key).0
+        else {
+            completion?(false)
+            return
+        }
+        Enclave.sign(data: encrypted, with: key) { signature, err in
+            guard
+                let signature = signature,
+                err == nil
+            else {
+                completion?(false)
+                return
+            }
+            let success = write(data: encrypted, signature: signature)
+            completion?(success)
+        }
     }
-    Enclave.sign(data: encrypted, with: key) { signature, err in
-      guard
-        let signature = signature,
-        err == nil
-      else {
-        completion?(false)
-        return
-      }
-      let success = write(data: encrypted, signature: signature)
-      completion?(success)
-    }
-  }
 
-  func write(data: Data, signature: Data) -> Bool {
-    guard
-      let rawData = try? JSONEncoder().encode(SecureDB(data: data, signature: signature)),
-      (try? rawData.write(to: path)) != nil
-    else {
-      return false
+    func write(data: Data, signature: Data) -> Bool {
+        guard
+            let rawData = try? JSONEncoder().encode(SecureDB(data: data, signature: signature)),
+            (try? rawData.write(to: path)) != nil
+        else {
+            return false
+        }
+        return true
     }
-    return true
-  }
 
-  func read() -> (Data, Data)? {
-    guard
-      let rawData = try? Data(contentsOf: path, options: [.uncached]),
-      let result = try? JSONDecoder().decode(SecureDB.self, from: rawData)
-    else {
-      return nil
+    func read() -> (Data, Data)? {
+        guard
+            let rawData = try? Data(contentsOf: path, options: [.uncached]),
+            let result = try? JSONDecoder().decode(SecureDB.self, from: rawData)
+        else {
+            return nil
+        }
+        return (result.data, result.signature)
     }
-    return (result.data, result.signature)
-  }
 }

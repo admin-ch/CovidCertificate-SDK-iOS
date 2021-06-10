@@ -1,9 +1,13 @@
 //
-//  File.swift
-//  
-//
-//  Created by Marco Zimmermann on 09.06.21.
-//
+/*
+ * Copyright (c) 2021 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
 import Foundation
 
@@ -36,9 +40,9 @@ extension Error {
         }
 
         switch e.errorCode {
-            case -1009: return .NETWORK_NO_INTERNET_CONNECTION
-            default:
-                return .NETWORK_ERROR(errorCode: "\(e.errorCode)")
+        case -1009: return .NETWORK_NO_INTERNET_CONNECTION
+        default:
+            return .NETWORK_ERROR(errorCode: "\(e.errorCode)")
         }
     }
 }
@@ -46,12 +50,12 @@ extension Error {
 extension NetworkError {
     func asValidationError() -> ValidationError {
         switch self {
-            case .NETWORK_ERROR(errorCode: let errorCode):
-                return .NETWORK_ERROR(errorCode: errorCode)
-            case .NETWORK_PARSE_ERROR:
-                return .NETWORK_PARSE_ERROR
-            case .NETWORK_NO_INTERNET_CONNECTION:
-                return .NETWORK_NO_INTERNET_CONNECTION
+        case let .NETWORK_ERROR(errorCode: errorCode):
+            return .NETWORK_ERROR(errorCode: errorCode)
+        case .NETWORK_PARSE_ERROR:
+            return .NETWORK_PARSE_ERROR
+        case .NETWORK_NO_INTERNET_CONNECTION:
+            return .NETWORK_NO_INTERNET_CONNECTION
         }
     }
 }
@@ -59,12 +63,12 @@ extension NetworkError {
 extension NetworkError {
     func asNationalRulesError() -> NationalRulesError {
         switch self {
-            case .NETWORK_ERROR(errorCode: let errorCode):
-                return .NETWORK_ERROR(errorCode: errorCode)
-            case .NETWORK_PARSE_ERROR:
-                return .NETWORK_PARSE_ERROR
-            case .NETWORK_NO_INTERNET_CONNECTION:
-                return .NETWORK_NO_INTERNET_CONNECTION
+        case let .NETWORK_ERROR(errorCode: errorCode):
+            return .NETWORK_ERROR(errorCode: errorCode)
+        case .NETWORK_PARSE_ERROR:
+            return .NETWORK_PARSE_ERROR
+        case .NETWORK_NO_INTERNET_CONNECTION:
+            return .NETWORK_NO_INTERNET_CONNECTION
         }
     }
 }

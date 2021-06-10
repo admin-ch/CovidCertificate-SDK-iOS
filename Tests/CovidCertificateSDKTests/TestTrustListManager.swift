@@ -1,52 +1,52 @@
 //
-//  File.swift
-//  
-//
-//  Created by Marco Zimmermann on 08.06.21.
-//
+/*
+ * Copyright (c) 2021 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
-import Foundation
 @testable import CovidCertificateSDK
+import Foundation
 
-class TestTrustlistManager : TrustlistManagerProtocol {
+class TestTrustlistManager: TrustlistManagerProtocol {
     var nationalRulesListUpdater: TrustListUpdate
     var revocationListUpdater: TrustListUpdate
     var trustCertificateUpdater: TrustListUpdate
     var trustStorage: TrustStorageProtocol
 
     init() {
-        self.trustStorage = TestTrustStorage(publicKeys: StaticTestTrustList().publicKeys())
-        self.revocationListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
-        self.trustCertificateUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
-        self.nationalRulesListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
+        trustStorage = TestTrustStorage(publicKeys: StaticTestTrustList().publicKeys())
+        revocationListUpdater = TestTrustListUpdate(trustStorage: trustStorage)
+        trustCertificateUpdater = TestTrustListUpdate(trustStorage: trustStorage)
+        nationalRulesListUpdater = TestTrustListUpdate(trustStorage: trustStorage)
     }
 
     init(publicKeys: [TrustListPublicKey]) {
-        self.trustStorage = TestTrustStorage(publicKeys: publicKeys)
-        self.revocationListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
-        self.trustCertificateUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
-        self.nationalRulesListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
+        trustStorage = TestTrustStorage(publicKeys: publicKeys)
+        revocationListUpdater = TestTrustListUpdate(trustStorage: trustStorage)
+        trustCertificateUpdater = TestTrustListUpdate(trustStorage: trustStorage)
+        nationalRulesListUpdater = TestTrustListUpdate(trustStorage: trustStorage)
     }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> ()), updateTimeInterval: TimeInterval) {
-
-    }
+    func restartTrustListUpdate(completionHandler _: @escaping (() -> Void), updateTimeInterval _: TimeInterval) {}
 }
 
-
-class TestTrustListUpdate : TrustListUpdate {
+class TestTrustListUpdate: TrustListUpdate {
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate() -> NetworkError? {
         // update active certificates service
         sleep(1)
         return nil
     }
 }
 
-class TestTrustStorage : TrustStorageProtocol {
-
-    private let publicKeys : [TrustListPublicKey]
+class TestTrustStorage: TrustStorageProtocol {
+    private let publicKeys: [TrustListPublicKey]
 
     init(publicKeys: [TrustListPublicKey]) {
         self.publicKeys = publicKeys
@@ -58,7 +58,7 @@ class TestTrustStorage : TrustStorageProtocol {
         return []
     }
 
-    func updateRevocationList(_ list: RevocationList) -> Bool {
+    func updateRevocationList(_: RevocationList) -> Bool {
         // do nothing
         return true
     }
@@ -70,15 +70,15 @@ class TestTrustStorage : TrustStorageProtocol {
     // MARK: - Active Certificates
 
     func activeCertificatePublicKeys() -> [TrustListPublicKey] {
-        return self.publicKeys
+        return publicKeys
     }
 
-    func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool {
+    func updateCertificateList(_: TrustCertificates, since _: Int64) -> Bool {
         // do nothing
         return true
     }
 
-    func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool {
+    func updateActiveCertificates(_: ActiveTrustCertificates) -> Bool {
         // do nothing
         return true
     }
@@ -97,7 +97,7 @@ class TestTrustStorage : TrustStorageProtocol {
         return true
     }
 
-    func updateNationalRules(_ update: NationalRulesList) -> Bool {
+    func updateNationalRules(_: NationalRulesList) -> Bool {
         return true
     }
 
@@ -116,11 +116,11 @@ class StaticTestTrustList {
     func publicKeys() -> [TrustListPublicKey] {
         switch CovidCertificateSDK.currentEnvironment {
         case .dev:
-            return [TrustListPublicKey(keyId: "mmrfzpMU6xc=", withRsaKey: DEV_RSA_ASN1_DER)].compactMap{ $0 }
+            return [TrustListPublicKey(keyId: "mmrfzpMU6xc=", withRsaKey: DEV_RSA_ASN1_DER)].compactMap { $0 }
         case .abn:
-            return [TrustListPublicKey(keyId: "JLxre3vSwyg=", withRsaKey: ABN_RSA_ASN1_DER)].compactMap{ $0 }
+            return [TrustListPublicKey(keyId: "JLxre3vSwyg=", withRsaKey: ABN_RSA_ASN1_DER)].compactMap { $0 }
         case .prod:
-            return [TrustListPublicKey(keyId: "Ll3NP03zOxY=", withRsaKey: PROD_RSA_ASN1_DER)].compactMap{ $0 }
+            return [TrustListPublicKey(keyId: "Ll3NP03zOxY=", withRsaKey: PROD_RSA_ASN1_DER)].compactMap { $0 }
         }
     }
 }

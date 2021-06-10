@@ -11,14 +11,14 @@
 
 import Foundation
 
-class TrustCertificatesUpdate : TrustListUpdate {
+class TrustCertificatesUpdate: TrustListUpdate {
     // MARK: - Session
 
     let session = URLSession.shared
 
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate() -> NetworkError? {
         // update active certificates service
         let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request()
         let (dataActive, _, errorActive) = session.synchronousDataTask(with: requestActive)
@@ -31,13 +31,13 @@ class TrustCertificatesUpdate : TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        let _ = self.trustStorage.updateActiveCertificates(result)
+        _ = trustStorage.updateActiveCertificates(result)
 
         // update trust certificates service
         var listNeedsUpdate = true
 
-        while(listNeedsUpdate) {
-            let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: self.trustStorage.certificateSince()).request()
+        while listNeedsUpdate {
+            let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: trustStorage.certificateSince()).request()
             let (data, response, error) = session.synchronousDataTask(with: request)
 
             if error != nil {
@@ -45,7 +45,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
             }
 
             // get the x-next-since, save it as well and pass to the next request
-            var nextSinceHeader : Int64 = 0
+            var nextSinceHeader: Int64 = 0
             if let s = (response as? HTTPURLResponse)?.allHeaderFields["x-next-since"] as? String,
                let nextHeader = Int64(s) {
                 nextSinceHeader = nextHeader
@@ -55,7 +55,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
                 return .NETWORK_PARSE_ERROR
             }
 
-            let _ = self.trustStorage.updateCertificateList(result, since: nextSinceHeader)
+            _ = trustStorage.updateCertificateList(result, since: nextSinceHeader)
 
             // start another request, as long as certificates are coming in
             listNeedsUpdate = result.certs.count > 0
@@ -64,7 +64,7 @@ class TrustCertificatesUpdate : TrustListUpdate {
         return nil
     }
 
-    internal override func isListStillValid() -> Bool {
-        return self.trustStorage.certificateListIsValid()
+    override internal func isListStillValid() -> Bool {
+        return trustStorage.certificateListIsValid()
     }
 }

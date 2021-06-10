@@ -1,20 +1,24 @@
 //
-//  File.swift
-//  
-//
-//  Created by Marco Zimmermann on 09.06.21.
-//
+/*
+ * Copyright (c) 2021 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
 import Foundation
 
-class NationalRulesListUpdate : TrustListUpdate {
+class NationalRulesListUpdate: TrustListUpdate {
     // MARK: - Session
 
     let session = URLSession.shared
 
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate() -> NetworkError? {
         let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request()
         let (data, _, error) = session.synchronousDataTask(with: request)
 
@@ -26,11 +30,11 @@ class NationalRulesListUpdate : TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        let _ = self.trustStorage.updateNationalRules(result)
+        _ = trustStorage.updateNationalRules(result)
         return nil
     }
 
-    internal override func isListStillValid() -> Bool {
-        return self.trustStorage.nationalRulesListIsStillValid()
+    override internal func isListStillValid() -> Bool {
+        return trustStorage.nationalRulesListIsStillValid()
     }
 }

@@ -11,14 +11,14 @@
 
 import Foundation
 
-class RevocationListUpdate : TrustListUpdate {
+class RevocationListUpdate: TrustListUpdate {
     // MARK: - Session
 
     let session = URLSession.shared
 
     // MARK: - Update
 
-    internal override func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate() -> NetworkError? {
         // download data and update local storage
         let request = CovidCertificateSDK.currentEnvironment.revocationListService.request()
         let (data, _, error) = session.synchronousDataTask(with: request)
@@ -31,11 +31,11 @@ class RevocationListUpdate : TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        let _ = self.trustStorage.updateRevocationList(result)
+        _ = trustStorage.updateRevocationList(result)
         return nil
     }
 
-    internal override func isListStillValid() -> Bool {
-        return self.trustStorage.revocationListIsValid()
+    override internal func isListStillValid() -> Bool {
+        return trustStorage.revocationListIsValid()
     }
 }

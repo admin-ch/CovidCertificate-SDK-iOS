@@ -15,7 +15,7 @@ import Security
 public class TrustListPublicKey {
     // MARK: - Elements
 
-    public let keyId : String
+    public let keyId: String
     public let key: SecKey
 
     // MARK: - Used with RSA
@@ -55,7 +55,7 @@ public class TrustListPublicKey {
 
 extension Array where Element == TrustListPublicKey {
     func hasValidSignature(for holder: DGCHolder) -> ValidationError? {
-        let filteredList = self.filter { $0.keyId == holder.keyId.base64EncodedString() }
+        let filteredList = filter { $0.keyId == holder.keyId.base64EncodedString() }
 
         guard filteredList.count > 0 else {
             return ValidationError.KEY_NOT_IN_TRUST_LIST

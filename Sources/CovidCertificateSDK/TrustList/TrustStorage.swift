@@ -19,7 +19,7 @@ public protocol TrustStorageProtocol {
     func activeCertificatePublicKeys() -> [TrustListPublicKey]
     func certificateSince() -> Int64
     func updateCertificateList(_ update: TrustCertificates, since: Int64) -> Bool
-    func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool
+    func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool
     func certificateListIsValid() -> Bool
 
     func nationalRulesListIsStillValid() -> Bool
@@ -27,9 +27,9 @@ public protocol TrustStorageProtocol {
     func nationalRules() -> NationalRulesList
 }
 
-class TrustStorage : TrustStorageProtocol, Codable {
-
+class TrustStorage: TrustStorageProtocol, Codable {
     // MARK: - Storage
+
     private static var sharedStorage = Storage()
     private static let secureStorage = SecureStorage<Storage>()
 
@@ -44,7 +44,7 @@ class TrustStorage : TrustStorageProtocol, Codable {
     }
 
     init() {
-        self.initialize()
+        initialize()
     }
 
     // MARK: - Revocation List
@@ -73,7 +73,7 @@ class TrustStorage : TrustStorageProtocol, Codable {
         return Self.secureStorage.saveSynchronously(Self.sharedStorage)
     }
 
-    func updateActiveCertificates(_ activeCertificates : ActiveTrustCertificates) -> Bool {
+    func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool {
         // remove all certificates that are not active
         Self.sharedStorage.activeCertificates.removeAll { c in
             activeCertificates.activeKeyIds.contains(c.keyId)
@@ -130,15 +130,15 @@ class TrustStorage : TrustStorageProtocol, Codable {
     }
 }
 
-class Storage : Codable {
+class Storage: Codable {
     public var revocationList = RevocationList()
-    public var lastRevocationListDownload : Int64 = 0
+    public var lastRevocationListDownload: Int64 = 0
 
-    public var activeCertificates : [TrustCertificate] = []
-    public var certificateSince : Int64 = 0
-    public var certificateValidDuration : Int64 = 0
-    public var lastCertificateListDownload : Int64 = 0
+    public var activeCertificates: [TrustCertificate] = []
+    public var certificateSince: Int64 = 0
+    public var certificateValidDuration: Int64 = 0
+    public var lastCertificateListDownload: Int64 = 0
 
     public var nationalRulesList = NationalRulesList()
-    public var lastNationalRulesListDownload : Int64 = 0
+    public var lastNationalRulesListDownload: Int64 = 0
 }

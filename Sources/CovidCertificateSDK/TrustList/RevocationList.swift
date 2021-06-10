@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class RevocationList : Codable {
+public class RevocationList: Codable {
     public var revokedCerts: [String] = []
-    public var validDuration : Int64 = 0
+    public var validDuration: Int64 = 0
 }
