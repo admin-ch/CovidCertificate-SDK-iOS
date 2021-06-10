@@ -28,8 +28,6 @@ public protocol TrustStorageProtocol {
 }
 
 class TrustStorage: TrustStorageProtocol {
-
-
     // MARK: - Storage
 
     private static var sharedStorage = Storage()
