@@ -61,8 +61,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
-            case let .failure(error):
-
+            case .failure:
                 XCTAssertTrue(false)
             }
         }
@@ -95,7 +94,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
         verifier.checkSignature(cose: dgcHolder) { result in
             switch result {
-            case let .success(r):
+            case .success:
                 XCTAssertTrue(false)
             case let .failure(error):
                 // we should fail with CWT expired

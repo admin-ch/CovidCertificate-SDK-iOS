@@ -43,6 +43,11 @@ public enum CovidCertificateSDK {
         return instance.checkNationalRules(dgc: dgc, completionHandler)
     }
 
+    public static func restartTrustListUpdate(completionHandler: @escaping () -> (), updateTimeInterval: TimeInterval) {
+        instancePrecondition()
+        instance.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+    }
+
     private static func instancePrecondition() {
         precondition(instance != nil, "CovidCertificateSDK not initialized, call `initialize()`")
     }

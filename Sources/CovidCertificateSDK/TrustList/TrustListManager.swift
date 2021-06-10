@@ -17,16 +17,20 @@ public protocol TrustlistManagerProtocol {
     var nationalRulesListUpdater: TrustListUpdate { get }
 
     var trustStorage : TrustStorageProtocol { get }
+
+    func restartTrustListUpdate(completionHandler: @escaping (() -> ()), updateTimeInterval: TimeInterval)
 }
 
-class TrustlistManager : TrustlistManagerProtocol {    
-
+class TrustlistManager : TrustlistManagerProtocol {
     // MARK: - Components
 
     var trustStorage : TrustStorageProtocol
     var revocationListUpdater : TrustListUpdate
     var trustCertificateUpdater : TrustListUpdate
     var nationalRulesListUpdater : TrustListUpdate
+
+    private let operationQueue = OperationQueue()
+    private var timer : Timer? = nil
 
     // MARK: - Init
     
@@ -35,6 +39,31 @@ class TrustlistManager : TrustlistManagerProtocol {
         self.nationalRulesListUpdater = NationalRulesListUpdate(trustStorage: self.trustStorage)
         self.revocationListUpdater = RevocationListUpdate(trustStorage: self.trustStorage)
         self.trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: self.trustStorage)
+    }
+
+    func restartTrustListUpdate(completionHandler: @escaping (() -> ()), updateTimeInterval: TimeInterval) {
+        self.timer = Timer.scheduledTimer(withTimeInterval: updateTimeInterval, repeats: true, block: { [weak self] timer in
+            guard let strongSelf = self else { return }
+            strongSelf.forceUpdate(completionHandler: completionHandler)
+        })
+
+        self.timer?.fire()
+    }
+
+    private func forceUpdate(completionHandler: @escaping (() -> ())) {
+        let group = DispatchGroup()
+
+        for updater in [self.nationalRulesListUpdater, self.revocationListUpdater, self.trustCertificateUpdater] {
+            group.enter()
+
+            updater.addCheckOperation(checkOperation: { _ in
+                group.leave()
+            }, forceUpdate: true)
+        }
+
+        group.notify(queue: .main) {
+            completionHandler()
+        }
     }
 }
 
@@ -58,8 +87,8 @@ public class TrustListUpdate {
         self.operationQueue.maxConcurrentOperationCount = 1
     }
 
-    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> ())) {
-        let updateNeeeded = !self.isListStillValid()
+    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> ()), forceUpdate: Bool = false) {
+        let updateNeeeded = !self.isListStillValid() || forceUpdate
         let updateAlreadyRunnning = self.updateOperation != nil
 
         if updateNeeeded && !updateAlreadyRunnning {
@@ -96,5 +125,9 @@ public class TrustListUpdate {
         }
 
         self.updateOperation = nil
+    }
+
+    private func forceUpdate() {
+        
     }
 }

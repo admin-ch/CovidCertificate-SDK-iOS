@@ -9,7 +9,7 @@ import Foundation
 @testable import CovidCertificateSDK
 
 class TestTrustlistManager : TrustlistManagerProtocol {
-
+    var nationalRulesListUpdater: TrustListUpdate
     var revocationListUpdater: TrustListUpdate
     var trustCertificateUpdater: TrustListUpdate
     var trustStorage: TrustStorageProtocol
@@ -18,12 +18,18 @@ class TestTrustlistManager : TrustlistManagerProtocol {
         self.trustStorage = TestTrustStorage(publicKeys: StaticTestTrustList().publicKeys())
         self.revocationListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
         self.trustCertificateUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
+        self.nationalRulesListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
     }
 
     init(publicKeys: [TrustListPublicKey]) {
         self.trustStorage = TestTrustStorage(publicKeys: publicKeys)
         self.revocationListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
         self.trustCertificateUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
+        self.nationalRulesListUpdater = TestTrustListUpdate(trustStorage: self.trustStorage)
+    }
+
+    func restartTrustListUpdate(completionHandler: @escaping (() -> ()), updateTimeInterval: TimeInterval) {
+
     }
 }
 

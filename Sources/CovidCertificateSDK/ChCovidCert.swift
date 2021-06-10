@@ -170,6 +170,10 @@ public struct ChCovidCert {
         }
     }
 
+    public func restartTrustListUpdate(completionHandler: @escaping () -> (), updateTimeInterval: TimeInterval) {
+        self.trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+    }
+
     func allRecoveriesAreValid(recoveries _: [PastInfection]) -> Bool {
         return false
     }
