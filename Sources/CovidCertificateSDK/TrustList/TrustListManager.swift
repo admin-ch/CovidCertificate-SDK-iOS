@@ -16,44 +16,44 @@ public protocol TrustlistManagerProtocol {
     var trustCertificateUpdater: TrustListUpdate { get }
     var nationalRulesListUpdater: TrustListUpdate { get }
 
-    var trustStorage : TrustStorageProtocol { get }
+    var trustStorage: TrustStorageProtocol { get }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> ()), updateTimeInterval: TimeInterval)
+    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval)
 }
 
-class TrustlistManager : TrustlistManagerProtocol {
+class TrustlistManager: TrustlistManagerProtocol {
     // MARK: - Components
 
-    var trustStorage : TrustStorageProtocol
-    var revocationListUpdater : TrustListUpdate
-    var trustCertificateUpdater : TrustListUpdate
-    var nationalRulesListUpdater : TrustListUpdate
+    var trustStorage: TrustStorageProtocol
+    var revocationListUpdater: TrustListUpdate
+    var trustCertificateUpdater: TrustListUpdate
+    var nationalRulesListUpdater: TrustListUpdate
 
     private let operationQueue = OperationQueue()
-    private var timer : Timer? = nil
+    private var timer: Timer?
 
     // MARK: - Init
-    
+
     init() {
-        self.trustStorage = TrustStorage()
-        self.nationalRulesListUpdater = NationalRulesListUpdate(trustStorage: self.trustStorage)
-        self.revocationListUpdater = RevocationListUpdate(trustStorage: self.trustStorage)
-        self.trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: self.trustStorage)
+        trustStorage = TrustStorage()
+        nationalRulesListUpdater = NationalRulesListUpdate(trustStorage: trustStorage)
+        revocationListUpdater = RevocationListUpdate(trustStorage: trustStorage)
+        trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: trustStorage)
     }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> ()), updateTimeInterval: TimeInterval) {
-        self.timer = Timer.scheduledTimer(withTimeInterval: updateTimeInterval, repeats: true, block: { [weak self] timer in
+    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
+        timer = Timer.scheduledTimer(withTimeInterval: updateTimeInterval, repeats: true, block: { [weak self] _ in
             guard let strongSelf = self else { return }
             strongSelf.forceUpdate(completionHandler: completionHandler)
         })
 
-        self.timer?.fire()
+        timer?.fire()
     }
 
-    private func forceUpdate(completionHandler: @escaping (() -> ())) {
+    private func forceUpdate(completionHandler: @escaping (() -> Void)) {
         let group = DispatchGroup()
 
-        for updater in [self.nationalRulesListUpdater, self.revocationListUpdater, self.trustCertificateUpdater] {
+        for updater in [revocationListUpdater, trustCertificateUpdater] {
             group.enter()
 
             updater.addCheckOperation(checkOperation: { _ in
@@ -72,36 +72,36 @@ public class TrustListUpdate {
 
     private let operationQueue = OperationQueue()
 
-    private var updateOperation : Operation? = nil
+    private var updateOperation: Operation?
 
     internal var lastUpdate: Date?
-    private var lastError : NetworkError? = nil
+    private var lastError: NetworkError?
 
-    internal let trustStorage : TrustStorageProtocol
+    internal let trustStorage: TrustStorageProtocol
 
     // MARK: - Add Check Operation
 
     init(trustStorage: TrustStorageProtocol) {
         // ensures that the update request is done before the other tasks
         self.trustStorage = trustStorage
-        self.operationQueue.maxConcurrentOperationCount = 1
+        operationQueue.maxConcurrentOperationCount = 1
     }
 
-    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> ()), forceUpdate: Bool = false) {
-        let updateNeeeded = !self.isListStillValid() || forceUpdate
-        let updateAlreadyRunnning = self.updateOperation != nil
+    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> Void), forceUpdate: Bool = false) {
+        let updateNeeeded = !isListStillValid() || forceUpdate
+        let updateAlreadyRunnning = updateOperation != nil
 
-        if updateNeeeded && !updateAlreadyRunnning {
-            self.updateOperation = BlockOperation(block: { [weak self] in
+        if updateNeeeded, !updateAlreadyRunnning {
+            updateOperation = BlockOperation(block: { [weak self] in
                 guard let strongSelf = self else { return }
                 strongSelf.startUpdate()
             })
 
             // !: initialized just above
-            self.operationQueue.addOperation(self.updateOperation!)
+            operationQueue.addOperation(updateOperation!)
         }
 
-        self.operationQueue.addOperation {
+        operationQueue.addOperation {
             checkOperation(self.lastError)
         }
     }
@@ -118,16 +118,14 @@ public class TrustListUpdate {
     }
 
     private func startUpdate() {
-        self.lastError = self.synchronousUpdate()
+        lastError = synchronousUpdate()
 
-        if self.lastError == nil {
-            self.lastUpdate = Date()
+        if lastError == nil {
+            lastUpdate = Date()
         }
 
-        self.updateOperation = nil
+        updateOperation = nil
     }
 
-    private func forceUpdate() {
-        
-    }
+    private func forceUpdate() {}
 }
