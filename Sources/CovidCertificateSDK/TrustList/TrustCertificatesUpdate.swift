@@ -45,10 +45,9 @@ class TrustCertificatesUpdate: TrustListUpdate {
             }
 
             // get the x-next-since, save it as well and pass to the next request
-            var nextSinceHeader: Int64 = 0
-            if let s = (response as? HTTPURLResponse)?.allHeaderFields["x-next-since"] as? String,
-               let nextHeader = Int64(s) {
-                nextSinceHeader = nextHeader
+            var nextSinceHeader: String = ""
+            if let s = (response as? HTTPURLResponse)?.allHeaderFields["x-next-since"] as? String {
+                nextSinceHeader = s
             }
 
             guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {

@@ -83,8 +83,8 @@ class TestTrustStorage: TrustStorageProtocol {
         return true
     }
 
-    func certificateSince() -> Int64 {
-        return 0
+    func certificateSince() -> String {
+        return ""
     }
 
     func certificateListIsValid() -> Bool {

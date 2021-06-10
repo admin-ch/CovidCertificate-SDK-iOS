@@ -35,8 +35,8 @@ public enum SDKEnvironment {
         return trustBackend.endpoint("verificationRules")
     }
 
-    func trustCertificatesService(since: Int64) -> Endpoint {
-        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": "\(since)"])
+    func trustCertificatesService(since: String) -> Endpoint {
+        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": since])
     }
 
     var activeCertificatesService: Endpoint {
