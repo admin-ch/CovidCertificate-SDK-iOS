@@ -98,7 +98,7 @@ public class TrustListUpdate {
             })
 
             // !: initialized just above
-            forceUpdateQueue.addOperation(updateOperation!)
+            forceUpdateQueue.addOperation(forceUpdateOperation!)
         }
 
         forceUpdateQueue.addOperation {
