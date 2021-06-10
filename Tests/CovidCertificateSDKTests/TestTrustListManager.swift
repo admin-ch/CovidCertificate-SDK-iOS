@@ -73,7 +73,7 @@ class TestTrustStorage: TrustStorageProtocol {
         return publicKeys
     }
 
-    func updateCertificateList(_: TrustCertificates, since _: Int64) -> Bool {
+    func updateCertificateList(_: TrustCertificates, since _: String) -> Bool {
         // do nothing
         return true
     }
