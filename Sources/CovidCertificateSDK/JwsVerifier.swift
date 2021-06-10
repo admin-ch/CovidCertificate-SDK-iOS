@@ -24,7 +24,7 @@ public enum JWSError: Error, Equatable {
     case COMMON_NAME_MISMATCH
 }
 
-/// A JWT token verifier
+/// A JWS verifier
 public class JWSVerifier {
     private let rootCA: SecCertificate
     private let leafCommonName: String?
@@ -32,10 +32,10 @@ public class JWSVerifier {
     /// Initializes a verifier with a public key
     ///
     /// - Parameters:
-    ///   - publicKey: The public key to verify the JWT signiture
-    ///   - leafCN: Verify common name which must match in leaf certificate
-    public init?(rootData: Data, leafCertMustMatch leafCN: String? = nil) {
-        guard let rootFromData = SecCertificateCreateWithData(nil, rootData as CFData) else {
+    ///   - rootCertificate: The root certificate to pin the chain validation against
+    ///   - leafCN: Makes sure the common name of the leaf vertificate matches
+    public init?(rootCertificate: Data, leafCertMustMatch leafCN: String? = nil) {
+        guard let rootFromData = SecCertificateCreateWithData(nil, rootCertificate as CFData) else {
             return nil
         }
         rootCA = rootFromData
