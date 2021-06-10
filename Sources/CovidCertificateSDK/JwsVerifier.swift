@@ -27,13 +27,14 @@ public enum JWSError: Error, Equatable {
 /// A JWT token verifier
 public class JWSVerifier {
     private let rootCA: SecCertificate
-    private let leafCommonName : String?
+    private let leafCommonName: String?
 
     /// Initializes a verifier with a public key
     ///
     /// - Parameters:
     ///   - publicKey: The public key to verify the JWT signiture
-    public init?(rootData: Data, leafCertMustMatch leafCN: String? = nil ) {
+    ///   - leafCN: Verify common name which must match in leaf certificate
+    public init?(rootData: Data, leafCertMustMatch leafCN: String? = nil) {
         guard let rootFromData = SecCertificateCreateWithData(nil, rootData as CFData) else {
             return nil
         }
@@ -65,6 +66,11 @@ public class JWSVerifier {
                 return
             }
 
+            guard let leafCertificateData = certificates[0].data(using: .utf8) else {
+                completionHandler(.failure(JWSError.CERTIFICATE_CHAIN_ERROR))
+                return
+            }
+
             for cert in certificates {
                 guard let certData = Data(base64Encoded: cert),
                       let certKey = SecCertificateCreateWithData(nil, certData as CFData)
@@ -76,7 +82,7 @@ public class JWSVerifier {
             }
 
             var optionalTrust: SecTrust?
-            
+
             let status = SecTrustCreateWithCertificates(chain as AnyObject,
                                                         SecPolicyCreateBasicX509(),
                                                         &optionalTrust)
@@ -93,7 +99,6 @@ public class JWSVerifier {
                 return
             }
 
-            // Since we use each time a new trust object, this call should be safe
             if #available(iOS 13.0, macOS 10.15, *) {
                 DispatchQueue.global().async {
                     SecTrustEvaluateAsyncWithError(secTrust, DispatchQueue.global()) { _, result, _ in
@@ -101,13 +106,8 @@ public class JWSVerifier {
                             completionHandler(.failure(.SIGNATURE_INVALID))
                             return
                         }
-                        if self.leafCommonName != nil,
-                           !self.isLeafCertificateValid(leafCertificate: chain[0]) {
-                            completionHandler(.failure(.COMMON_NAME_MISMATCH))
-                            return
-                        }
-                        
-                        self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
+
+                        self.continueWithCommonNameEvaluation(jwtString: jwtString, leafCertificate: chain[0], leafCertificateData: leafCertificateData, completionHandler)
                     }
                 }
             } else {
@@ -116,14 +116,8 @@ public class JWSVerifier {
                         completionHandler(.failure(.SIGNATURE_INVALID))
                         return
                     }
-                    
-                    if self.leafCommonName != nil,
-                       !self.isLeafCertificateValid(leafCertificate: chain[0]) {
-                        completionHandler(.failure(.COMMON_NAME_MISMATCH))
-                        return
-                    }
-                    
-                    self.verifySignature(jwtString: jwtString, leafCertificateData: certificates[0].data(using: .utf8), completionHandler)
+
+                    self.continueWithCommonNameEvaluation(jwtString: jwtString, leafCertificate: chain[0], leafCertificateData: leafCertificateData, completionHandler)
                 }
             }
         } catch JWTError.invalidJWTString {
@@ -135,7 +129,18 @@ public class JWSVerifier {
             return
         }
     }
-    
+
+    private func continueWithCommonNameEvaluation<ClaimType: JWTExtension>(jwtString: String, leafCertificate: SecCertificate, leafCertificateData: Data, _ completionHandler: @escaping (Result<ClaimType, JWSError>) -> Void) {
+        if leafCommonName != nil,
+           !isLeafCertificateValid(leafCertificate: leafCertificate) {
+            completionHandler(.failure(.COMMON_NAME_MISMATCH))
+            return
+        }
+
+        // Continue with signature verification
+        verifySignature(jwtString: jwtString, leafCertificateData: leafCertificateData, completionHandler)
+    }
+
     private func isLeafCertificateValid(leafCertificate: SecCertificate) -> Bool {
         var commonName: CFString?
         let result = SecCertificateCopyCommonName(leafCertificate, &commonName)
@@ -149,12 +154,8 @@ public class JWSVerifier {
         return (cfName as String) == leafCommonName
     }
 
-    private func verifySignature<ClaimType: JWTExtension>(jwtString: String, leafCertificateData: Data?, _ completionHandler: @escaping (_ claims: Result<ClaimType, JWSError>) -> Void) {
-        guard let leafCertificate = leafCertificateData else {
-            completionHandler(.failure(JWSError.CERTIFICATE_CHAIN_ERROR))
-            return
-        }
-        let jwtVerifier = JWTVerifier.rs256(certificate: leafCertificate)
+    private func verifySignature<ClaimType: JWTExtension>(jwtString: String, leafCertificateData: Data, _ completionHandler: @escaping (_ claims: Result<ClaimType, JWSError>) -> Void) {
+        let jwtVerifier = JWTVerifier.rs256(certificate: leafCertificateData)
         do {
             let jwt = try JWT<ClaimType>(jwtString: jwtString, verifier: jwtVerifier)
 
