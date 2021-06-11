@@ -22,8 +22,16 @@ public enum CertLogicValidationError : Error {
 public class CertLogic {
     var rules: [JSON] = []
     var valueSets: JSON = []
+    let calendar : Calendar
     
-    public init() {}
+    public init?() {
+        guard let utc = TimeZone(identifier: "UTC")  else {
+            return nil
+        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = utc
+        self.calendar = calendar
+    }
     public func updateData(rules: JSON, valueSets: JSON) -> Result<(), CertLogicCommonError> {
         guard let array = rules.array else {
             return .failure(.RULE_PARSING_FAILED)
@@ -36,7 +44,7 @@ public class CertLogic {
     public func checkRules(hcert: EuHealthCert, validationClock: Date = Date()) -> Result<(), CertLogicValidationError> {
         var external = JSON(
             ["validationClock": ISO8601DateFormatter().string(from: validationClock),
-             "validationClockAtStartOfDay": ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: validationClock)),
+             "validationClockAtStartOfDay": ISO8601DateFormatter().string(from:calendar.startOfDay(for: validationClock)),
             ]
         )
         external["valueSets"] = valueSets

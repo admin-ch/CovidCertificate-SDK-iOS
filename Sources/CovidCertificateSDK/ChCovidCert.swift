@@ -164,8 +164,9 @@ public struct ChCovidCert {
                     return
                 } else {
                     let list = self.trustListManager.trustStorage.nationalRules()
-                    let result = CertLogic()
-                    guard let rules = list.getRulesJSON(),
+    
+                    guard let result = CertLogic(),
+                        let rules = list.getRulesJSON(),
                           let valueSets = list.getValueSetsJSON() else {
                         completionHandler(.failure(.NETWORK_PARSE_ERROR))
                         return
