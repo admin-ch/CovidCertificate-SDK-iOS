@@ -176,10 +176,10 @@ public struct ChCovidCert {
                         return
                     }
                     
-                    let maxValidity = valueSets["acceptance-critreria"]["vaccine-immunity"].int ?? 0
-                    let daysAfterFirstShot = valueSets["acceptance-critreria"]["single-vaccine-validity-offset"].int ?? 10000
-                    let pcrValidity = valueSets["acceptance-critreria"]["pcr-test-valididty"].int ?? 0
-                    let ratValidity = valueSets["acceptance-critreria"]["rat-test-valididty"].int ?? 0
+                    let maxValidity = result.maxValidity
+                    let daysAfterFirstShot = result.daysAfterFirstShot
+                    let pcrValidity = result.pcrValidity
+                    let ratValidity = result.ratValidity
                    
                     switch result.checkRules(hcert: dgc)  {
                     case .success:
