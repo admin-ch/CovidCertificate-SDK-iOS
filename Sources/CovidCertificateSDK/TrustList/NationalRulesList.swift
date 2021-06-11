@@ -11,6 +11,6 @@
 
 import Foundation
 
-public class NationalRulesList: Codable {
+public class NationalRulesList: Codable, JWTExtension {
     public var validDuration: Int64 = 0
 }

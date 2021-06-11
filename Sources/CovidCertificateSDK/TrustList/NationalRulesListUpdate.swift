@@ -26,10 +26,23 @@ class NationalRulesListUpdate: TrustListUpdate {
             return error?.asNetworkError()
         }
 
-        guard let d = data, let result = try? JSONDecoder().decode(NationalRulesList.self, from: d) else {
+        guard let d = data else {
             return .NETWORK_PARSE_ERROR
         }
 
+        let semaphore = DispatchSemaphore(value: 0)
+        var outcome: Result<NationalRulesList, JWSError> = .failure(.SIGNATURE_INVALID)
+
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<NationalRulesList, JWSError>) in
+            outcome = result
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        guard let result = try? outcome.get() else {
+            return .NETWORK_PARSE_ERROR
+        }
         _ = trustStorage.updateNationalRules(result)
         return nil
     }

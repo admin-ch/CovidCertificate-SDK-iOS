@@ -11,7 +11,7 @@
 
 import Foundation
 
-public class TrustCertificates: Codable {
+public class TrustCertificates: Codable, JWTExtension {
     public var certs: [TrustCertificate] = []
 }
 
@@ -25,7 +25,7 @@ public class TrustCertificate: Codable {
     public var y: String?
 }
 
-public class ActiveTrustCertificates: Codable {
+public class ActiveTrustCertificates: Codable, JWTExtension {
     public var activeKeyIds: [String] = []
     public var validDuration: Int64
 }

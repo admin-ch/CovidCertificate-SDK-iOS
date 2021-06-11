@@ -27,19 +27,21 @@ public enum SDKEnvironment {
         }
     }
 
+    public static let applicationJwtPlusJws: String = "application/json+jws"
+
     var revocationListService: Endpoint {
-        return trustBackend.endpoint("revocationList")
+        return trustBackend.endpoint("revocationList", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
     var nationalRulesListService: Endpoint {
-        return trustBackend.endpoint("verificationRules")
+        return trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
     func trustCertificatesService(since: String) -> Endpoint {
-        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": since])
+        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": since], headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
     var activeCertificatesService: Endpoint {
-        return trustBackend.endpoint("keys/list")
+        return trustBackend.endpoint("keys/list", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 }

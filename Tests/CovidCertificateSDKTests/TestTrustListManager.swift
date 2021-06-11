@@ -13,6 +13,31 @@
 import Foundation
 
 class TestTrustlistManager: TrustlistManagerProtocol {
+    // MARK: - JWS verification
+
+    public static var jwsVerifier: JWSVerifier {
+        guard let data = Bundle.module.url(forResource: "swiss_governmentrootcaii", withExtension: "der") else {
+            fatalError("Signing CA not in Bundle")
+        }
+        guard let caPem = try? Data(contentsOf: data),
+              let verifier = JWSVerifier(rootCertificate: caPem, leafCertMustMatch: TestTrustlistManager.leafCertificateCommonName) else {
+            fatalError("Cannot create certificate from data")
+        }
+        return verifier
+    }
+
+    private static var leafCertificateCommonName: String {
+        switch CovidCertificateSDK.currentEnvironment {
+        case .dev:
+            // TODO: fix this when we have a dedicated dev certificate
+            return "CH01-AppContentCertificate-ref"
+        case .abn:
+            return "CH01-AppContentCertificate-ref"
+        case .prod:
+            return "CH01-AppContentCertificate-prod"
+        }
+    }
+
     var nationalRulesListUpdater: TrustListUpdate
     var revocationListUpdater: TrustListUpdate
     var trustCertificateUpdater: TrustListUpdate

@@ -27,7 +27,21 @@ class RevocationListUpdate: TrustListUpdate {
             return error?.asNetworkError()
         }
 
-        guard let d = data, let result = try? JSONDecoder().decode(RevocationList.self, from: d) else {
+        guard let d = data else {
+            return .NETWORK_PARSE_ERROR
+        }
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var outcome: Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)
+
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<RevocationList, JWSError>) in
+            outcome = result
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
 

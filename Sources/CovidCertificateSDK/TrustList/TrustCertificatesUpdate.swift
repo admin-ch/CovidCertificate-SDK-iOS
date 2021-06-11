@@ -16,6 +16,10 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
     let session = URLSession.shared
 
+    private static let falseConstant = "false"
+    private static let trueConstant = "true"
+    private static let maximumNumberOfRequests = 20
+
     // MARK: - Update
 
     override internal func synchronousUpdate() -> NetworkError? {
@@ -27,7 +31,21 @@ class TrustCertificatesUpdate: TrustListUpdate {
             return errorActive?.asNetworkError()
         }
 
-        guard let d = dataActive, let result = try? JSONDecoder().decode(ActiveTrustCertificates.self, from: d) else {
+        guard let d = dataActive else {
+            return .NETWORK_PARSE_ERROR
+        }
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var outcome: Result<ActiveTrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
+
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<ActiveTrustCertificates, JWSError>) in
+            outcome = result
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
 
@@ -35,8 +53,11 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
         // update trust certificates service
         var listNeedsUpdate = true
+        var requestsCount = 0
 
-        while listNeedsUpdate {
+        while listNeedsUpdate, requestsCount < Self.maximumNumberOfRequests {
+            requestsCount = requestsCount + 1
+
             let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: trustStorage.certificateSince()).request()
             let (data, response, error) = session.synchronousDataTask(with: request)
 
@@ -50,14 +71,34 @@ class TrustCertificatesUpdate: TrustListUpdate {
                 nextSinceHeader = s
             }
 
-            guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {
+            // get the x-next-since, save it as well and pass to the next request
+            var upToDate: String = Self.falseConstant
+            if let s = (response as? HTTPURLResponse)?.allHeaderFields["up-to-date"] as? String {
+                upToDate = s
+            }
+
+            guard let d = data else {
+                return .NETWORK_PARSE_ERROR
+            }
+
+            let semaphore = DispatchSemaphore(value: 0)
+            var outcome: Result<TrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
+
+            TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<TrustCertificates, JWSError>) in
+                outcome = result
+                semaphore.signal()
+            }
+
+            semaphore.wait()
+
+            guard let result = try? outcome.get() else {
                 return .NETWORK_PARSE_ERROR
             }
 
             _ = trustStorage.updateCertificateList(result, since: nextSinceHeader)
 
             // start another request, as long as certificates are coming in
-            listNeedsUpdate = result.certs.count > 0
+            listNeedsUpdate = upToDate == Self.falseConstant
         }
 
         return nil
