@@ -55,7 +55,7 @@ class TrustCertificatesUpdate: TrustListUpdate {
         var listNeedsUpdate = true
         var requestsCount = 0
 
-        while listNeedsUpdate && requestsCount < Self.maximumNumberOfRequests {
+        while listNeedsUpdate, requestsCount < Self.maximumNumberOfRequests {
             requestsCount = requestsCount + 1
 
             let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: trustStorage.certificateSince()).request()

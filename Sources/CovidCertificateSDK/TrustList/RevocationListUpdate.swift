@@ -44,7 +44,7 @@ class RevocationListUpdate: TrustListUpdate {
         guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
-        
+
         _ = trustStorage.updateRevocationList(result)
         return nil
     }
