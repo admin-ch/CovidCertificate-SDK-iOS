@@ -1,6 +1,12 @@
 //
 @testable import CovidCertificateSDK
 import XCTest
+import jsonlogic
+import JSON
+
+class TestRules {
+    
+}
 
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: ChCovidCert {
@@ -10,6 +16,111 @@ final class CovidCertificateSDKTests: XCTestCase {
 
     override class func setUp() {
         CovidCertificateSDK.initialize(environment: SDKEnvironment.dev)
+    }
+    
+    func testAtMostOneVaccine() {
+        let logic = """
+            {
+                            "!": [
+                                {
+                                    "var": "payload.v.1"
+                                }
+                            ]
+                        }
+            """
+        let hcert = "HC1:NCFK70DF0/3WUWGSLKH47GO0KNJ9DSWQIIWT9CK-600XKY-CE59-G80:84F36RIBJ42F3FMMPSKY50.FK6ZKZWEDOLOPCO8F6%E3.DA%EOPC1G72A6YM8JG70Y8I%6557F46G:6TG8ER6WW6F:6$A7+96/B8UPC0JCZ69+EDG8F3I80/D6$CBECSUER:C2$NS346$C2%E9VC- CSUE145GB8JA5B$D:TCQF6SG69/DY3FCEC%JC82E-M8*+A%R81A6M34U1D5UA QE3KC*PCT23846Y96B465W5HX6F462G7M%63R6Y$5F%68JB5WEQPD6$CSUEIN8G/D5$C4KCD3DX47B46IL6646H*6KWEKDDC%6-Q6QW66464KCCWE6T9OF6:/6NA76W5JPCT3E5JDJA76L68463W5/A6..DX%DZJC3/DH$9- NTVDWKEI3DK2D4XOXVD1/DLPCG/DU2D4ZA2T9GY8MPCG/DY-CAY81C9XY8O/EZKEZ96446256V50J.L3VJGEI7H9.VMVC7S+7E7LFEM2TILEVZN9FQDNMTDJCKXAYYV7+RKNPY:IC0FVR4/OGQ NY%B/Q44VC9NUYTUOSFSULKZ8H*S 3AKGQXC7ID2S4VA.B3L1C44G69+M6G4G$2E*H1BBD%-1-G6CAVGZ1%RI3VP59FUL1*O8/:PCRQL7PB9GP67ZRU-.KFE1AA33IP.HD%RM JNF:7DB48/4A.5-5C:GLXIGWM5Y2MU.GUMP*B25+D36H30EO1OJMM671M4U8WGN23OJ3+:6RW4VDPB 6P5CIW7O08U9J1B8KFP$Y7L0VLWCB4T-FJ3IDWTM/*HUV5H4L645NGF72G8C6BLC/+C:7B:N2:UT .LD5RA+GC36+PS YH 8WDLD18WM5T"
+        
+        let dgc = try! verifier.decode(encodedData: hcert).get()
+        let dgcJson =  try! JSONEncoder().encode(dgc.healthCert)
+        
+        var dgcTest = JSON(["payload" : JSON(dgcJson)])
+        
+        let result: Bool? = try! applyRule(JSON(string: logic)!, to: dgcTest)
+        XCTAssertTrue(result!)
+    }
+    
+    func testJsonLogic() {
+        let hcert = "HC1:NCFJ60EG0/3WUWGSLKH47GO0KNJ9DSWQIIWT9CK+500XKY-CE59-G80:84F3ZKG%QU2F30GK JEY50.FK6ZK7:EDOLOPCF8F746KG7+59.Q6+A80:6JM8SX8RM8.A8TL6IA7-Q6.Q6JM8WJCT3EYM8XJC +DXJCCWENF6OF63W5$Q69L6%JC+QE$.32%E6VCHQEU$DE44NXOBJE719$QE0/D+8D-ED.24-G8$:8.JCBECB1A-:8$96646AL60A60S6Q$D.UDRYA 96NF6L/5QW6307KQEPD09WEQDD+Q6TW6FA7C466KCN9E%961A6DL6FA7D46JPCT3E5JDJA76L68463W5/A6..DX%DZJC3/DH$9- NTVDWKEI3DK2D4XOXVD1/DLPCG/DU2D4ZA2T9GY8MPCG/DY-CAY81C9XY8O/EZKEZ96446256V50G7AZQ4CUBCD9-FV-.6+OJROVHIBEI3KMU/TLRYPM0FA9DCTID.GQ$NYE3NPBP90/9IQH24YL7WMO0CNV1 SDB1AHX7:O26872.NV/LC+VJ75L%NGF7PT134ERGJ.I0 /49BB6JA7WKY:AL19PB120CUQ37XL1P9505-YEFJHVETB3CB-KE8EN9BPQIMPRTEW*DU+X2STCJ6O6S4XXVJ$UQNJW6IIO0X20D4S3AWSTHTA5FF7I/J9:8ALF/VP 4K1+8QGI:N0H 91QBHPJLSMNSJC BFZC5YSD.9-9E5R8-.IXUB-OG1RRQR7JEH/5T852EA3T7P6 VPFADBFUN0ZD93MQY07/4OH1FKHL9P95LIG841 BM7EXDR/PLCUUE88+-IX:Q"
+        
+        let dgc = try! verifier.decode(encodedData: hcert).get()
+        let dgcJson =  try! JSONEncoder().encode(dgc.healthCert)
+        let session = URLSession.shared
+        let request = URLRequest.init(url: URL(string: "https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/verificationRules.json")!)
+        let (data, urlResponse, _) = session.synchronousDataTask(with: request)
+        
+        let rules = JSON(data!)["rules"]
+        let valueSets = JSON(data!)["valueSets"]
+        var external = JSON(
+            ["validationClock": "2021-06-03T09:40:51Z",
+             "validationClockAtStartOfDay": "2021-06-03T00:00:00Z",
+            ]
+        )
+        external["valueSets"] = valueSets
+        
+        for rule in rules.array! {
+            let logic = rule["logic"]
+         
+            var dgcTest = JSON(["external" : external, "payload" : JSON(dgcJson)])
+            guard let result: Bool = try? applyRule(logic, to: dgcTest) else {
+                XCTFail("should be valid")
+                return
+            }
+            if !result {
+                XCTFail("should be valid")
+            }
+        }
+        print("a")
+    }
+    
+    func testOldTestFails() {
+        let hcert = "HC1:NCFK70DF0/3WUWGSLKH47GO0KNJ9DSWQIIWT9CK-600XKY-CE59-G80:84F36RIBJ42F3FMMPSKY50.FK6ZKZWEDOLOPCO8F6%E3.DA%EOPC1G72A6YM8JG70Y8I%6557F46G:6TG8ER6WW6F:6$A7+96/B8UPC0JCZ69+EDG8F3I80/D6$CBECSUER:C2$NS346$C2%E9VC- CSUE145GB8JA5B$D:TCQF6SG69/DY3FCEC%JC82E-M8*+A%R81A6M34U1D5UA QE3KC*PCT23846Y96B465W5HX6F462G7M%63R6Y$5F%68JB5WEQPD6$CSUEIN8G/D5$C4KCD3DX47B46IL6646H*6KWEKDDC%6-Q6QW66464KCCWE6T9OF6:/6NA76W5JPCT3E5JDJA76L68463W5/A6..DX%DZJC3/DH$9- NTVDWKEI3DK2D4XOXVD1/DLPCG/DU2D4ZA2T9GY8MPCG/DY-CAY81C9XY8O/EZKEZ96446256V50J.L3VJGEI7H9.VMVC7S+7E7LFEM2TILEVZN9FQDNMTDJCKXAYYV7+RKNPY:IC0FVR4/OGQ NY%B/Q44VC9NUYTUOSFSULKZ8H*S 3AKGQXC7ID2S4VA.B3L1C44G69+M6G4G$2E*H1BBD%-1-G6CAVGZ1%RI3VP59FUL1*O8/:PCRQL7PB9GP67ZRU-.KFE1AA33IP.HD%RM JNF:7DB48/4A.5-5C:GLXIGWM5Y2MU.GUMP*B25+D36H30EO1OJMM671M4U8WGN23OJ3+:6RW4VDPB 6P5CIW7O08U9J1B8KFP$Y7L0VLWCB4T-FJ3IDWTM/*HUV5H4L645NGF72G8C6BLC/+C:7B:N2:UT .LD5RA+GC36+PS YH 8WDLD18WM5T"
+        let rule = """
+             {
+                            "if": [
+                                {
+                                    "===": [
+                                        {
+                                            "var": "payload.t.0.tt"
+                                        },
+                                        "LP217198-3"
+                                    ]
+                                },
+                                {
+                                    "<": [
+                                        {
+                                            "plusTime": [
+                                                {
+                                                    "var": "external.validationClock"
+                                                },
+                                                0,
+                                                "day"
+                                            ]
+                                        },
+                                        {
+                                            "plusTime": [
+                                                {
+                                                    "var": "payload.t.0.sc"
+                                                },
+                                                72
+                                                ,
+                                                "hour"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                true
+                            ]
+                        }
+            """
+        
+        let dgc = try! verifier.decode(encodedData: hcert).get()
+        let dgcJson =  try! JSONEncoder().encode(dgc.healthCert)
+        
+        var dgcTest = JSON(["external" : JSON(string: "{\"validationClock\" : \"2021-06-10T09:40:51Z\",\"validationClockAtStartOfDay\" : \"2021-06-10T00:00:00Z\"}")!, "payload" : JSON(dgcJson)])
+        
+        let result: Bool? = try! applyRule(JSON(string: rule)!, to: dgcTest)
+        
+        XCTAssertFalse(result!)
     }
 
     func testDevSignature() {
