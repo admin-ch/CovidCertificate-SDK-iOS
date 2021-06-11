@@ -12,6 +12,7 @@
 import base45_swift
 import Foundation
 import Gzip
+import JSON
 
 public enum CovidCertError: Error, Equatable {
     case NOT_IMPLEMENTED
@@ -156,12 +157,76 @@ public struct ChCovidCert {
 
     public func checkNationalRules(dgc: EuHealthCert, forceUpdate _: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         switch dgc.certType {
-        case .vaccination:
-            nationalRules.verifyVaccine(vaccine: dgc.vaccinations![0], completionHandler)
-        case .recovery:
-            nationalRules.verifyRecovery(recovery: dgc.pastInfections![0], completionHandler)
-        case .test:
-            nationalRules.verifyTest(test: dgc.tests![0], completionHandler)
+        case .vaccination, .recovery, .test:
+            trustListManager.nationalRulesListUpdater.addCheckOperation {error in
+                if let e = error?.asNationalRulesError() {
+                    completionHandler(.failure(e))
+                    return
+                } else {
+                    let list = self.trustListManager.trustStorage.nationalRules()
+                    let result = CertLogic()
+                    guard let rules = list.getRulesJSON(),
+                          let valueSets = list.getValueSetsJSON() else {
+                        completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                        return
+                    }
+                    if case .failure = result.updateData(rules: rules, valueSets: valueSets) {
+                        completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                        return
+                    }
+                   
+                    switch result.checkRules(hcert: dgc)  {
+                    case .success:
+                        switch dgc.certType {
+                        case .recovery:
+                            completionHandler(.success(VerificationResult(isValid: true, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validUntilDate, dateError: nil)))
+                        case .vaccination:
+                            let maxValidity = valueSets["acceptance-critreria"]["vaccine-immunity"].int ?? 0
+                            let daysAfterFirstShot = valueSets["acceptance-critreria"]["single-vaccine-validity-offset"].int ?? 10000
+                            completionHandler(.success(VerificationResult(isValid: true, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: nil)))
+                        case .test:
+                            let pcrValidity = valueSets["acceptance-critreria"]["pcr-test-valididty"].int ?? 0
+                            let ratValidity = valueSets["acceptance-critreria"]["rat-test-valididty"].int ?? 0
+                            completionHandler(.success(VerificationResult(isValid: true, validUntil: dgc.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: dgc.tests?.first?.validFromDate, dateError: nil)))
+                        default:
+                            completionHandler(.failure(.NETWORK_PARSE_ERROR))
+
+                        }
+                        return
+                    case .failure(.TESTS_FAILED(let tests)):
+                        switch tests.keys.first {
+                        case "GR-CH-0001": completionHandler(.failure(.WRONG_DISEASE_TARGET))
+                        case "VR-CH-0000": completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                        case  "VR-CH-0001": completionHandler(.failure(.NOT_FULLY_PROTECTED))
+                        case "VR-CH-0002" : completionHandler(.failure(.NO_VALID_PRODUCT))
+                        case  "VR-CH-0003": completionHandler(.failure(.NO_VALID_DATE))
+                        case  "VR-CH-0004": completionHandler(.failure(.NO_VALID_DATE))
+                        case  "VR-CH-0006": completionHandler(.failure(.NO_VALID_DATE))
+                        case  "TR-CH-0000" : completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                        case  "TR-CH-0001": completionHandler(.failure(.POSITIVE_RESULT))
+                        case  "TR-CH-0002" : completionHandler(.failure(.WRONG_TEST_TYPE))
+                        case  "TR-CH-0003" : completionHandler(.failure(.NO_VALID_PRODUCT))
+                        case  "TR-CH-0004" : completionHandler(.failure(.NO_VALID_DATE))
+                        case  "TR-CH-0005" : completionHandler(.failure(.NO_VALID_DATE))
+                        case  "TR-CH-0006" : completionHandler(.failure(.NO_VALID_DATE))
+                        case  "TR-CH-0007" : completionHandler(.failure(.NO_VALID_DATE))
+                        case  "RR-CH-0000" : completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                        case  "RR-CH-0001" : completionHandler(.failure(.NO_VALID_DATE))
+                        case  "RR-CH-0002" : completionHandler(.failure(.NO_VALID_DATE))
+                        case "RR-CH-0003" : completionHandler(.failure(.NO_VALID_DATE))
+                        default:
+                            completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                        }
+                        return
+                    case .failure(.TEST_COULD_NOT_BE_PERFORMED(let test)):
+                        completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                        return
+                    default:
+                        completionHandler(.failure(.NO_VALID_DATE))
+                        return
+                    }
+                }
+            }
         default:
             completionHandler(.failure(.NO_VALID_PRODUCT))
         }

@@ -137,11 +137,36 @@ public struct Vaccination: Codable {
             return dateOfVaccination
         }
     }
+    
+    public func getValidFromDate(daysAfterFirstShot: Int) -> Date? {
+        guard let dateOfVaccination = self.dateOfVaccination,
+              let totalDoses = AcceptedProducts.shared.totalNumberOfDoses(vaccination: self)
+        else {
+            return nil
+        }
+
+        // if this is a vaccine, which only needs one shot AND we had no previous infections, the vaccine is valid 15 days after the date of vaccination
+        if !hadPastInfection,
+           totalDoses == 1 {
+            return Calendar.current.date(byAdding: DateComponents(day: daysAfterFirstShot), to: dateOfVaccination)
+        } else {
+            // in any other case the vaccine is valid from the date of vaccination
+            return dateOfVaccination
+        }
+    }
 
     /// Vaccines are valid for 180 days
     public var validUntilDate: Date? {
         guard let dateOfVaccination = self.dateOfVaccination,
               let date = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: dateOfVaccination) else {
+            return nil
+        }
+        return date
+    }
+    
+    public func getValidUntilDate(maximumValidityInDays: Int) -> Date? {
+        guard let dateOfVaccination = self.dateOfVaccination,
+              let date = Calendar.current.date(byAdding: DateComponents(day: maximumValidityInDays), to: dateOfVaccination) else {
             return nil
         }
         return date
@@ -208,6 +233,18 @@ public struct Test: Codable {
             return Calendar.current.date(byAdding: DateComponents(hour: PCR_TEST_VALIDITY_IN_HOURS), to: startDate)
         case TestType.Rat.rawValue:
             return Calendar.current.date(byAdding: DateComponents(hour: RAT_TEST_VALIDITY_IN_HOURS), to: startDate)
+        default:
+            return nil
+        }
+    }
+    
+    public func getValidUntilDate(pcrTestValidityInHours: Int, ratTestValidityInHours: Int) -> Date? {
+        guard let startDate = validFromDate else { return nil }
+        switch type {
+        case TestType.Pcr.rawValue:
+            return Calendar.current.date(byAdding: DateComponents(hour: pcrTestValidityInHours), to: startDate)
+        case TestType.Rat.rawValue:
+            return Calendar.current.date(byAdding: DateComponents(hour: ratTestValidityInHours), to: startDate)
         default:
             return nil
         }
