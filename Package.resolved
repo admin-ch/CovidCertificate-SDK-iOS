@@ -47,6 +47,15 @@
         }
       },
       {
+        "package": "jsonlogic",
+        "repositoryURL": "https://github.com/eu-digital-green-certificates/json-logic-swift",
+        "state": {
+          "branch": "release/test-merged-prs",
+          "revision": "be733d2978beaf9e4db4f7eebb1e5d3023134753",
+          "version": null
+        }
+      },
+      {
         "package": "KituraContracts",
         "repositoryURL": "https://github.com/Kitura/KituraContracts.git",
         "state": {
@@ -80,12 +89,6 @@
           "branch": null,
           "revision": "5d66f7ba25daf4f94100e7022febf3c75e37a6c7",
           "version": "1.4.2"
-        "package": "jsonlogic",
-        "repositoryURL": "https://github.com/eu-digital-green-certificates/json-logic-swift",
-        "state": {
-          "branch": "master",
-          "revision": "674f16fb72c9f807f7a7573f2373aba8dcafdd5f",
-          "version": null
         }
       },
       {
