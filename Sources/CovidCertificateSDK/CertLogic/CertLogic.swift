@@ -24,31 +24,19 @@ public class CertLogic {
     var valueSets: JSON = []
     
     public init() {}
-    
-    public init(data: Data) {
-        let _ = self.updateData(requestBody: data)
-    }
-    
-    private var now : String {
-        return ISO8601DateFormatter().string(from: Date())
-    }
-    private var today : String {
-        return ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: Date()))
-    }
-    
-    public func updateData(requestBody: Data) -> Result<(), CertLogicCommonError> {
-        guard let logicRules = JSON(requestBody)["rules"].array else {
+    public func updateData(rules: JSON, valueSets: JSON) -> Result<(), CertLogicCommonError> {
+        guard let array = rules.array else {
             return .failure(.RULE_PARSING_FAILED)
         }
-        rules = logicRules
-        valueSets = JSON(requestBody)["valueSets"]
+        self.rules = array
+        self.valueSets = valueSets
         return .success(())
     }
     
-    public func checkRules(hcert: EuHealthCert) -> Result<(), CertLogicValidationError> {
+    public func checkRules(hcert: EuHealthCert, validationClock: Date = Date()) -> Result<(), CertLogicValidationError> {
         var external = JSON(
-            ["validationClock": now,
-             "validationClockAtStartOfDay": today,
+            ["validationClock": ISO8601DateFormatter().string(from: validationClock),
+             "validationClockAtStartOfDay": ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: validationClock)),
             ]
         )
         external["valueSets"] = valueSets
@@ -56,7 +44,7 @@ public class CertLogic {
         guard let dgcJson =  try? JSONEncoder().encode(hcert) else {
             return .failure(.JSON_ERROR)
         }
-        var context = JSON(["external" : external, "payload" : JSON(dgcJson)])
+        let context = JSON(["external" : external, "payload" : JSON(dgcJson)])
         for rule in self.rules {
             let logic = rule["logic"]
             guard let result: Bool = try? applyRule(logic, to: context) else {
