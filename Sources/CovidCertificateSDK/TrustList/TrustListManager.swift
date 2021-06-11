@@ -26,7 +26,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     // MARK: - JWS verification
 
     public static var jwsVerifier: JWSVerifier {
-        guard let data = Bundle.main.url(forResource: "swiss_governmentrootcaii", withExtension: "der") else {
+        guard let data = Bundle.module.url(forResource: "swiss_governmentrootcaii", withExtension: "der") else {
             fatalError("Signing CA not in Bundle")
         }
         guard let caPem = try? Data(contentsOf: data),
