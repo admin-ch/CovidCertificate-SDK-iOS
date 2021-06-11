@@ -43,7 +43,7 @@ class NationalRulesListUpdate: TrustListUpdate {
        
         semaphore.wait()
 
-        guard var result = try? outcome.get() else {
+        guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
         
