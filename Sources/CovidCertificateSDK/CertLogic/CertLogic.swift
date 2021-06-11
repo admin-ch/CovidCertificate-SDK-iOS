@@ -52,6 +52,8 @@ public class CertLogic {
             }
             if !result {
                 failedTests.updateValue(rule["description"].string ?? "TEST_DESCRIPTION_UNKNOWN", forKey: rule["id"].string ?? "TEST_ID_UNKNOWN")
+                // for now we break at the first occurence of an error
+                break
             }
         }
         if failedTests.isEmpty {
