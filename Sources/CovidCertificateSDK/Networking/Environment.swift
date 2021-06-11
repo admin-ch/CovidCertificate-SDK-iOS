@@ -26,20 +26,22 @@ public enum SDKEnvironment {
             return Backend("https://www.cc.bit.admin.ch/trust", version: "v1")
         }
     }
+    
+    public static let APPLICATION_JWT_PLUS_JWS : String = "application/json+jws"
 
     var revocationListService: Endpoint {
-        return trustBackend.endpoint("revocationList")
+        return trustBackend.endpoint("revocationList", headers: ["Accept" : SDKEnvironment.APPLICATION_JWT_PLUS_JWS])
     }
 
     var nationalRulesListService: Endpoint {
-        return trustBackend.endpoint("verificationRules")
+        return trustBackend.endpoint("verificationRules",headers: ["Accept" : SDKEnvironment.APPLICATION_JWT_PLUS_JWS])
     }
 
     func trustCertificatesService(since: String) -> Endpoint {
-        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": since])
+        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": since], headers: ["Accept" : SDKEnvironment.APPLICATION_JWT_PLUS_JWS])
     }
 
     var activeCertificatesService: Endpoint {
-        return trustBackend.endpoint("keys/list")
+        return trustBackend.endpoint("keys/list", headers: ["Accept" : SDKEnvironment.APPLICATION_JWT_PLUS_JWS])
     }
 }

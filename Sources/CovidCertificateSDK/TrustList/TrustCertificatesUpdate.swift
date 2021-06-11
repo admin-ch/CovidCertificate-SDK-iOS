@@ -27,7 +27,21 @@ class TrustCertificatesUpdate: TrustListUpdate {
             return errorActive?.asNetworkError()
         }
 
-        guard let d = dataActive, let result = try? JSONDecoder().decode(ActiveTrustCertificates.self, from: d) else {
+        guard let d = dataActive else {
+            return .NETWORK_PARSE_ERROR
+        }
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        var outcome :  Result<ActiveTrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
+        
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result : Result<ActiveTrustCertificates, JWSError>) in
+            outcome = result
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
 
@@ -50,9 +64,24 @@ class TrustCertificatesUpdate: TrustListUpdate {
                 nextSinceHeader = s
             }
 
-            guard let d = data, let result = try? JSONDecoder().decode(TrustCertificates.self, from: d) else {
+            guard let d = data else {
                 return .NETWORK_PARSE_ERROR
             }
+            
+            let semaphore = DispatchSemaphore(value: 0)
+            var outcome :  Result<TrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
+            
+            TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result : Result<TrustCertificates, JWSError>) in
+                outcome = result
+                semaphore.signal()
+            }
+            
+            semaphore.wait()
+            
+            guard let result = try? outcome.get() else {
+                return .NETWORK_PARSE_ERROR
+            }
+
 
             _ = trustStorage.updateCertificateList(result, since: nextSinceHeader)
 
