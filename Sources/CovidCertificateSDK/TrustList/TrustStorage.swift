@@ -89,7 +89,7 @@ class TrustStorage: TrustStorageProtocol {
         // remove all certificates that are not active
         return certificateQueue.sync {
             Self.sharedStorage.activeCertificates.removeAll { c in
-                activeCertificates.activeKeyIds.contains(c.keyId)
+                !activeCertificates.activeKeyIds.contains(c.keyId)
             }
 
             Self.sharedStorage.lastCertificateListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
