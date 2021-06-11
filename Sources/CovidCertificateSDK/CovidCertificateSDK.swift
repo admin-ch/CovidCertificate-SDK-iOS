@@ -19,7 +19,7 @@ public enum CovidCertificateSDK {
 
     public static func initialize(environment: SDKEnvironment) {
         precondition(instance == nil, "CovidCertificateSDK already initialized")
-        instance = ChCovidCert(environment: environment, trustList: StaticTrustlist())
+        instance = ChCovidCert(environment: environment, trustListManager: TrustlistManager())
     }
 
     public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
@@ -41,6 +41,11 @@ public enum CovidCertificateSDK {
     public static func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         instancePrecondition()
         return instance.checkNationalRules(dgc: dgc, completionHandler)
+    }
+
+    public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+        instancePrecondition()
+        instance.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
     }
 
     private static func instancePrecondition() {

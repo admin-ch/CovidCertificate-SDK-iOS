@@ -26,6 +26,9 @@ public enum NationalRulesError: Error, Equatable {
     case POSITIVE_RESULT
     case NOT_FULLY_PROTECTED
     case NO_VALID_DATE
+    case NETWORK_ERROR(errorCode: String)
+    case NETWORK_PARSE_ERROR
+    case NETWORK_NO_INTERNET_CONNECTION
 
     public var errorCode: String {
         switch self {
@@ -35,6 +38,9 @@ public enum NationalRulesError: Error, Equatable {
         case .POSITIVE_RESULT: return "N|PR"
         case .NOT_FULLY_PROTECTED: return "N|NFP"
         case .NO_VALID_DATE: return "N|NVD"
+        case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
+        case .NETWORK_PARSE_ERROR: return "NE|PE"
+        case .NETWORK_NO_INTERNET_CONNECTION: return "NE|NIC"
         }
     }
 }

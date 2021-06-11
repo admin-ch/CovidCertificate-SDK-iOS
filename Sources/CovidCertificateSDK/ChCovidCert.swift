@@ -70,14 +70,15 @@ public struct DGCHolder {
 
 public struct ChCovidCert {
     private let PREFIX = "HC1:"
-    private let trustList: Trustlist
+
+    private let trustListManager: TrustlistManagerProtocol
     private let nationalRules = NationalRulesVerifier()
 
     public let environment: SDKEnvironment
 
-    init(environment: SDKEnvironment, trustList: Trustlist) {
+    init(environment: SDKEnvironment, trustListManager: TrustlistManagerProtocol) {
         self.environment = environment
-        self.trustList = trustList
+        self.trustListManager = trustListManager
     }
 
     public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
@@ -123,20 +124,32 @@ public struct ChCovidCert {
             return
         }
 
-        trustList.key(for: cose.keyId) { result in
-            switch result {
-            case let .success(key):
-                let isValid = cose.hasValidSignature(for: key)
-                let error: ValidationError? = isValid ? nil : ValidationError.KEY_NOT_IN_TRUST_LIST
-                completionHandler(.success(ValidationResult(isValid: isValid, payload: cose.healthCert, error: error)))
-            case let .failure(error): completionHandler(.failure(error))
+        trustListManager.trustCertificateUpdater.addCheckOperation { error in
+            if let e = error?.asValidationError() {
+                completionHandler(.failure(e))
+            } else {
+                let list = self.trustListManager.trustStorage.activeCertificatePublicKeys()
+                let validationError = list.hasValidSignature(for: cose)
+
+                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: cose.healthCert, error: validationError)))
             }
         }
     }
 
     public func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         // As long as no revocation list is published yet, return true
-        completionHandler(.success(ValidationResult(isValid: true, payload: dgc, error: nil)))
+        trustListManager.revocationListUpdater.addCheckOperation { error in
+
+            if let e = error?.asValidationError() {
+                completionHandler(.failure(e))
+            } else {
+                let list = self.trustListManager.trustStorage.revokedCertificates()
+                let isRevoked = dgc.certIdentifiers().contains { list.contains($0) }
+                let error: ValidationError? = isRevoked ? .REVOKED : nil
+
+                completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: dgc, error: error)))
+            }
+        }
     }
 
     public func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
@@ -150,6 +163,10 @@ public struct ChCovidCert {
         default:
             completionHandler(.failure(.NO_VALID_PRODUCT))
         }
+    }
+
+    public func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+        trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
     }
 
     func allRecoveriesAreValid(recoveries _: [PastInfection]) -> Bool {

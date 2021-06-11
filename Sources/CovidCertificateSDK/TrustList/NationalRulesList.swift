@@ -11,8 +11,6 @@
 
 import Foundation
 
-public enum SDKEnvironment {
-    case dev
-    case abn
-    case prod
+public class NationalRulesList: Codable {
+    public var validDuration: Int64 = 0
 }

@@ -31,7 +31,6 @@ public enum ValidationError: Error, Equatable {
     case CBOR_DESERIALIZATION_FAILED
     case CERTIFICATE_QUERY_FAILED
     case USER_CANCELLED
-    case TRUST_SERVICE_ERROR(cause: String)
     case KEY_NOT_IN_TRUST_LIST
     case PUBLIC_KEY_EXPIRED
     case CWT_EXPIRED
@@ -41,6 +40,9 @@ public enum ValidationError: Error, Equatable {
     case KEYSTORE_ERROR(cause: String)
     case REVOKED
     case SIGNATURE_TYPE_INVALID(SignatureTypeInvalidError)
+    case NETWORK_ERROR(errorCode: String)
+    case NETWORK_PARSE_ERROR
+    case NETWORK_NO_INTERNET_CONNECTION
 
     public var message: String {
         switch self {
@@ -48,7 +50,6 @@ public enum ValidationError: Error, Equatable {
         case .CBOR_DESERIALIZATION_FAILED: return "CBOR deserialization failed"
         case .CERTIFICATE_QUERY_FAILED: return "Signing certificate query failed"
         case .USER_CANCELLED: return "User cancelled"
-        case let .TRUST_SERVICE_ERROR(cause): return cause
         case .KEY_NOT_IN_TRUST_LIST: return "Key not in trust list"
         case .PUBLIC_KEY_EXPIRED: return "Public key expired"
         case .UNSUITABLE_PUBLIC_KEY_TYPE: return "Key unsuitable for EHN certificate type"
@@ -58,6 +59,9 @@ public enum ValidationError: Error, Equatable {
         case .ISSUED_IN_FUTURE: return "The CWT was issued in the future"
         case .REVOKED: return "Certificate was revoked"
         case .SIGNATURE_TYPE_INVALID: return "The certificate is not valid according to specification"
+        case .NETWORK_ERROR: return "A network error occured"
+        case .NETWORK_PARSE_ERROR: return "The data could not be parsed"
+        case .NETWORK_NO_INTERNET_CONNECTION: return "The internet connection appears to be offline"
         }
     }
 
@@ -67,7 +71,6 @@ public enum ValidationError: Error, Equatable {
         case .CBOR_DESERIALIZATION_FAILED: return ""
         case .CERTIFICATE_QUERY_FAILED: return ""
         case .USER_CANCELLED: return ""
-        case .TRUST_SERVICE_ERROR: return "R|TSE"
         case .KEY_NOT_IN_TRUST_LIST: return "S|KNTL"
         case .PUBLIC_KEY_EXPIRED: return "R|PKE"
         case .UNSUITABLE_PUBLIC_KEY_TYPE: return "S|PKT"
@@ -77,6 +80,9 @@ public enum ValidationError: Error, Equatable {
         case .ISSUED_IN_FUTURE: return ""
         case .REVOKED: return "R|REV"
         case let .SIGNATURE_TYPE_INVALID(wrapped): return "S|TIV|" + wrapped.errorCode
+        case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
+        case .NETWORK_PARSE_ERROR: return "NE|PE"
+        case .NETWORK_NO_INTERNET_CONNECTION: return "NE|NIC"
         }
     }
 }

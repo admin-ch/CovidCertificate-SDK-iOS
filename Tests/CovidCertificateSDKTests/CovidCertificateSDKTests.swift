@@ -1,42 +1,10 @@
 //
 @testable import CovidCertificateSDK
-/*
- * Copyright (c) 2021 Ubique Innovation AG <https://www.ubique.ch>
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/.
- *
- * SPDX-License-Identifier: MPL-2.0
- */
 import XCTest
-
-class TestTrustList: Trustlist {
-    func publicKeys() -> [TrustListPublicKey] {
-        return innerPublicKeys
-    }
-
-    func key(for keyId: Data, completionHandler: @escaping (Result<SecKey, ValidationError>) -> Void) {
-        guard let publicKey = publicKeys().first(where: { key in
-            key.keyId == keyId.base64EncodedString()
-        })
-        else {
-            completionHandler(.failure(.KEY_NOT_IN_TRUST_LIST))
-            return
-        }
-
-        completionHandler(.success(publicKey.key))
-    }
-
-    let innerPublicKeys: [TrustListPublicKey]
-    init(publicKeys: [TrustListPublicKey]) {
-        innerPublicKeys = publicKeys
-    }
-}
 
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: ChCovidCert {
-        let ver = ChCovidCert(environment: SDKEnvironment.dev, trustList: StaticTrustlist())
+        let ver = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager())
         return ver
     }
 
@@ -72,20 +40,18 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc=", andY: "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM=")
         let keys: [TrustListPublicKey] = [key].compactMap { $0 }
-        let testTrustList = TestTrustList(publicKeys: keys)
 
         guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTAssertTrue(false)
             return
         }
 
-        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
+        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(cose: dgcHolder) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
-            case let .failure(error):
-
+            case .failure:
                 XCTAssertTrue(false)
             }
         }
@@ -118,7 +84,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
         verifier.checkSignature(cose: dgcHolder) { result in
             switch result {
-            case let .success(r):
+            case .success:
                 XCTAssertTrue(false)
             case let .failure(error):
                 // we should fail with CWT expired
@@ -140,7 +106,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 //            return
 //        }
 //
-//        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustList: testTrustList)
+//        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager(publicKeys: keys))
 //        customVerifier.checkSignature(cose: dgcHolder) { result in
 //            if case let .success(r) = result {
 //                XCTAssertTrue(r.isValid)
