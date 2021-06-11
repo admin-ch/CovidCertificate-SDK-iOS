@@ -149,11 +149,9 @@ class TrustStorage: TrustStorageProtocol {
     // MARK: - Validity
 
     private func isStillValid(lastDownloadTimeStamp: Int64, validDuration: Int64) -> Bool {
-        return nationalQueue.sync {
-            let stillValidUntil = lastDownloadTimeStamp + validDuration
-            let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
-            return Date().isBefore(validUntilDate)
-        }
+        let stillValidUntil = lastDownloadTimeStamp + validDuration
+        let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
+        return Date().isBefore(validUntilDate)
     }
 }
 
