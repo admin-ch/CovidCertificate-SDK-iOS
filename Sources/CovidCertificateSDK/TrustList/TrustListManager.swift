@@ -24,29 +24,30 @@ public protocol TrustlistManagerProtocol {
 
 class TrustlistManager: TrustlistManagerProtocol {
     // MARK: - JWS verification
-    public static var jwsVerifier : JWSVerifier  {
+
+    public static var jwsVerifier: JWSVerifier {
         guard let data = Bundle.main.url(forResource: "swiss_governmentrootcaii", withExtension: "der") else {
-                   fatalError("Signing CA not in Bundle")
-               }
-       guard let caPem = try? Data(contentsOf: data),
-             let verifier = JWSVerifier(rootCertificate: caPem, leafCertMustMatch: TrustlistManager.leafCertificateCommonName) else {
-           fatalError("Cannot create certificate from data")
-       }
+            fatalError("Signing CA not in Bundle")
+        }
+        guard let caPem = try? Data(contentsOf: data),
+              let verifier = JWSVerifier(rootCertificate: caPem, leafCertMustMatch: TrustlistManager.leafCertificateCommonName) else {
+            fatalError("Cannot create certificate from data")
+        }
         return verifier
     }
-    
+
     private static var leafCertificateCommonName: String {
         switch CovidCertificateSDK.currentEnvironment {
-            case .dev:
-                // TODO: fix this when we have a dedicated dev certificate
-                return "CH01-AppContentCertificate-ref"
-            case .abn:
-                return "CH01-AppContentCertificate-ref"
-            case .prod:
-                return "CH01-AppContentCertificate-prod"
-            }
+        case .dev:
+            // TODO: fix this when we have a dedicated dev certificate
+            return "CH01-AppContentCertificate-ref"
+        case .abn:
+            return "CH01-AppContentCertificate-ref"
+        case .prod:
+            return "CH01-AppContentCertificate-prod"
         }
-    
+    }
+
     // MARK: - Components
 
     var trustStorage: TrustStorageProtocol

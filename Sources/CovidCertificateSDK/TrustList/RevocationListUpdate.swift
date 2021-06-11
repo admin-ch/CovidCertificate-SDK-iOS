@@ -30,21 +30,21 @@ class RevocationListUpdate: TrustListUpdate {
         guard let d = data else {
             return .NETWORK_PARSE_ERROR
         }
-        
+
         let semaphore = DispatchSemaphore(value: 0)
-        var outcome :  Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)
-        
-        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result : Result<RevocationList, JWSError>) in
+        var outcome: Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)
+
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<RevocationList, JWSError>) in
             outcome = result
             semaphore.signal()
         }
-        
+
         semaphore.wait()
-        
+
         guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
-        _ = self.trustStorage.updateRevocationList(result)
+        _ = trustStorage.updateRevocationList(result)
         return nil
     }
 

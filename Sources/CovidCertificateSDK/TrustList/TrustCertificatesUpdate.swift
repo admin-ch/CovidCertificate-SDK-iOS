@@ -30,17 +30,17 @@ class TrustCertificatesUpdate: TrustListUpdate {
         guard let d = dataActive else {
             return .NETWORK_PARSE_ERROR
         }
-        
+
         let semaphore = DispatchSemaphore(value: 0)
-        var outcome :  Result<ActiveTrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
-        
-        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result : Result<ActiveTrustCertificates, JWSError>) in
+        var outcome: Result<ActiveTrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
+
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<ActiveTrustCertificates, JWSError>) in
             outcome = result
             semaphore.signal()
         }
-        
+
         semaphore.wait()
-        
+
         guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
@@ -67,21 +67,20 @@ class TrustCertificatesUpdate: TrustListUpdate {
             guard let d = data else {
                 return .NETWORK_PARSE_ERROR
             }
-            
+
             let semaphore = DispatchSemaphore(value: 0)
-            var outcome :  Result<TrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
-            
-            TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result : Result<TrustCertificates, JWSError>) in
+            var outcome: Result<TrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)
+
+            TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<TrustCertificates, JWSError>) in
                 outcome = result
                 semaphore.signal()
             }
-            
+
             semaphore.wait()
-            
+
             guard let result = try? outcome.get() else {
                 return .NETWORK_PARSE_ERROR
             }
-
 
             _ = trustStorage.updateCertificateList(result, since: nextSinceHeader)
 
