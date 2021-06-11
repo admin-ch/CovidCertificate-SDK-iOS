@@ -57,7 +57,7 @@ public enum CovidCertificateSDK {
         return instance.environment
     }
 
-    public static var apiKey : String {
+    public static var apiKey: String {
         instancePrecondition()
         return instance.apiKey
     }
