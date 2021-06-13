@@ -132,8 +132,8 @@ public class TrustListUpdate {
         }
     }
 
-    public func addCheckOperation(checkOperation: @escaping ((NetworkError?) -> Void)) {
-        let updateNeeeded = !isListStillValid()
+    public func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
+        let updateNeeeded = !isListStillValid() || forceUpdate
         let updateAlreadyRunnning = updateOperation != nil
 
         if updateNeeeded, !updateAlreadyRunnning {

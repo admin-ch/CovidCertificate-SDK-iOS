@@ -28,19 +28,19 @@ public enum CovidCertificateSDK {
     }
 
     @available(OSX 10.13, *)
-    public static func checkSignature(cose: DGCHolder, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    public static func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         instancePrecondition()
-        return instance.checkSignature(cose: cose, completionHandler)
+        return instance.checkSignature(cose: cose, forceUpdate: forceUpdate, completionHandler)
     }
 
-    public static func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    public static func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         instancePrecondition()
-        return instance.checkRevocationStatus(dgc: dgc, completionHandler)
+        return instance.checkRevocationStatus(dgc: dgc, forceUpdate: forceUpdate, completionHandler)
     }
 
-    public static func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    public static func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         instancePrecondition()
-        return instance.checkNationalRules(dgc: dgc, completionHandler)
+        return instance.checkNationalRules(dgc: dgc, forceUpdate: forceUpdate, completionHandler)
     }
 
     public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {

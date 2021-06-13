@@ -107,7 +107,7 @@ public struct ChCovidCert {
     }
 
     @available(OSX 10.13, *)
-    public func checkSignature(cose: DGCHolder, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    public func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch cose.cwt.isValid() {
         case let .success(isValid):
             if !isValid {
@@ -124,7 +124,7 @@ public struct ChCovidCert {
             return
         }
 
-        trustListManager.trustCertificateUpdater.addCheckOperation { error in
+        trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
             if let e = error?.asValidationError() {
                 completionHandler(.failure(e))
             } else {
@@ -133,12 +133,12 @@ public struct ChCovidCert {
 
                 completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: cose.healthCert, error: validationError)))
             }
-        }
+        })
     }
 
-    public func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    public func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         // As long as no revocation list is published yet, return true
-        trustListManager.revocationListUpdater.addCheckOperation { error in
+        trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
 
             if let e = error?.asValidationError() {
                 completionHandler(.failure(e))
@@ -149,10 +149,10 @@ public struct ChCovidCert {
 
                 completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: dgc, error: error)))
             }
-        }
+        })
     }
 
-    public func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    public func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         switch dgc.certType {
         case .vaccination:
             nationalRules.verifyVaccine(vaccine: dgc.vaccinations![0], completionHandler)
