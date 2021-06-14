@@ -4,10 +4,6 @@ import XCTest
 import jsonlogic
 import JSON
 
-class TestRules {
-    
-}
-
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: ChCovidCert {
         let ver = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager())

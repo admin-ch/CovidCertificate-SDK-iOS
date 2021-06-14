@@ -35,9 +35,8 @@ public class NationalRulesList: Codable, JWTExtension {
         case requestData
     }
     
-    public init() {
-        
-    }
+    // Allow default constructor
+    public init(){}
     
     required public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
