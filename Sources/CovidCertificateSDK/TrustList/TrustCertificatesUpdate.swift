@@ -49,8 +49,6 @@ class TrustCertificatesUpdate: TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        _ = trustStorage.updateActiveCertificates(result)
-
         // update trust certificates service
         var listNeedsUpdate = true
         var requestsCount = 0
@@ -100,6 +98,10 @@ class TrustCertificatesUpdate: TrustListUpdate {
             // start another request, as long as certificates are coming in
             listNeedsUpdate = upToDate == Self.falseConstant
         }
+
+        // Check which certificates need to be removed. This needs to be called
+        // after loading new certificates and only if it was successful.
+        _ = trustStorage.updateActiveCertificates(result)
 
         return nil
     }
