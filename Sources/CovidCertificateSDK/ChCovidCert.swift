@@ -75,9 +75,11 @@ public struct ChCovidCert {
     private let nationalRules = NationalRulesVerifier()
 
     public let environment: SDKEnvironment
+    public let apiKey: String
 
-    init(environment: SDKEnvironment, trustListManager: TrustlistManagerProtocol) {
+    init(environment: SDKEnvironment, apiKey: String, trustListManager: TrustlistManagerProtocol) {
         self.environment = environment
+        self.apiKey = apiKey
         self.trustListManager = trustListManager
     }
 
