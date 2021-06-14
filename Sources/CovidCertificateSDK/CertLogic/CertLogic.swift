@@ -64,10 +64,10 @@ public class CertLogic {
         )
         external["valueSets"] = valueSets
         var failedTests: [String: String] = [:]
-        guard let dgcJson = try? JSONEncoder().encode(hcert) else {
+        guard let dccJson = try? JSONEncoder().encode(hcert) else {
             return .failure(.JSON_ERROR)
         }
-        let context = JSON(["external": external, "payload": JSON(dgcJson)])
+        let context = JSON(["external": external, "payload": JSON(dccJson)])
         for rule in rules {
             let logic = rule["logic"]
             guard let result: Bool = try? applyRule(logic, to: context) else {
