@@ -276,11 +276,16 @@ final class CovidCertificateSDKTests: XCTestCase {
     /// A vaccine which only needs one shot is only valid after 15 days
     func testVaccine1of1IsValidAfter15Days() {
         let hcert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
+        
+        let today = Calendar.current.startOfDay(for: Date())
+        let time = Calendar.current.date(byAdding: DateComponents(day: -15), to: today)!
 
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
+                XCTAssertEqual(r.validFrom,  time)
+                XCTAssertEqual(r.validUntil, today)
             default:
                 XCTAssertTrue(false)
             }
