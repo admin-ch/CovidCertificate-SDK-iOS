@@ -37,7 +37,10 @@ let package = Package(
         ),
         .testTarget(
             name: "CovidCertificateSDKTests",
-            dependencies: ["CovidCertificateSDK","jsonlogic"]
+            dependencies: ["CovidCertificateSDK","jsonlogic"],
+            resources: [
+                .process("NationalRules")
+            ]
         ),
     ]
 )
