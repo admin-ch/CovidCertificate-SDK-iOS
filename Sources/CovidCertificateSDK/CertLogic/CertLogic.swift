@@ -20,22 +20,28 @@ public enum CertLogicValidationError : Error {
 }
 
 public class CertLogic {
+    private static let acceptanceCriteriaKey : String = "acceptance-criteria"
+    private static let vaccineImmunityKey : String = "vaccine-immunity"
+    private static let singleVaccineValidityOffsetKey : String = "single-vaccine-validity-offset"
+    private static let pcrTestValidityKey : String = "pcr-test-validity"
+    private static let ratTestValidityKey : String = "ratTestValidity"
+    
     var rules: [JSON] = []
     var valueSets: JSON = []
     let calendar : Calendar
     
-    public var maxValidity : Int64 { valueSets["acceptance-criteria"]["vaccine-immunity"].int ?? 0 }
-    public var daysAfterFirstShot : Int64 { valueSets["acceptance-criteria"]["single-vaccine-validity-offset"].int ?? 10000 }
-    public var pcrValidity : Int64 { valueSets["acceptance-criteria"]["pcr-test-validity"].int ?? 0 }
-    public var ratValidity : Int64 { valueSets["acceptance-criteria"]["rat-test-validity"].int ?? 0 }
+    public var maxValidity : Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int ?? 0 }
+    public var daysAfterFirstShot : Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int ?? 10000 }
+    public var pcrValidity : Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int ?? 0 }
+    public var ratValidity : Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int ?? 0 }
     
     public init?() {
         guard let utc = TimeZone(identifier: "UTC")  else {
             return nil
         }
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = utc
-        self.calendar = calendar
+        var tmpCalendar = Calendar(identifier: .gregorian)
+        tmpCalendar.timeZone = utc
+        self.calendar = tmpCalendar
     }
     public func updateData(rules: JSON, valueSets: JSON) -> Result<(), CertLogicCommonError> {
         guard let array = rules.array else {
