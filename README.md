@@ -44,6 +44,8 @@ After initialization the following pipeline should be used:
 
 4) Check for rules specific to countries such as validity of vaccines or tests
 
+All these checks check against verification properties that are loaded from a server. These returned properties use a property to specify how long they are valid (like `max-age` in general networking). With the parameter `forceUpdate`, these properties can be forced to update.
+
 ### Decoding
 ```swift
 public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError>
@@ -51,18 +53,18 @@ public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError>
 
 ### Verify Signature
 ```swift
-public static func checkSignature(cose: DGCHolder, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void)
+public static func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void)
 ```
 
 ### Check Revocation List
 Currently only stubs
 ```swift
-public static func checkRevocationStatus(dgc: EuHealthCert, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void)
+public static func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void)
 ```
 
 ### Check National Specific Rules
 ```swift
-public static func checkNationalRules(dgc: EuHealthCert, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void)
+public static func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void)
 ```
 
  ## References
