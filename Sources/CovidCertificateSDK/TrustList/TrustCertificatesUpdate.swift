@@ -14,7 +14,7 @@ import Foundation
 class TrustCertificatesUpdate: TrustListUpdate {
     // MARK: - Session
 
-    let session = URLSession.shared
+    let session = URLSession.certificatePinned
 
     private static let falseConstant = "false"
     private static let trueConstant = "true"
