@@ -17,9 +17,9 @@ public enum CovidCertificateSDK {
     /// The current version of the SDK
     public static let frameworkVersion: String = "1.0.0"
 
-    public static func initialize(environment: SDKEnvironment) {
+    public static func initialize(environment: SDKEnvironment, apiKey: String) {
         precondition(instance == nil, "CovidCertificateSDK already initialized")
-        instance = ChCovidCert(environment: environment, trustListManager: TrustlistManager())
+        instance = ChCovidCert(environment: environment, apiKey: apiKey, trustListManager: TrustlistManager())
     }
 
     public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
@@ -55,5 +55,10 @@ public enum CovidCertificateSDK {
     public static var currentEnvironment: SDKEnvironment {
         instancePrecondition()
         return instance.environment
+    }
+
+    public static var apiKey : String {
+        instancePrecondition()
+        return instance.apiKey
     }
 }

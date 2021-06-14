@@ -36,6 +36,9 @@ struct Backend {
         let url = components.url!
         let data = body?.jsonData
 
+        var h : [String: String] = headers ?? [:]
+        h["Authorization"] = "Bearer \(CovidCertificateSDK.apiKey)"
+
         return Endpoint(method: method, url: url, headers: headers, body: data)
     }
 }
