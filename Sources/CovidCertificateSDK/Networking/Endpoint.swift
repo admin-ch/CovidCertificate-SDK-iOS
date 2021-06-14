@@ -41,7 +41,7 @@ extension Endpoint {
 
 extension HTTPURLResponse {
     func value(forHeaderField field: String) -> String? {
-        if #available(iOS 13.0, *) {
+        if #available(iOS 13.0, macOS 10.15, *) {
             return self.value(forHTTPHeaderField: field)
         } else {
             for header in allHeaderFields {
