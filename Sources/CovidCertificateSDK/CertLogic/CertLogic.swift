@@ -8,7 +8,6 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-
 import Foundation
 import JSON
 import jsonlogic
@@ -35,8 +34,8 @@ public class CertLogic {
     let calendar: Calendar
 
     public var maxValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int }
-    public var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int  }
-    public var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int  }
+    public var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int }
+    public var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int }
     public var ratValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int }
 
     public init?() {
