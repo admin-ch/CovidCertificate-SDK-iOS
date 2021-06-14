@@ -252,6 +252,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertEqual(r.validFrom, Calendar.current.startOfDay(for: Date()))
+                XCTAssertEqual(r.validUntil, Calendar.current.date(byAdding: DateComponents(day: 180), to: Date()))
             default:
                 XCTAssertTrue(false)
             }
@@ -267,6 +268,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertEqual(r.validFrom, Calendar.current.startOfDay(for: Date()))
+                XCTAssertEqual(r.validUntil, Calendar.current.date(byAdding: DateComponents(day: 180), to: Date()))
             default:
                 XCTAssertTrue(false)
             }
