@@ -155,10 +155,10 @@ public struct ChCovidCert {
         })
     }
 
-    public func checkNationalRules(dgc: EuHealthCert, forceUpdate _: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    public func checkNationalRules(dgc: EuHealthCert, forceUpdate : Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         switch dgc.certType {
         case .vaccination, .recovery, .test:
-            trustListManager.nationalRulesListUpdater.addCheckOperation { error in
+            trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
                 if let e = error?.asNationalRulesError() {
                     completionHandler(.failure(e))
                     return
@@ -229,7 +229,7 @@ public struct ChCovidCert {
                         return
                     }
                 }
-            }
+            })
         default:
             completionHandler(.failure(.NO_VALID_PRODUCT))
         }

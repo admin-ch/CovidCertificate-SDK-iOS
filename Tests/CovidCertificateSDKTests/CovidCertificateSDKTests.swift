@@ -6,12 +6,12 @@ import XCTest
 
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: ChCovidCert {
-        let ver = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager())
+        let ver = ChCovidCert(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager())
         return ver
     }
 
     override class func setUp() {
-        CovidCertificateSDK.initialize(environment: SDKEnvironment.dev)
+        CovidCertificateSDK.initialize(environment: SDKEnvironment.dev, apiKey: "")
     }
 
     func testDevSignature() {
@@ -48,7 +48,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             return
         }
 
-        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager(publicKeys: keys))
+        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(cose: dgcHolder, forceUpdate: false) { result in
             switch result {
             case let .success(r):
