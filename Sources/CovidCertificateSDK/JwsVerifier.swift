@@ -112,12 +112,13 @@ public class JWSVerifier {
                 }
             } else {
                 SecTrustEvaluateAsync(secTrust, DispatchQueue.global()) { _, result in
-                    if result != .proceed {
+                    switch result {
+                    case .proceed, .unspecified:
+                        self.continueWithCommonNameEvaluation(jwtString: jwtString, leafCertificate: chain[0], leafCertificateData: leafCertificateData, completionHandler)
+                    default:
                         completionHandler(.failure(.SIGNATURE_INVALID))
                         return
                     }
-
-                    self.continueWithCommonNameEvaluation(jwtString: jwtString, leafCertificate: chain[0], leafCertificateData: leafCertificateData, completionHandler)
                 }
             }
         } catch JWTError.invalidJWTString {
