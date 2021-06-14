@@ -43,8 +43,8 @@ extension Date {
         }
         return nil
     }
-    
+
     func isSimiliar(to other: Date, leeway: TimeInterval = 10) -> Bool {
-        return abs(self.timeIntervalSince1970 - other.timeIntervalSince1970) < leeway
+        return abs(timeIntervalSince1970 - other.timeIntervalSince1970) < leeway
     }
 }

@@ -47,7 +47,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTAssertTrue(false)
             return
         }
-        let expectations = self.expectation(description: "async job")
+        let expectations = expectation(description: "async job")
 
         let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(cose: dgcHolder, forceUpdate: false) { result in
@@ -59,14 +59,14 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             expectations.fulfill()
         }
-        
-        self.waitForExpectations(timeout: 60, handler: nil)
+
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testVariousFloatAndSignedIntCBORDates() {
         let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6LDAI81POIF:0S1E2-I534LRHRXQQHIZC4.OI1RM8ZA*LP$V25$0$/AQ$3H-8R6TU:C//CW$5 -D1$4C5PE/H:Y0D$0M+8H:H00M-$4U/HYE9/MVKQC*LA 436IAXPMHQ1*P1TU12XE %POH6JK5 *JAYUQJATK25M9:OQPAU:IAJ0AGY0OWCR/C+T44%4GIP77TLXKQ/S1E5E6J90J7*KP/S57TT65:9TNIF 35:U47AL+T4 %23NJ.43CGJ8X2+36D-I/2DBAJDAJCNB-43 X4VV2 73-E3GG3V20-7TZD5CC9T0HQ+4CNNG.85$07LPMIH-O92UQKRQT02.MPDB9SH9C9QG3FSZN0/4P/5CA7G6ME1SDQ6CS4:ZJ83B-6THC1G%5TW5A 6YO67N659EWEWJ2T7+VCK19ASG+7G7WH0JSZARUA82WIAQ/+IY%NT2G5+GG 95MD5FN:3VJXRUN3U.LF:HKVTFZIP.4X7GHBBJ17IN6$MQV7SH.5941GPG"
-        
-        let expectations = self.expectation(description: "async job")
+
+        let expectations = expectation(description: "async job")
 
         guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTFail("testVariousFloatAndSignedIntCBORDates failed")
@@ -82,14 +82,14 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             expectations.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testInvalidDateInCBORCausesError() {
         let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6RLQI81POIF:0:3BAG1PZIQ+Q%SQXZI3VUD%N/+P.SS  QS+G3WOHVU978MRLQ+Q.OIVTQA+QWQ23E2F/8X*G3M9JUPY0BZW4:.AY73CIBVQFM83IMJTLJ8UJARN*FN4DJV53/G7-43Z23EG3%971IN/AJVC7SP499TVW5KK9+OC+G9QJPNF67J6QW67KQ9G66PP33M/TEJG3LKBXBJFF02JNEJOA+MY55V90*F7$17IK8D:6NY4R35OBA4DN/VM/H5J35 96$ 8BX7/JP9398C5Y47Z.4Z6NC1R4SO* PUHLO$GAHLW 70SO:GOLIROGO3T59YLLYP-HQLTQ9R0+L69/9-3AKI6-Q6R3RX76QW6.V99Q9E$BDZIE9JIRF71A4-9SCA6LFOSNENSUC75HF KP8EFXOTJ.K274M.SY$N/U6ZVA69E$JDVPLW1KD0KCZG-3NKWJ33W6BAO87CAF%OS-WKMY1SQPWPQBMT2IV2CVC16F9U2BQUM9:SV246:%UHII9K4HZB/.U-CW6%L$UJ68NS%D.GTPPQN2PRW8610FNS32"
 
-        let expectations = self.expectation(description: "async job")
-        
+        let expectations = expectation(description: "async job")
+
         guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTFail("Could not decode")
             return
@@ -104,7 +104,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             expectations.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
 //    func testEC() {
@@ -134,9 +134,9 @@ final class CovidCertificateSDKTests: XCTestCase {
         let hcert = "HC1:NCFJ60EG0/3WUWGSLKH47GO0KNJ9DSWQIIWT9CK+500XKY-CE59-G80:84F3ZKG%QU2F30GK JEY50.FK6ZK7:EDOLOPCF8F746KG7+59.Q6+A80:6JM8SX8RM8.A8TL6IA7-Q6.Q6JM8WJCT3EYM8XJC +DXJCCWENF6OF63W5$Q69L6%JC+QE$.32%E6VCHQEU$DE44NXOBJE719$QE0/D+8D-ED.24-G8$:8.JCBECB1A-:8$96646AL60A60S6Q$D.UDRYA 96NF6L/5QW6307KQEPD09WEQDD+Q6TW6FA7C466KCN9E%961A6DL6FA7D46JPCT3E5JDJA76L68463W5/A6..DX%DZJC3/DH$9- NTVDWKEI3DK2D4XOXVD1/DLPCG/DU2D4ZA2T9GY8MPCG/DY-CAY81C9XY8O/EZKEZ96446256V50G7AZQ4CUBCD9-FV-.6+OJROVHIBEI3KMU/TLRYPM0FA9DCTID.GQ$NYE3NPBP90/9IQH24YL7WMO0CNV1 SDB1AHX7:O26872.NV/LC+VJ75L%NGF7PT134ERGJ.I0 /49BB6JA7WKY:AL19PB120CUQ37XL1P9505-YEFJHVETB3CB-KE8EN9BPQIMPRTEW*DU+X2STCJ6O6S4XXVJ$UQNJW6IIO0X20D4S3AWSTHTA5FF7I/J9:8ALF/VP 4K1+8QGI:N0H 91QBHPJLSMNSJC BFZC5YSD.9-9E5R8-.IXUB-OG1RRQR7JEH/5T852EA3T7P6 VPFADBFUN0ZD93MQY07/4OH1FKHL9P95LIG841 BM7EXDR/PLCUUE88+-IX:Q"
 //            let hcert = "HC1:NCFOXNYTSFDHJI8-.O0:A%1W RI%.BI06-JV1WG21QKP85NPV*JVH5MVI$068WA.VU1/M:ZH6I1$4JN:IN1MPK9V L9L6O MH8VWJE+9663FHFE$96L07Z*65LEK.EUW61R6A46EN9U3Q+QUSH9UKPSH9WC5PF6846A$Q 76SW6%V98T5%BIMI5DN9XW5O PICA$O7T6LEJOA+MY55EII-EBBAK%ZM2L6:/6N9R%EPXCROGO3HO-HQKOOEC5L64HX6IAS3DS2980IQRDOUHLO$GAHLW 70SO:GOLIROGO3T59YLLYP-HQLTQ9R0+L69/9E2A1PB2AD$ZJ*DJWP42W5JY4I47-V5KV3Q0531TAYKD%0QCNH9LZ33/HLIJL8JF8JF0IIVP1TX2SK6L8K6G1%5ECJVL3FI:1L$8:SN55K*0GQ2VJ*035C26VQONPOUZ9NVUT0KVPNB8XB8-RD/VR7GSEFRCSSUVRXNIVDCFLCP6UV6GXO7RT* CU.7D DLTL.GHME2MMNPH5 ET3PFF1EY+D6 I5FUSNS7J8+Z2Q:6R6RXAO59WJNP*WML/T93N*9U%Z953T1K9$%GIOOTW4 X06$C-WHIRC1+IWEBJCBTICQPFY63G8L 5HHOT:ED399X VL2NF1QUKB2XDT4W.3U38K%RH$WVG*R1FVNJK 27X7I$LH6:SLLI.$VE:KRP15C2SZE$GD$MAU93+ 9EWU1H7/%R/6RMSJGOPPJB-/L$PLHYF%2AKY46NG*9TYRA-PBQ8LFD7GX5FOVODAANJKLGRFW-TEC6BF7R"
 
-        let signatureExpectation = self.expectation(description: "signature check")
-        let revocationStatus = self.expectation(description: "revocation status")
-        
+        let signatureExpectation = expectation(description: "signature check")
+        let revocationStatus = expectation(description: "revocation status")
+
         let dgcHolder = try? verifier.decode(encodedData: hcert).get()
         XCTAssertNotNil(dgcHolder)
 
@@ -152,8 +152,8 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTAssertTrue(res!.isValid)
             revocationStatus.fulfill()
         }
-        
-        self.waitForExpectations(timeout: 60, handler: nil)
+
+        waitForExpectations(timeout: 60, handler: nil)
 //            verifier.checkNationalRules(dgc: dgcHolder!.healthCert) {result in
 //                let res : VerificationResult? = try? result.get()
 //                XCTAssertNotNil(res)
@@ -176,9 +176,9 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let dgcHolder = try? verifier.decode(encodedData: hcert_targets_covid).get()
         XCTAssertNotNil(dgcHolder)
-        
-        let successExpectation = self.expectation(description: "succes")
-        let failExpectation = self.expectation(description: "fail")
+
+        let successExpectation = expectation(description: "succes")
+        let failExpectation = expectation(description: "fail")
 
         verifier.checkNationalRules(dgc: dgcHolder!.healthCert, forceUpdate: false) { result in
             switch result {
@@ -203,7 +203,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     var dateFormatter: DateFormatter {
@@ -247,9 +247,9 @@ final class CovidCertificateSDKTests: XCTestCase {
 
     func testVaccineMustBeInWhitelist() {
         let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -270,15 +270,15 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     /// A vaccine which needs two shots
     func test2of2VaccineIsValidToday() {
         let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: 0))
-        let successExpectation = self.expectation(description: "success")
+        let successExpectation = expectation(description: "success")
         let today = Calendar.current.startOfDay(for: Date())
-        
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -290,37 +290,37 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             successExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     /// A vaccine which indicates 1/1 but is actually N/N means we had previous infections, and is valid from the day of vaccination
     func testVaccine1of1WithPreviousInfectionsIsValidToday() {
         let hcert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: 0))
-        let successExpectation = self.expectation(description: "success")
+        let successExpectation = expectation(description: "success")
         let today = Calendar.current.startOfDay(for: Date())
-        
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(r.validFrom!.isSimiliar(to: Calendar.current.startOfDay(for: Date())))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to:  Calendar.current.date(byAdding: DateComponents(day: 179), to: today)!))
+                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 179), to: today)!))
             default:
                 XCTFail("Should be valid today")
             }
             successExpectation.fulfill()
         }
-        
-        self.waitForExpectations(timeout: 60, handler: nil)
+
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     /// A vaccine which only needs one shot is only valid after 15 days
     func testVaccine1of1IsValidAfter15Days() {
         let hcert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
-        
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         let today = Calendar.current.startOfDay(for: Date())
         let time = Calendar.current.date(byAdding: DateComponents(day: -15), to: today)!
 
@@ -328,7 +328,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(r.validFrom!.isSimiliar(to:  today))
+                XCTAssertTrue(r.validFrom!.isSimiliar(to: today))
                 XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 179), to: time)!))
             default:
                 XCTFail("Should be vali")
@@ -348,16 +348,16 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     /// A valid vaccine which needs 2 shots is only valid if the certificate states that this is shot N/N
     func testWeNeedAllShots() {
         let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
 
-        let successExpcetation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+        let successExpcetation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -379,7 +379,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     /// TEST TESTS
@@ -422,9 +422,9 @@ final class CovidCertificateSDKTests: XCTestCase {
 
     func testTestDiseaseTargetedHasToBeSarsCoV2() {
         let hcert = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
-        
-        let successExpecation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
+
+        let successExpecation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
 
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
@@ -447,17 +447,17 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        
-        self.waitForExpectations(timeout: 60, handler: nil)
+
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testTypeHasToBePcrOrRat() {
         let hcert_rat = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        let successExpectation1 = self.expectation(description: "success")
-        let successExpectation2 = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+        let successExpectation1 = expectation(description: "success")
+        let successExpectation2 = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert_rat, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -490,8 +490,8 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        
-        self.waitForExpectations(timeout: 60, handler: nil)
+
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testTestHasToBeInWhitelist() {
@@ -506,14 +506,14 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             expectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testPcrTestsAreAlwaysAccepted() {
         // pcr tests are always accepte
         let invalid_cert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
         let expectation = self.expectation(description: "async task")
-        
+
         verifier.checkNationalRules(dgc: invalid_cert_pcr, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -523,25 +523,25 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             expectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testPcrIsValidFor72h() {
         let hcert = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -71))
-        
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         let now = Date()
         let time = Calendar.current.date(byAdding: DateComponents(hour: -71), to: now)!
-        
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 /// TEST MUST BE VALID
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(r.validFrom!.isSimiliar(to: time))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to:  Calendar.current.date(byAdding: DateComponents(hour: 1), to: now)!))
+                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(hour: 1), to: now)!))
             default:
                 XCTFail("Test should still be valid")
             }
@@ -559,31 +559,31 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testRatIsValidFor24h() {
         let hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
-        
+
         let now = Date()
         let time = Calendar.current.date(byAdding: DateComponents(hour: -23), to: now)!
 
-        let correctExpectation = self.expectation(description: "correct")
+        let correctExpectation = expectation(description: "correct")
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 /// TEST MUST BE VALID
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(abs((r.validFrom!.timeIntervalSince1970 - time.timeIntervalSince1970)) < 10)
-                XCTAssertTrue(abs(r.validUntil!.timeIntervalSince1970 -  Calendar.current.date(byAdding: DateComponents(hour: 1), to: now)!.timeIntervalSince1970) < 10)
+                XCTAssertTrue(abs(r.validFrom!.timeIntervalSince1970 - time.timeIntervalSince1970) < 10)
+                XCTAssertTrue(abs(r.validUntil!.timeIntervalSince1970 - Calendar.current.date(byAdding: DateComponents(hour: 1), to: now)!.timeIntervalSince1970) < 10)
             default:
-                    XCTFail("Something happened")
+                XCTFail("Something happened")
             }
             correctExpectation.fulfill()
         }
 
         let invalid_hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -24))
-        let wrongExpectation = self.expectation(description: "wrong")
+        let wrongExpectation = expectation(description: "wrong")
         verifier.checkNationalRules(dgc: invalid_hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -592,19 +592,19 @@ final class CovidCertificateSDKTests: XCTestCase {
                     XCTAssertFalse(r.isValid)
                 }
             default:
-                    XCTFail("Something happened")
+                XCTFail("Something happened")
             }
             wrongExpectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testTestResultHasToBeNegative() {
         let hcert_rat = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert_rat, forceUpdate: false) { result in
             switch result {
             case .failure(.POSITIVE_RESULT):
@@ -625,7 +625,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     /// RECOVERY TESTS
@@ -635,6 +635,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         tmpCalendar.timeZone = utc
         return tmpCalendar
     }
+
     private func generateRecoveryCert(validSinceNow: DateComponents, validFromNow: DateComponents, firstResultWasAgo: DateComponents, tg: String) -> EuHealthCert {
         let calendar = getCalendar()
         let now = calendar.startOfDay(for: Date())
@@ -669,10 +670,10 @@ final class CovidCertificateSDKTests: XCTestCase {
 
     func testRecoveryDiseaseTargetedHasToBeSarsCoV2() {
         let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 6), firstResultWasAgo: DateComponents(day: -20), tg: Disease.SarsCov2.rawValue)
-        
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -693,7 +694,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testSanityCheckForDateCalculations() {
@@ -742,10 +743,10 @@ final class CovidCertificateSDKTests: XCTestCase {
     func testCertificateIsValidFor180DaysAfterTestResult() {
         // The certificate was issued 179 days ago, which means it is still valid today (the 180th day)
         let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -179), tg: Disease.SarsCov2.rawValue)
-        
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -768,15 +769,15 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 
     func testTestIsOnlyValid10DaysAfterTestResult() {
         let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -10), tg: Disease.SarsCov2.rawValue)
-        
-        let successExpectation = self.expectation(description: "success")
-        let failExpectation = self.expectation(description: "fail")
-        
+
+        let successExpectation = expectation(description: "success")
+        let failExpectation = expectation(description: "fail")
+
         verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
@@ -798,6 +799,6 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             failExpectation.fulfill()
         }
-        self.waitForExpectations(timeout: 60, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
     }
 }

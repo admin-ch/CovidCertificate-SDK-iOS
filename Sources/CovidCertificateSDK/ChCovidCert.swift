@@ -171,7 +171,7 @@ public struct ChCovidCert {
                 guard let certLogic = CertLogic(),
                       let valueSets = list.getValueSetsJSON(),
                       let rules = list.getRulesJSON()
-                     else {
+                else {
                     completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     return
                 }
