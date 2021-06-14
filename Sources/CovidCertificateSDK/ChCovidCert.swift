@@ -176,10 +176,13 @@ public struct ChCovidCert {
                         return
                     }
 
-                    let maxValidity = result.maxValidity
-                    let daysAfterFirstShot = result.daysAfterFirstShot
-                    let pcrValidity = result.pcrValidity
-                    let ratValidity = result.ratValidity
+                    guard let maxValidity = result.maxValidity,
+                    let daysAfterFirstShot = result.daysAfterFirstShot,
+                    let pcrValidity = result.pcrValidity,
+                    let ratValidity = result.ratValidity else {
+                        completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                        return
+                    }
 
                     switch result.checkRules(hcert: dgc) {
                     case .success:

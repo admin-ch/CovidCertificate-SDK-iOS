@@ -34,10 +34,10 @@ public class CertLogic {
     var valueSets: JSON = []
     let calendar: Calendar
 
-    public var maxValidity: Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int ?? 0 }
-    public var daysAfterFirstShot: Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int ?? 10000 }
-    public var pcrValidity: Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int ?? 0 }
-    public var ratValidity: Int64 { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int ?? 0 }
+    public var maxValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int }
+    public var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int  }
+    public var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int  }
+    public var ratValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int }
 
     public init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
