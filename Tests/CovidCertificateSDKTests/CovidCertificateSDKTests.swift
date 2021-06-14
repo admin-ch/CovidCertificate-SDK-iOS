@@ -1,8 +1,8 @@
 //
 @testable import CovidCertificateSDK
-import XCTest
-import jsonlogic
 import JSON
+import jsonlogic
+import XCTest
 
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: ChCovidCert {

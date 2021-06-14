@@ -137,7 +137,7 @@ public struct Vaccination: Codable {
             return dateOfVaccination
         }
     }
-    
+
     public func getValidFromDate(daysAfterFirstShot: Int) -> Date? {
         guard let dateOfVaccination = self.dateOfVaccination,
               let totalDoses = AcceptedProducts.shared.totalNumberOfDoses(vaccination: self)
@@ -163,7 +163,7 @@ public struct Vaccination: Codable {
         }
         return date
     }
-    
+
     public func getValidUntilDate(maximumValidityInDays: Int) -> Date? {
         guard let dateOfVaccination = self.dateOfVaccination,
               let date = Calendar.current.date(byAdding: DateComponents(day: maximumValidityInDays), to: dateOfVaccination) else {
@@ -237,7 +237,7 @@ public struct Test: Codable {
             return nil
         }
     }
-    
+
     public func getValidUntilDate(pcrTestValidityInHours: Int, ratTestValidityInHours: Int) -> Date? {
         guard let startDate = validFromDate else { return nil }
         switch type {
