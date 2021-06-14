@@ -169,11 +169,13 @@ public struct ChCovidCert {
                 let list = self.trustListManager.trustStorage.nationalRules()
 
                 guard let certLogic = CertLogic(),
-                      let rules = list.getRulesJSON(),
-                      let valueSets = list.getValueSetsJSON() else {
+                      let valueSets = list.getValueSetsJSON(),
+                      let rules = list.getRulesJSON()
+                     else {
                     completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     return
                 }
+
                 if case .failure = certLogic.updateData(rules: rules, valueSets: valueSets) {
                     completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     return
@@ -210,6 +212,7 @@ public struct ChCovidCert {
                     case "VR-CH-0002": completionHandler(.failure(.NO_VALID_PRODUCT))
                     case "VR-CH-0003": completionHandler(.failure(.NO_VALID_DATE))
                     case "VR-CH-0004": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: nil)))
+                    case "VR-CH-0005": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: nil)))
                     case "VR-CH-0006": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: nil)))
                     case "TR-CH-0000": completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     case "TR-CH-0001": completionHandler(.failure(.POSITIVE_RESULT))
@@ -221,8 +224,8 @@ public struct ChCovidCert {
                     case "TR-CH-0007": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: dgc.tests?.first?.validFromDate, dateError: nil)))
                     case "RR-CH-0000": completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     case "RR-CH-0001": completionHandler(.failure(.NO_VALID_DATE))
-                    case "RR-CH-0002": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validUntilDate, dateError: nil)))
-                    case "RR-CH-0003": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validUntilDate, dateError: nil)))
+                    case "RR-CH-0002": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validFromDate, dateError: nil)))
+                    case "RR-CH-0003": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validFromDate, dateError: nil)))
                     default:
                         completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     }

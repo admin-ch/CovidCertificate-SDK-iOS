@@ -27,7 +27,9 @@ public class CertLogic {
     private static let vaccineImmunityKey: String = "vaccine-immunity"
     private static let singleVaccineValidityOffsetKey: String = "single-vaccine-validity-offset"
     private static let pcrTestValidityKey: String = "pcr-test-validity"
-    private static let ratTestValidityKey: String = "ratTestValidity"
+    private static let ratTestValidityKey: String = "rat-test-validity"
+    private static let recoveryOffsetValidFrom : String = "recovery-offset-valid-from"
+    private static let recoveryOffsetValidUntil : String = "recovery-offset-valid-until"
 
     var rules: [JSON] = []
     var valueSets: JSON = []

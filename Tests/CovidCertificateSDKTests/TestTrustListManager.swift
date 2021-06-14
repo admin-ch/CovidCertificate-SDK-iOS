@@ -128,9 +128,9 @@ class TestTrustStorage: TrustStorageProtocol {
 
     func nationalRules() -> NationalRulesList {
         let data = Bundle.module.url(forResource: "nationalrules", withExtension: "json")!
-        let nationalRulesData = try! Data(contentsOf: data)
+        let nationalRulesData = try? Data(contentsOf: data)
         let nationalRules = NationalRulesList()
-        nationalRules.requestData = nationalRulesData
+        nationalRules.requestData = nationalRulesData!
         return nationalRules
     }
 }
