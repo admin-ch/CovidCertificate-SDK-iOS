@@ -103,6 +103,7 @@ class TrustCertificatesUpdate: TrustListUpdate {
             listNeedsUpdate = upToDate == Self.falseConstant
         }
 
+        // TODO: return an error if we hit the circuit breaker
         return nil
     }
 

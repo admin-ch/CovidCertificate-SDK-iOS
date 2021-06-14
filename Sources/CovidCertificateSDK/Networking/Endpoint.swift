@@ -44,7 +44,7 @@ extension HTTPURLResponse {
         if #available(iOS 13.0, *) {
             return self.value(forHTTPHeaderField: field)
         } else {
-            for header in self.allHeaderFields {
+            for header in allHeaderFields {
                 if let stringValue = header.value as? String,
                    let key = header.key as? String,
                    key.lowercased() == field.lowercased() {
