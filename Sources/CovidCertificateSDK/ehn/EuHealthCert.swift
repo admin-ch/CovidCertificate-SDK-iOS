@@ -193,7 +193,7 @@ public struct Test: Codable {
     public let timestampSample: String
     public let timestampResult: String?
     public let result: String
-    public let testCenter: String
+    public let testCenter: String?
     public let country: String
     public let certificateIssuer: String
     public let certificateIdentifier: String
