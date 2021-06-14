@@ -65,16 +65,18 @@ class TrustCertificatesUpdate: TrustListUpdate {
                 return error?.asNetworkError()
             }
 
-            // get the x-next-since, save it as well and pass to the next request
-            var nextSinceHeader: String = ""
-            if let s = (response as? HTTPURLResponse)?.allHeaderFields["x-next-since"] as? String {
-                nextSinceHeader = s
+            guard let httpResponse = response as? HTTPURLResponse else {
+                return .NETWORK_PARSE_ERROR
             }
 
-            // get the x-next-since, save it as well and pass to the next request
-            var upToDate: String = Self.falseConstant
-            if let s = (response as? HTTPURLResponse)?.allHeaderFields["up-to-date"] as? String {
-                upToDate = s
+            // get the `x-next-since` from HTTP headers, save it and pass to the next request
+            guard let nextSinceHeader = httpResponse.value(forHeaderField: "x-next-since") else {
+                return .NETWORK_PARSE_ERROR
+            }
+
+            // get the `up-to-date` from HTTP headers to decide whether we are at the end
+            guard let upToDate = httpResponse.value(forHeaderField: "up-to-date") else {
+                return .NETWORK_PARSE_ERROR
             }
 
             guard let d = data else {
@@ -101,6 +103,7 @@ class TrustCertificatesUpdate: TrustListUpdate {
             listNeedsUpdate = upToDate == Self.falseConstant
         }
 
+        // TODO: return an error if we hit the circuit breaker
         return nil
     }
 
