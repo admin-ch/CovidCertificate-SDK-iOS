@@ -10,6 +10,7 @@
  */
 
 import Foundation
+import JSON
 
 class NationalRulesListUpdate: TrustListUpdate {
     // MARK: - Session
@@ -43,11 +44,32 @@ class NationalRulesListUpdate: TrustListUpdate {
         guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
         }
+
+        let jwtString = String(data: d, encoding: .utf8)!
+        let components = jwtString.components(separatedBy: ".")
+        guard components.count == 2 || components.count == 3,
+              let claimsData = Data.data(base64urlEncoded: components[1])
+        else {
+            return .NETWORK_PARSE_ERROR
+        }
+        result.requestData = claimsData
         _ = trustStorage.updateNationalRules(result)
         return nil
     }
 
     override internal func isListStillValid() -> Bool {
         return trustStorage.nationalRulesListIsStillValid()
+    }
+}
+
+public extension Data {
+    static func data(base64urlEncoded: String) -> Data? {
+        let paddingLength = 4 - base64urlEncoded.count % 4
+        let padding = (paddingLength < 4) ? String(repeating: "=", count: paddingLength) : ""
+        let base64EncodedString = base64urlEncoded
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+            + padding
+        return Data(base64Encoded: base64EncodedString)
     }
 }

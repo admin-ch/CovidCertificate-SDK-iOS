@@ -47,6 +47,15 @@
         }
       },
       {
+        "package": "jsonlogic",
+        "repositoryURL": "https://github.com/admin-ch/json-logic-swift",
+        "state": {
+          "branch": "master",
+          "revision": "f0f9fa1f6d7326f59bf45e1d31548134cd8cb6f4",
+          "version": null
+        }
+      },
+      {
         "package": "KituraContracts",
         "repositoryURL": "https://github.com/Kitura/KituraContracts.git",
         "state": {

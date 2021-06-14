@@ -79,7 +79,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     private func forceUpdate(completionHandler: @escaping (() -> Void)) {
         let group = DispatchGroup()
 
-        for updater in [revocationListUpdater, trustCertificateUpdater] {
+        for updater in [revocationListUpdater, trustCertificateUpdater, nationalRulesListUpdater] {
             group.enter()
 
             updater.forceUpdate {

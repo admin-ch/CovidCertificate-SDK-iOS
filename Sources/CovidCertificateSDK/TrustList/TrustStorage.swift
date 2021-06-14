@@ -89,7 +89,7 @@ class TrustStorage: TrustStorageProtocol {
         // remove all certificates that are not active
         return certificateQueue.sync {
             Self.sharedStorage.activeCertificates.removeAll { c in
-                activeCertificates.activeKeyIds.contains(c.keyId)
+                !activeCertificates.activeKeyIds.contains(c.keyId)
             }
 
             Self.sharedStorage.lastCertificateListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
@@ -149,11 +149,9 @@ class TrustStorage: TrustStorageProtocol {
     // MARK: - Validity
 
     private func isStillValid(lastDownloadTimeStamp: Int64, validDuration: Int64) -> Bool {
-        return nationalQueue.sync {
-            let stillValidUntil = lastDownloadTimeStamp + validDuration
-            let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
-            return Date().isBefore(validUntilDate)
-        }
+        let stillValidUntil = lastDownloadTimeStamp + validDuration
+        let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
+        return Date().isBefore(validUntilDate)
     }
 }
 
