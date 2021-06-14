@@ -93,6 +93,7 @@ class TrustStorage: TrustStorageProtocol {
             }
 
             Self.sharedStorage.lastCertificateListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+            Self.sharedStorage.certificateValidDuration = activeCertificates.validDuration
 
             return Self.secureStorage.saveSynchronously(Self.sharedStorage)
         }
