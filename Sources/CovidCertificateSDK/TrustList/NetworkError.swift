@@ -27,15 +27,14 @@ public enum NetworkError: Error, Equatable {
         switch self {
         case .NETWORK_ERROR: return "A network error occured"
         case .NETWORK_PARSE_ERROR: return "The data could not be parsed"
-        case .NETWORK_NO_INTERNET_CONNECTION:
-        case .NETWORK_ERROR_TIMED_OUT:
-        case .NETWORK_ERROR_CANNOT_FIND_HOST:
-        case .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST:
-        case .NETWORK_ERROR_CONNECTION_LOST:
-        case .NETWORK_ERROR_DNS_LOOKUP_FAILURE:
-        case .NETWORK_NO_INTERNET_CONNECTION:
-        case .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF:
-        case .NETWORK_ERROR_DATA_NOT_ALLOWED:
+        case .NETWORK_NO_INTERNET_CONNECTION,
+             .NETWORK_ERROR_TIMED_OUT,
+             .NETWORK_ERROR_CANNOT_FIND_HOST,
+             .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST,
+             .NETWORK_ERROR_CONNECTION_LOST,
+             .NETWORK_ERROR_DNS_LOOKUP_FAILURE,
+             .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF,
+             .NETWORK_ERROR_DATA_NOT_ALLOWED:
             return "The internet connection appears to be offline"
         }
     }
@@ -84,15 +83,15 @@ extension NetworkError {
             return .NETWORK_ERROR(errorCode: errorCode)
         case .NETWORK_PARSE_ERROR:
             return .NETWORK_PARSE_ERROR
-        case .NETWORK_NO_INTERNET_CONNECTION:
-        case .NETWORK_ERROR_TIMED_OUT:
-        case .NETWORK_ERROR_CANNOT_FIND_HOST:
-        case .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST:
-        case .NETWORK_ERROR_CONNECTION_LOST:
-        case .NETWORK_ERROR_DNS_LOOKUP_FAILURE:
-        case .NETWORK_NO_INTERNET_CONNECTION:
-        case .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF:
-        case .NETWORK_ERROR_DATA_NOT_ALLOWED:
+        case .NETWORK_NO_INTERNET_CONNECTION,
+             .NETWORK_ERROR_TIMED_OUT,
+             .NETWORK_ERROR_CANNOT_FIND_HOST,
+             .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST,
+             .NETWORK_ERROR_CONNECTION_LOST,
+             .NETWORK_ERROR_DNS_LOOKUP_FAILURE,
+             .NETWORK_NO_INTERNET_CONNECTION,
+             .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF,
+             .NETWORK_ERROR_DATA_NOT_ALLOWED:
             return .NETWORK_NO_INTERNET_CONNECTION
         }
     }
@@ -105,15 +104,15 @@ extension NetworkError {
             return .NETWORK_ERROR(errorCode: errorCode)
         case .NETWORK_PARSE_ERROR:
             return .NETWORK_PARSE_ERROR
-        case .NETWORK_NO_INTERNET_CONNECTION:
-        case .NETWORK_ERROR_TIMED_OUT:
-        case .NETWORK_ERROR_CANNOT_FIND_HOST:
-        case .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST:
-        case .NETWORK_ERROR_CONNECTION_LOST:
-        case .NETWORK_ERROR_DNS_LOOKUP_FAILURE:
-        case .NETWORK_NO_INTERNET_CONNECTION:
-        case .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF:
-        case .NETWORK_ERROR_DATA_NOT_ALLOWED:
+        case .NETWORK_NO_INTERNET_CONNECTION,
+             .NETWORK_ERROR_TIMED_OUT,
+             .NETWORK_ERROR_CANNOT_FIND_HOST,
+             .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST,
+             .NETWORK_ERROR_CONNECTION_LOST,
+             .NETWORK_ERROR_DNS_LOOKUP_FAILURE,
+             .NETWORK_NO_INTERNET_CONNECTION,
+             .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF,
+             .NETWORK_ERROR_DATA_NOT_ALLOWED:
             return .NETWORK_NO_INTERNET_CONNECTION
         }
     }
