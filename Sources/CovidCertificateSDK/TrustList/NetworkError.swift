@@ -22,7 +22,6 @@ public enum NetworkError: Error, Equatable {
     case NETWORK_ERROR_DNS_LOOKUP_FAILURE
     case NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF
     case NETWORK_ERROR_DATA_NOT_ALLOWED
-    
 
     public var message: String {
         switch self {
@@ -53,7 +52,6 @@ public enum NetworkError: Error, Equatable {
         case .NETWORK_ERROR_DNS_LOOKUP_FAILURE: return "NE|DLF"
         case .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF: return "NE|IRO"
         case .NETWORK_ERROR_DATA_NOT_ALLOWED: return "NE|DNA"
-        
         }
     }
 }
