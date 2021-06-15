@@ -41,6 +41,11 @@ public class NationalRulesList: Codable, JWTExtension {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         validDuration = try container.decode(Int64.self, forKey: .validDuration)
         requestData = try? container.decode(Data.self, forKey: .requestData)
+
+        if let newValue = requestData {
+            rules = JSON(newValue)["rules"]
+            valueSets = JSON(newValue)["valueSets"]
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
