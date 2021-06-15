@@ -15,7 +15,7 @@ import JSON
 class NationalRulesListUpdate: TrustListUpdate {
     // MARK: - Session
 
-    let session = URLSession.shared
+    let session = URLSession.certificatePinned
 
     // MARK: - Update
 

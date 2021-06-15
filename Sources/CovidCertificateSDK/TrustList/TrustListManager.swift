@@ -39,7 +39,6 @@ class TrustlistManager: TrustlistManagerProtocol {
     private static var leafCertificateCommonName: String {
         switch CovidCertificateSDK.currentEnvironment {
         case .dev:
-            // TODO: fix this when we have a dedicated dev certificate
             return "CH01-AppContentCertificate-ref"
         case .abn:
             return "CH01-AppContentCertificate-abn"
