@@ -14,27 +14,13 @@ import Foundation
 public enum NetworkError: Error, Equatable {
     case NETWORK_ERROR(errorCode: String)
     case NETWORK_PARSE_ERROR
-    case NETWORK_NO_INTERNET_CONNECTION
-    case NETWORK_ERROR_TIMED_OUT
-    case NETWORK_ERROR_CANNOT_FIND_HOST
-    case NETWORK_ERROR_CANNOT_CONNECT_TO_HOST
-    case NETWORK_ERROR_CONNECTION_LOST
-    case NETWORK_ERROR_DNS_LOOKUP_FAILURE
-    case NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF
-    case NETWORK_ERROR_DATA_NOT_ALLOWED
+    case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
 
     public var message: String {
         switch self {
         case .NETWORK_ERROR: return "A network error occured"
         case .NETWORK_PARSE_ERROR: return "The data could not be parsed"
-        case .NETWORK_NO_INTERNET_CONNECTION,
-             .NETWORK_ERROR_TIMED_OUT,
-             .NETWORK_ERROR_CANNOT_FIND_HOST,
-             .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST,
-             .NETWORK_ERROR_CONNECTION_LOST,
-             .NETWORK_ERROR_DNS_LOOKUP_FAILURE,
-             .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF,
-             .NETWORK_ERROR_DATA_NOT_ALLOWED:
+        case .NETWORK_NO_INTERNET_CONNECTION:
             return "The internet connection appears to be offline"
         }
     }
@@ -43,35 +29,27 @@ public enum NetworkError: Error, Equatable {
         switch self {
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
         case .NETWORK_PARSE_ERROR: return "NE|PE"
-        case .NETWORK_NO_INTERNET_CONNECTION: return "NE|NIC"
-        case .NETWORK_ERROR_TIMED_OUT: return "NE|TIO"
-        case .NETWORK_ERROR_CANNOT_FIND_HOST: return "NE|CFH"
-        case .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST: return "NE|CTH"
-        case .NETWORK_ERROR_CONNECTION_LOST: return "NE|CNL"
-        case .NETWORK_ERROR_DNS_LOOKUP_FAILURE: return "NE|DLF"
-        case .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF: return "NE|IRO"
-        case .NETWORK_ERROR_DATA_NOT_ALLOWED: return "NE|DNA"
+        case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         }
     }
 }
 
 extension Error {
     func asNetworkError() -> NetworkError {
-        guard let e = self as? URLError else {
-            return .NETWORK_ERROR(errorCode: "")
-        }
+        let code = (self as NSError).code
 
-        switch e.errorCode {
-        case -1001: return .NETWORK_ERROR_TIMED_OUT
-        case -1003: return .NETWORK_ERROR_CANNOT_FIND_HOST
-        case -1004: return .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST
-        case -1005: return .NETWORK_ERROR_CONNECTION_LOST
-        case -1006: return .NETWORK_ERROR_DNS_LOOKUP_FAILURE
-        case -1009: return .NETWORK_NO_INTERNET_CONNECTION
-        case -1018: return .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF
-        case -1020: return .NETWORK_ERROR_DATA_NOT_ALLOWED
+        switch code {
+        case NSURLErrorTimedOut,
+             NSURLErrorCannotFindHost,
+             NSURLErrorCannotConnectToHost,
+             NSURLErrorNetworkConnectionLost,
+             NSURLErrorDNSLookupFailed,
+             NSURLErrorNotConnectedToInternet,
+             NSURLErrorInternationalRoamingOff,
+             NSURLErrorDataNotAllowed:
+            return .NETWORK_NO_INTERNET_CONNECTION(errorCode: "\(code)")
         default:
-            return .NETWORK_ERROR(errorCode: "\(e.errorCode)")
+            return .NETWORK_ERROR(errorCode: "\(code)")
         }
     }
 }
@@ -83,15 +61,8 @@ extension NetworkError {
             return .NETWORK_ERROR(errorCode: errorCode)
         case .NETWORK_PARSE_ERROR:
             return .NETWORK_PARSE_ERROR
-        case .NETWORK_NO_INTERNET_CONNECTION,
-             .NETWORK_ERROR_TIMED_OUT,
-             .NETWORK_ERROR_CANNOT_FIND_HOST,
-             .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST,
-             .NETWORK_ERROR_CONNECTION_LOST,
-             .NETWORK_ERROR_DNS_LOOKUP_FAILURE,
-             .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF,
-             .NETWORK_ERROR_DATA_NOT_ALLOWED:
-            return .NETWORK_NO_INTERNET_CONNECTION
+        case let .NETWORK_NO_INTERNET_CONNECTION(errorCode: errorCode):
+            return .NETWORK_NO_INTERNET_CONNECTION(errorCode: errorCode)
         }
     }
 }
@@ -103,15 +74,8 @@ extension NetworkError {
             return .NETWORK_ERROR(errorCode: errorCode)
         case .NETWORK_PARSE_ERROR:
             return .NETWORK_PARSE_ERROR
-        case .NETWORK_NO_INTERNET_CONNECTION,
-             .NETWORK_ERROR_TIMED_OUT,
-             .NETWORK_ERROR_CANNOT_FIND_HOST,
-             .NETWORK_ERROR_CANNOT_CONNECT_TO_HOST,
-             .NETWORK_ERROR_CONNECTION_LOST,
-             .NETWORK_ERROR_DNS_LOOKUP_FAILURE,
-             .NETWORK_ERROR_INTERNATIONAL_ROAMING_OFF,
-             .NETWORK_ERROR_DATA_NOT_ALLOWED:
-            return .NETWORK_NO_INTERNET_CONNECTION
+        case let .NETWORK_NO_INTERNET_CONNECTION(errorCode: errorCode):
+            return .NETWORK_NO_INTERNET_CONNECTION(errorCode: errorCode)
         }
     }
 }

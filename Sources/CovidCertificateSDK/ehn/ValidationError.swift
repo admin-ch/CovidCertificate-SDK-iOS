@@ -42,7 +42,7 @@ public enum ValidationError: Error, Equatable {
     case SIGNATURE_TYPE_INVALID(SignatureTypeInvalidError)
     case NETWORK_ERROR(errorCode: String)
     case NETWORK_PARSE_ERROR
-    case NETWORK_NO_INTERNET_CONNECTION
+    case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
 
     public var message: String {
         switch self {
@@ -82,7 +82,7 @@ public enum ValidationError: Error, Equatable {
         case let .SIGNATURE_TYPE_INVALID(wrapped): return "S|TIV|" + wrapped.errorCode
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
         case .NETWORK_PARSE_ERROR: return "NE|PE"
-        case .NETWORK_NO_INTERNET_CONNECTION: return "NE|NIC"
+        case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         }
     }
 }
