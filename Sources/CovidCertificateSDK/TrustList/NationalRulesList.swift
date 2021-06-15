@@ -14,21 +14,20 @@ import JSON
 
 public class NationalRulesList: Codable, JWTExtension {
     public var validDuration: Int64 = 0
-    public var requestData: Data? = nil
-
-    public func getRulesJSON() -> JSON? {
-        guard let rulesData = requestData else {
-            return nil
+    public var requestData: Data? {
+        didSet {
+            if let newValue = requestData {
+                rules = JSON(newValue)["rules"]
+                valueSets = JSON(newValue)["valueSets"]
+            } else {
+                rules = nil
+                valueSets = nil
+            }
         }
-        return JSON(rulesData)["rules"]
     }
 
-    public func getValueSetsJSON() -> JSON? {
-        guard let rulesData = requestData else {
-            return nil
-        }
-        return JSON(rulesData)["valueSets"]
-    }
+    var rules: JSON? = nil
+    var valueSets: JSON? = nil
 
     enum CodingKeys: String, CodingKey {
         case validDuration
