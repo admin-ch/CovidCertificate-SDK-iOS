@@ -9,6 +9,9 @@
  */
 
 import Foundation
+#if os(iOS)
+    import UIKit
+#endif
 
 struct Endpoint {
     // MARK: - Implementation
@@ -29,6 +32,8 @@ extension Endpoint {
         var request = URLRequest(url: url, timeoutInterval: timeoutInterval)
         request.httpMethod = method.rawValue
 
+        request.setValue(userAgentHeader, forHTTPHeaderField: "User-Agent")
+
         for (k, v) in headers ?? [:] {
             request.setValue(v, forHTTPHeaderField: k)
         }
@@ -36,6 +41,25 @@ extension Endpoint {
         request.httpBody = body
 
         return request
+    }
+
+    private var userAgentHeader: String {
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
+        let appVersion = Bundle.appVersion
+        let build = Bundle.buildNumber
+
+        var os = "unknown"
+        var systemVersion = "unknown"
+        #if os(iOS)
+            os = "iOS"
+            systemVersion = UIDevice.current.systemVersion
+        #elseif os(macOS)
+            os = "macOS"
+            systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        #endif
+
+        let header = [bundleIdentifier, appVersion, build, os, systemVersion].joined(separator: ";")
+        return header
     }
 }
 
