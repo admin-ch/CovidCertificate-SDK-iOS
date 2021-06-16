@@ -22,9 +22,9 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
     // MARK: - Update
 
-    override internal func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         // update active certificates service
-        let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request()
+        let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request(reloadIgnoringLocalCache: ignoreLocalCache)
         let (dataActive, _, errorActive) = session.synchronousDataTask(with: requestActive)
 
         if errorActive != nil {
@@ -56,7 +56,7 @@ class TrustCertificatesUpdate: TrustListUpdate {
         while listNeedsUpdate, requestsCount < Self.maximumNumberOfRequests {
             requestsCount = requestsCount + 1
 
-            let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: trustStorage.certificateSince()).request()
+            let request = CovidCertificateSDK.currentEnvironment.trustCertificatesService(since: trustStorage.certificateSince()).request(reloadIgnoringLocalCache: ignoreLocalCache)
             let (data, response, error) = session.synchronousDataTask(with: request)
 
             if error != nil {

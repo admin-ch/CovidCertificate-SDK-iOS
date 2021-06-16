@@ -19,8 +19,8 @@ class NationalRulesListUpdate: TrustListUpdate {
 
     // MARK: - Update
 
-    override internal func synchronousUpdate() -> NetworkError? {
-        let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request()
+    override internal func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
+        let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadIgnoringLocalCache: ignoreLocalCache)
         let (data, _, error) = session.synchronousDataTask(with: request)
 
         if error != nil {
