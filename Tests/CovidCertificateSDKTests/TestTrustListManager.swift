@@ -62,7 +62,7 @@ class TestTrustlistManager: TrustlistManagerProtocol {
 class TestTrustListUpdate: TrustListUpdate {
     // MARK: - Update
 
-    override internal func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
         // update active certificates service
         sleep(1)
         return nil
