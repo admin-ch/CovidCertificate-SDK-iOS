@@ -18,9 +18,9 @@ class RevocationListUpdate: TrustListUpdate {
 
     // MARK: - Update
 
-    override internal func synchronousUpdate() -> NetworkError? {
+    override internal func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         // download data and update local storage
-        let request = CovidCertificateSDK.currentEnvironment.revocationListService.request()
+        let request = CovidCertificateSDK.currentEnvironment.revocationListService.request(reloadIgnoringLocalCache: ignoreLocalCache)
         let (data, _, error) = session.synchronousDataTask(with: request)
 
         if error != nil {

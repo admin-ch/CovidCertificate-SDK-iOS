@@ -111,6 +111,7 @@ public class TrustListUpdate {
         // ensures that the update request is done before the other tasks
         self.trustStorage = trustStorage
         operationQueue.maxConcurrentOperationCount = 1
+        forceUpdateQueue.maxConcurrentOperationCount = 1
     }
 
     public func forceUpdate(completion: @escaping (() -> Void)) {
@@ -152,7 +153,7 @@ public class TrustListUpdate {
 
     // MARK: - Update
 
-    internal func synchronousUpdate() -> NetworkError? {
+    internal func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
         // download data and update local storage
         return nil
     }
@@ -162,12 +163,12 @@ public class TrustListUpdate {
     }
 
     private func startUpdate() {
-        lastError = synchronousUpdate()
-
+        lastError = synchronousUpdate(ignoreLocalCache: true)
         updateOperation = nil
     }
 
     private func startForceUpdate() {
-        _ = synchronousUpdate()
+        _ = synchronousUpdate(ignoreLocalCache: true)
+        forceUpdateOperation = nil
     }
 }

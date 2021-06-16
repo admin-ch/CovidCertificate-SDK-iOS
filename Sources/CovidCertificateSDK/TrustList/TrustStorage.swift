@@ -30,8 +30,14 @@ public protocol TrustStorageProtocol {
 class TrustStorage: TrustStorageProtocol {
     // MARK: - Storage
 
-    private static var sharedStorage = Storage()
-    private static let secureStorage = SecureStorage<Storage>()
+    private static var nationalRulesStorage = NationalRulesStorage()
+    private static let nationalRulesSecureStorage = SecureStorage<NationalRulesStorage>(name: "national_rules")
+
+    private static var activeCertificatesStorage = ActiveCertificatesStorage()
+    private static let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
+
+    private static var revocationStorage = RevocationStorage()
+    private static let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocation")
 
     let revocationQueue = DispatchQueue(label: "storage.sync.revocation")
     let certificateQueue = DispatchQueue(label: "storage.sync.certificate")
@@ -40,9 +46,21 @@ class TrustStorage: TrustStorageProtocol {
     // MARK: - API
 
     public func initialize() {
-        Self.secureStorage.load { storage in
+        Self.activeCertificatesSecureStorage.load { storage in
             if let s = storage {
-                Self.sharedStorage = s
+                Self.activeCertificatesStorage = s
+            }
+        }
+
+        Self.nationalRulesSecureStorage.load { storage in
+            if let s = storage {
+                Self.nationalRulesStorage = s
+            }
+        }
+
+        Self.revocationSecureStorage.load { storage in
+            if let s = storage {
+                Self.revocationStorage = s
             }
         }
     }
@@ -55,22 +73,21 @@ class TrustStorage: TrustStorageProtocol {
 
     public func revokedCertificates() -> [String] {
         return revocationQueue.sync {
-            return Self.sharedStorage.revocationList.revokedCerts
+            return Self.revocationStorage.revocationList.revokedCerts
         }
     }
 
     public func updateRevocationList(_ list: RevocationList) -> Bool {
         revocationQueue.sync {
-            Self.sharedStorage.revocationList = list
-            Self.sharedStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
-
-            return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+            Self.revocationStorage.revocationList = list
+            Self.revocationStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+            return Self.revocationSecureStorage.saveSynchronously(Self.revocationStorage)
         }
     }
 
     func revocationListIsValid() -> Bool {
         return revocationQueue.sync {
-            return isStillValid(lastDownloadTimeStamp: Self.sharedStorage.lastRevocationListDownload, validDuration: Self.sharedStorage.revocationList.validDuration)
+            return isStillValid(lastDownloadTimeStamp: Self.revocationStorage.lastRevocationListDownload, validDuration: Self.revocationStorage.revocationList.validDuration)
         }
     }
 
@@ -79,29 +96,29 @@ class TrustStorage: TrustStorageProtocol {
     func updateCertificateList(_ update: TrustCertificates, since: String) -> Bool {
         // add all certificates from update
         return certificateQueue.sync {
-            Self.sharedStorage.certificateSince = since
-            Self.sharedStorage.activeCertificates.append(contentsOf: update.certs)
-            return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+            Self.activeCertificatesStorage.certificateSince = since
+            Self.activeCertificatesStorage.activeCertificates.append(contentsOf: update.certs)
+            return Self.activeCertificatesSecureStorage.saveSynchronously(Self.activeCertificatesStorage)
         }
     }
 
     func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool {
         // remove all certificates that are not active
         return certificateQueue.sync {
-            Self.sharedStorage.activeCertificates.removeAll { c in
+            Self.activeCertificatesStorage.activeCertificates.removeAll { c in
                 !activeCertificates.activeKeyIds.contains(c.keyId)
             }
 
-            Self.sharedStorage.lastCertificateListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
-            Self.sharedStorage.certificateValidDuration = activeCertificates.validDuration
+            Self.activeCertificatesStorage.lastCertificateListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+            Self.activeCertificatesStorage.certificateValidDuration = activeCertificates.validDuration
 
-            return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+            return Self.activeCertificatesSecureStorage.saveSynchronously(Self.activeCertificatesStorage)
         }
     }
 
     func activeCertificatePublicKeys() -> [TrustListPublicKey] {
         return certificateQueue.sync {
-            return Self.sharedStorage.activeCertificates.compactMap { t in
+            return Self.activeCertificatesStorage.activeCertificates.compactMap { t in
                 if t.alg == "RS256" {
                     return TrustListPublicKey(keyId: t.keyId, withRsaKey: t.subjectPublicKeyInfo)
                 } else if t.alg == "ES256" {
@@ -115,13 +132,13 @@ class TrustStorage: TrustStorageProtocol {
 
     func certificateSince() -> String {
         return certificateQueue.sync {
-            return Self.sharedStorage.certificateSince
+            return Self.activeCertificatesStorage.certificateSince
         }
     }
 
     func certificateListIsValid() -> Bool {
         return certificateQueue.sync {
-            return isStillValid(lastDownloadTimeStamp: Self.sharedStorage.lastCertificateListDownload, validDuration: Self.sharedStorage.certificateValidDuration)
+            return isStillValid(lastDownloadTimeStamp: Self.activeCertificatesStorage.lastCertificateListDownload, validDuration: Self.activeCertificatesStorage.certificateValidDuration)
         }
     }
 
@@ -129,21 +146,21 @@ class TrustStorage: TrustStorageProtocol {
 
     func nationalRulesListIsStillValid() -> Bool {
         return nationalQueue.sync {
-            return isStillValid(lastDownloadTimeStamp: Self.sharedStorage.lastNationalRulesListDownload, validDuration: Self.sharedStorage.nationalRulesList.validDuration)
+            return isStillValid(lastDownloadTimeStamp: Self.nationalRulesStorage.lastNationalRulesListDownload, validDuration: Self.nationalRulesStorage.nationalRulesList.validDuration)
         }
     }
 
     func updateNationalRules(_ update: NationalRulesList) -> Bool {
         return nationalQueue.sync {
-            Self.sharedStorage.nationalRulesList = update
-            Self.sharedStorage.lastNationalRulesListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
-            return Self.secureStorage.saveSynchronously(Self.sharedStorage)
+            Self.nationalRulesStorage.nationalRulesList = update
+            Self.nationalRulesStorage.lastNationalRulesListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+            return Self.nationalRulesSecureStorage.saveSynchronously(Self.nationalRulesStorage)
         }
     }
 
     func nationalRules() -> NationalRulesList {
         return nationalQueue.sync {
-            return Self.sharedStorage.nationalRulesList
+            return Self.nationalRulesStorage.nationalRulesList
         }
     }
 
@@ -156,15 +173,19 @@ class TrustStorage: TrustStorageProtocol {
     }
 }
 
-class Storage: Codable {
+class RevocationStorage: Codable {
     public var revocationList = RevocationList()
     public var lastRevocationListDownload: Int64 = 0
+}
 
+class ActiveCertificatesStorage: Codable {
     public var activeCertificates: [TrustCertificate] = []
     public var certificateSince: String = ""
     public var certificateValidDuration: Int64 = 0
     public var lastCertificateListDownload: Int64 = 0
+}
 
+class NationalRulesStorage: Codable {
     public var nationalRulesList = NationalRulesList()
     public var lastNationalRulesListDownload: Int64 = 0
 }

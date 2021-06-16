@@ -230,7 +230,7 @@ public struct ChCovidCert {
                         completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     }
                     return
-                case let .failure(.TEST_COULD_NOT_BE_PERFORMED(test)):
+                case let .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
                     completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     return
                 default:

@@ -39,10 +39,15 @@ public struct SecureStorage<T: Codable> {
         appropriateFor: nil,
         create: true
     )
-    var path: URL! { URL(string: documents.absoluteString + "secure.db") }
-    let secureStorageKey = Enclave.loadOrGenerateKey(with: "secureStorageKey")
+    var path: URL! { URL(string: documents.absoluteString + name) }
+    let secureStorageKey: SecKey?
 
-    public init() {}
+    let name: String
+
+    public init(name: String) {
+        self.name = name
+        secureStorageKey = Enclave.loadOrGenerateKey(with: "\(name)_secureStorageKey")
+    }
 
     /**
      Loads encrypted db and overrides it with an empty one if that fails.

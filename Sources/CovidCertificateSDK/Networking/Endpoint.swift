@@ -28,9 +28,13 @@ struct Endpoint {
 }
 
 extension Endpoint {
-    func request(timeoutInterval: TimeInterval = 30.0) -> URLRequest {
+    func request(timeoutInterval: TimeInterval = 30.0, reloadIgnoringLocalCache: Bool = false) -> URLRequest {
         var request = URLRequest(url: url, timeoutInterval: timeoutInterval)
         request.httpMethod = method.rawValue
+
+        if reloadIgnoringLocalCache {
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+        }
 
         request.setValue(userAgentHeader, forHTTPHeaderField: "User-Agent")
 
