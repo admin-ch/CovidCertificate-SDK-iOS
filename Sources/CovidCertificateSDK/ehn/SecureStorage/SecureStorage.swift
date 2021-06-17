@@ -91,6 +91,35 @@ public struct SecureStorage<T: Codable> {
         }
     }
 
+    public func loadSynchronously() -> T? {
+        if !FileManager.default.fileExists(atPath: path.path) {
+            return nil
+        }
+        guard
+            let (data, signature) = read(),
+            let key = secureStorageKey,
+            Enclave.verify(data: data, signature: signature, with: key).0
+        else {
+            return nil
+        }
+        let semaphore = DispatchSemaphore(value: 0)
+        var t: T?
+        Enclave.decrypt(data: data, with: key) { decrypted, err in
+            guard
+                let decrypted = decrypted,
+                err == nil,
+                let data = try? JSONDecoder().decode(T.self, from: decrypted)
+            else {
+                semaphore.signal()
+                return
+            }
+            t = data
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return t
+    }
+
     public func saveSynchronously(_ instance: T) -> Bool {
         let semaphore = DispatchSemaphore(value: 0)
         var outcome = false
