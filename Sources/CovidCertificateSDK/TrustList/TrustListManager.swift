@@ -137,20 +137,20 @@ public class TrustListUpdate {
             let updateNeeeded = !self.isListStillValid() || forceUpdate
             let updateAlreadyRunnning = self.updateOperation != nil
 
-        if updateNeeeded, !updateAlreadyRunnning {
+            if updateNeeeded, !updateAlreadyRunnning {
                 self.updateOperation = BlockOperation(block: { [weak self] in
-                guard let strongSelf = self else { return }
-                strongSelf.startUpdate()
-            })
+                    guard let strongSelf = self else { return }
+                    strongSelf.startUpdate()
+                })
 
-            // !: initialized just above
+                // !: initialized just above
                 self.operationQueue.addOperation(self.updateOperation!)
-        }
+            }
 
             self.operationQueue.addOperation {
-            checkOperation(self.lastError)
+                checkOperation(self.lastError)
+            }
         }
-    }
     }
 
     // MARK: - Update
@@ -170,7 +170,13 @@ public class TrustListUpdate {
     }
 
     private func startForceUpdate() {
-        _ = synchronousUpdate(ignoreLocalCache: true)
+        let error = synchronousUpdate(ignoreLocalCache: true)
+        // Only reset lastError if synchronousUpdate was successful
+        if error == nil {
+            operationQueue.addOperation {
+                self.lastError = nil
+            }
+        }
         forceUpdateOperation = nil
     }
 }
