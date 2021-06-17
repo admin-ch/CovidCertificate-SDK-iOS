@@ -133,22 +133,24 @@ public class TrustListUpdate {
     }
 
     public func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
-        let updateNeeeded = !isListStillValid() || forceUpdate
-        let updateAlreadyRunnning = updateOperation != nil
+        DispatchQueue.global().async {
+            let updateNeeeded = !self.isListStillValid() || forceUpdate
+            let updateAlreadyRunnning = self.updateOperation != nil
 
         if updateNeeeded, !updateAlreadyRunnning {
-            updateOperation = BlockOperation(block: { [weak self] in
+                self.updateOperation = BlockOperation(block: { [weak self] in
                 guard let strongSelf = self else { return }
                 strongSelf.startUpdate()
             })
 
             // !: initialized just above
-            operationQueue.addOperation(updateOperation!)
+                self.operationQueue.addOperation(self.updateOperation!)
         }
 
-        operationQueue.addOperation {
+            self.operationQueue.addOperation {
             checkOperation(self.lastError)
         }
+    }
     }
 
     // MARK: - Update
