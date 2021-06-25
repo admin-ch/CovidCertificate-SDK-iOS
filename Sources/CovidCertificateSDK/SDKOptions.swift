@@ -12,7 +12,6 @@ import Foundation
 
 /// Configure advanced options of the SDK
 public struct SDKOptions {
-
     /// Option to disable certificate pinning of TLS requests for debugging
     var certificatePinning = true
 
