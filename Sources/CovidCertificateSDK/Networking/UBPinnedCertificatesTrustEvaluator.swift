@@ -121,18 +121,16 @@ public final class UBPinnedCertificatesTrustEvaluator: UBServerTrustEvaluator {
     }
 }
 
-#if DEBUG || ENABLE_TESTING
-    /// Disables all evaluation which in turn will always consider any server trust as valid.
-    ///
-    /// THIS EVALUATOR SHOULD NEVER BE USED IN PRODUCTION!
-    public final class UBDisabledEvaluator: UBServerTrustEvaluator {
-        /// :nodoc:
-        public init() {}
+/// Disables all evaluation which in turn will always consider any server trust as valid.
+///
+/// THIS EVALUATOR SHOULD NEVER BE USED IN PRODUCTION!
+public final class UBDisabledEvaluator: UBServerTrustEvaluator {
+    /// :nodoc:
+    public init() {}
 
-        /// :nodoc:
-        public func evaluate(_: SecTrust, forHost _: String) throws {}
-    }
-#endif
+    /// :nodoc:
+    public func evaluate(_: SecTrust, forHost _: String) throws {}
+}
 
 extension Bundle {
     /// Returns all valid `cer`, `crt`, and `der` certificates in the bundle.
