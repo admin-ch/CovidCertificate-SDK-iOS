@@ -63,7 +63,6 @@ public struct DGCHolder {
         self.keyId = keyId
     }
 
-    @available(OSX 10.13, *)
     public func hasValidSignature(for publicKey: SecKey) -> Bool {
         cose.hasValidSignature(for: publicKey)
     }
@@ -109,7 +108,6 @@ public struct ChCovidCert {
         return .success(DGCHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    @available(OSX 10.13, *)
     public func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch cose.cwt.isValid() {
         case let .success(isValid):
@@ -140,7 +138,6 @@ public struct ChCovidCert {
     }
 
     public func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        // As long as no revocation list is published yet, return true
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
 
             if let e = error?.asValidationError() {
