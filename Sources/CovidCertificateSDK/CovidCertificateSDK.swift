@@ -27,7 +27,6 @@ public enum CovidCertificateSDK {
         return instance.decode(encodedData: encodedData)
     }
 
-    @available(OSX 10.13, *)
     public static func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         instancePrecondition()
         return instance.checkSignature(cose: cose, forceUpdate: forceUpdate, completionHandler)
@@ -60,5 +59,9 @@ public enum CovidCertificateSDK {
     public static var apiKey: String {
         instancePrecondition()
         return instance.apiKey
+    }
+
+    public static func setOptions(options: SDKOptions) {
+        URLSession.evaluator.useCertificatePinning = options.certificatePinning
     }
 }
