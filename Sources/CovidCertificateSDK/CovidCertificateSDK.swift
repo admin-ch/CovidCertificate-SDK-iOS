@@ -61,4 +61,8 @@ public enum CovidCertificateSDK {
         instancePrecondition()
         return instance.apiKey
     }
+
+    public static func setOptions(options: SDKOptions) {
+        URLSession.evaluator.useCertificatePinning = options.certificatePinning
+    }
 }
