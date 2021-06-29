@@ -23,7 +23,6 @@ public enum CovidCertificateSDK {
     }
 
     public enum Verifier {
-
         public static func decode(encodedData: String) -> Result<DGCVerifierHolder, CovidCertError> {
             instancePrecondition()
             switch instance.decode(encodedData: encodedData) {
@@ -52,22 +51,18 @@ public enum CovidCertificateSDK {
                 }
             }
         }
-        
     }
 
     public enum Wallet {
-
         public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
             instancePrecondition()
             return instance.decode(encodedData: encodedData)
         }
 
-
         public static func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
             return instance.check(cose: cose, forceUpdate: forceUpdate, completionHandler)
         }
-
     }
 
     public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {

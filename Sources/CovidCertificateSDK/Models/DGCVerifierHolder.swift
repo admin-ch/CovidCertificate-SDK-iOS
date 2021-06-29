@@ -11,7 +11,6 @@
 import Foundation
 
 public struct DGCVerifierHolder {
-
     let dgc: DGCHolder
 
     init(dgc: DGCHolder) {
@@ -23,5 +22,4 @@ public struct DGCVerifierHolder {
     public var person: Person {
         dgc.healthCert.person
     }
-
 }

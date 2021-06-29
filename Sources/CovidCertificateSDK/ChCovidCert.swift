@@ -109,7 +109,6 @@ struct ChCovidCert {
     }
 
     func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
-
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
