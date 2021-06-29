@@ -22,4 +22,8 @@ public struct DGCVerifierHolder {
     public var person: Person {
         dgc.healthCert.person
     }
+
+    public var dateOfBirth: String {
+        dgc.healthCert.dateOfBirth
+    }
 }
