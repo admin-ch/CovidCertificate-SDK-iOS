@@ -12,11 +12,11 @@
 import Foundation
 import Security
 
-public class TrustListPublicKey {
+class TrustListPublicKey {
     // MARK: - Elements
 
-    public let keyId: String
-    public let key: SecKey
+    let keyId: String
+    let key: SecKey
 
     // MARK: - Used with RSA
 

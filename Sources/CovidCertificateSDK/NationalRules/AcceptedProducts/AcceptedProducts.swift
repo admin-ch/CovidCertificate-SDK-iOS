@@ -12,25 +12,25 @@
 import Foundation
 
 class AcceptedProducts {
-    public static var shared = AcceptedProducts()
+    static var shared = AcceptedProducts()
 
     private let acceptedTests: AcceptedTests
     private let acceptedVaccines: AcceptedVaccines
 
     // MARK: - Vaccination API
 
-    public func vaccineIsAccepted(vaccination: Vaccination) -> Bool {
+    func vaccineIsAccepted(vaccination: Vaccination) -> Bool {
         return acceptedVaccines.entries.contains { $0.code == vaccination.medicinialProduct }
     }
 
-    public func totalNumberOfDoses(vaccination: Vaccination) -> UInt64? {
+    func totalNumberOfDoses(vaccination: Vaccination) -> UInt64? {
         let entry = acceptedVaccines.entries.first { $0.code == vaccination.medicinialProduct }
         return entry?.totalDosisNumber
     }
 
     // MARK: - Test API
 
-    public func testIsAccepted(test: Test) -> Bool {
+    func testIsAccepted(test: Test) -> Bool {
         if test.type == TestType.Pcr.rawValue {
             return true
         }

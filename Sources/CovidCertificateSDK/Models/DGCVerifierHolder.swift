@@ -12,7 +12,7 @@ import Foundation
 
 public struct DGCVerifierHolder {
 
-    internal let dgc: DGCHolder
+    let dgc: DGCHolder
 
     init(dgc: DGCHolder) {
         self.dgc = dgc

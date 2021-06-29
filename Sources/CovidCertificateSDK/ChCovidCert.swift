@@ -68,14 +68,14 @@ public struct DGCHolder {
     }
 }
 
-public struct ChCovidCert {
+struct ChCovidCert {
     private let PREFIX = "HC1:"
 
     private let trustListManager: TrustlistManagerProtocol
     private let nationalRules = NationalRulesVerifier()
 
-    public let environment: SDKEnvironment
-    public let apiKey: String
+    let environment: SDKEnvironment
+    let apiKey: String
 
     init(environment: SDKEnvironment, apiKey: String, trustListManager: TrustlistManagerProtocol) {
         self.environment = environment
@@ -83,7 +83,7 @@ public struct ChCovidCert {
         self.trustListManager = trustListManager
     }
 
-    public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
+    func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
         #if DEBUG
             print(encodedData)
         #endif
@@ -108,7 +108,7 @@ public struct ChCovidCert {
         return .success(DGCHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    internal func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
 
         let group = DispatchGroup()
 
@@ -148,7 +148,7 @@ public struct ChCovidCert {
         }
     }
 
-    internal func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch cose.cwt.isValid() {
         case let .success(isValid):
             if !isValid {
@@ -177,7 +177,7 @@ public struct ChCovidCert {
         })
     }
 
-    public func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
 
             if let e = error?.asValidationError() {
@@ -192,7 +192,7 @@ public struct ChCovidCert {
         })
     }
 
-    public func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         if dgc.certType == nil {
             completionHandler(.failure(.NO_VALID_PRODUCT))
             return
@@ -267,7 +267,7 @@ public struct ChCovidCert {
                         completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     }
                     return
-                case let .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
+                case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
                     completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     return
                 default:
@@ -278,7 +278,7 @@ public struct ChCovidCert {
         })
     }
 
-    public func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+    func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
         trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
     }
 
@@ -287,7 +287,7 @@ public struct ChCovidCert {
     }
 
     /// Strips a given scheme prefix from the encoded EHN health certificate
-    private func removeScheme(prefix: String, from encodedString: String) -> String? {
+    func removeScheme(prefix: String, from encodedString: String) -> String? {
         guard encodedString.starts(with: prefix) else {
             return nil
         }
@@ -295,17 +295,17 @@ public struct ChCovidCert {
     }
 
     /// Base45-decodes an EHN health certificate
-    private func decode(_ encodedData: String) -> Data? {
+    func decode(_ encodedData: String) -> Data? {
         return try? encodedData.fromBase45()
     }
 
     /// Decompress the EHN health certificate using ZLib
-    private func decompress(_ encodedData: Data) -> Data? {
+    func decompress(_ encodedData: Data) -> Data? {
         return try? encodedData.gunzipped()
     }
 
     /// Creates COSE structure from EHN health certificate
-    private func cose(from data: Data) -> Cose? {
+    func cose(from data: Data) -> Cose? {
         return Cose(from: data)
     }
 }

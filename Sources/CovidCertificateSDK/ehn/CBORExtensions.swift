@@ -86,7 +86,7 @@ extension CBOR {
     }
 }
 
-public extension CBOR.Tag {
+extension CBOR.Tag {
     static let coseSign1Item = CBOR.Tag(rawValue: 18)
     static let coseSignItem = CBOR.Tag(rawValue: 98)
 }

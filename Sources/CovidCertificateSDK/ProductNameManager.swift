@@ -23,31 +23,31 @@ class ProductNameManager {
 
     // MARK: - Shared instance
 
-    public static let shared = ProductNameManager()
+    static let shared = ProductNameManager()
 
     // MARK: - API
 
-    public func vaccineManufacturer(key: String?) -> String? {
+    func vaccineManufacturer(key: String?) -> String? {
         return vaccineManufacturers.productName(key: key)
     }
 
-    public func vaccineProductName(key: String?) -> String? {
+    func vaccineProductName(key: String?) -> String? {
         return vaccineProducts.productName(key: key)
     }
 
-    public func vaccineProphylaxisName(key: String?) -> String? {
+    func vaccineProphylaxisName(key: String?) -> String? {
         return vaccineProphylaxis.productName(key: key)
     }
 
-    public func testManufacturerName(key: String?) -> String? {
+    func testManufacturerName(key: String?) -> String? {
         return testManufacturers.productName(key: key)
     }
 
-    public func testTypeName(key: String?) -> String? {
+    func testTypeName(key: String?) -> String? {
         return testTypes.productName(key: key)
     }
 
-    public func testResultName(key: String?) -> String? {
+    func testResultName(key: String?) -> String? {
         return testResults.productName(key: key)
     }
 
@@ -67,17 +67,17 @@ class ProductNameManager {
 }
 
 class ProductEntry: Codable {
-    public let display: String?
-    public let lang: String?
-    public let active: Bool?
-    public let system: String?
-    public let version: String?
+    let display: String?
+    let lang: String?
+    let active: Bool?
+    let system: String?
+    let version: String?
 }
 
 class Products: Codable {
-    public let valueSetId: String?
-    public let valueSetDate: String?
-    public let valueSetValues: [String: ProductEntry]
+    let valueSetId: String?
+    let valueSetDate: String?
+    let valueSetValues: [String: ProductEntry]
 
     init() {
         valueSetId = nil
@@ -87,7 +87,7 @@ class Products: Codable {
 
     // MARK: - Product name helper
 
-    public func productName(key: String?) -> String? {
+    func productName(key: String?) -> String? {
         guard let k = key,
               let p = valueSetValues[k],
               let name = p.display

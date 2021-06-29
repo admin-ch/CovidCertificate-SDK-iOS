@@ -8,7 +8,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct CWT {
+struct CWT {
     let iss: String?
     let exp: CBOR?
     let iat: CBOR?

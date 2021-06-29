@@ -32,7 +32,7 @@ struct SecureDB: Codable {
     let signature: Data
 }
 
-public struct SecureStorage<T: Codable> {
+struct SecureStorage<T: Codable> {
     let documents: URL! = try? FileManager.default.url(
         for: .documentDirectory,
         in: .userDomainMask,
@@ -44,7 +44,7 @@ public struct SecureStorage<T: Codable> {
 
     let name: String
 
-    public init(name: String) {
+    init(name: String) {
         self.name = name
         secureStorageKey = Enclave.loadOrGenerateKey(with: "\(name)_secureStorageKey")
     }
@@ -52,7 +52,7 @@ public struct SecureStorage<T: Codable> {
     /**
      Loads encrypted db and overrides it with an empty one if that fails.
      */
-    public func loadOverride(fallback: T, completion: ((T?) -> Void)? = nil) {
+    func loadOverride(fallback: T, completion: ((T?) -> Void)? = nil) {
         load { result in
             if result != nil {
                 completion?(result)
@@ -64,7 +64,7 @@ public struct SecureStorage<T: Codable> {
         }
     }
 
-    public func load(completion: ((T?) -> Void)? = nil) {
+    func load(completion: ((T?) -> Void)? = nil) {
         if !FileManager.default.fileExists(atPath: path.path) {
             completion?(nil)
             return
@@ -91,7 +91,7 @@ public struct SecureStorage<T: Codable> {
         }
     }
 
-    public func loadSynchronously() -> T? {
+    func loadSynchronously() -> T? {
         if !FileManager.default.fileExists(atPath: path.path) {
             return nil
         }
@@ -120,7 +120,7 @@ public struct SecureStorage<T: Codable> {
         return t
     }
 
-    public func saveSynchronously(_ instance: T) -> Bool {
+    func saveSynchronously(_ instance: T) -> Bool {
         let semaphore = DispatchSemaphore(value: 0)
         var outcome = false
         save(instance) { result in
@@ -132,7 +132,7 @@ public struct SecureStorage<T: Codable> {
         return outcome
     }
 
-    public func save(_ instance: T, completion: ((Bool) -> Void)? = nil) {
+    func save(_ instance: T, completion: ((Bool) -> Void)? = nil) {
         guard
             let data = try? JSONEncoder().encode(instance),
             let key = secureStorageKey,

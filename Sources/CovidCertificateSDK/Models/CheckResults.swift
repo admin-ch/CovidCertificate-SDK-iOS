@@ -11,7 +11,7 @@
 import Foundation
 
 public struct CheckResults {
-    let signature: Result<ValidationResult, ValidationError>
-    let revocationStatus: Result<ValidationResult, ValidationError>
-    let nationalRules: Result<VerificationResult, NationalRulesError>
+    public let signature: Result<ValidationResult, ValidationError>
+    public let revocationStatus: Result<ValidationResult, ValidationError>
+    public let nationalRules: Result<VerificationResult, NationalRulesError>
 }

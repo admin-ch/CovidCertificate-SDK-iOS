@@ -12,9 +12,9 @@
 import Foundation
 import JSON
 
-public class NationalRulesList: Codable, JWTExtension {
-    public var validDuration: Int64 = 0
-    public var requestData: Data? {
+class NationalRulesList: Codable, JWTExtension {
+    var validDuration: Int64 = 0
+    var requestData: Data? {
         didSet {
             if let newValue = requestData {
                 rules = JSON(newValue)["rules"]
@@ -35,9 +35,9 @@ public class NationalRulesList: Codable, JWTExtension {
     }
 
     // Allow default constructor
-    public init() {}
+    init() {}
 
-    public required init(from decoder: Decoder) throws {
+    required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         validDuration = try container.decode(Int64.self, forKey: .validDuration)
         requestData = try? container.decode(Data.self, forKey: .requestData)
@@ -48,7 +48,7 @@ public class NationalRulesList: Codable, JWTExtension {
         }
     }
 
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(validDuration, forKey: .validDuration)
         try container.encode(requestData, forKey: .requestData)

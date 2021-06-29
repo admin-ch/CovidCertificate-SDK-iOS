@@ -64,7 +64,7 @@ class NationalRulesVerifier {
 
     // MARK: - Test
 
-    public func verifyTest(test: Test, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    func verifyTest(test: Test, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         // tg must be sars-cov2
         if !test.isTargetDiseaseCorrect {
             completionHandler(.failure(.WRONG_DISEASE_TARGET))
@@ -109,7 +109,7 @@ class NationalRulesVerifier {
 
     // MARK: - Vaccine
 
-    public func verifyVaccine(vaccine: Vaccination, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    func verifyVaccine(vaccine: Vaccination, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         // tg must be sars-cov2
         if !vaccine.isTargetDiseaseCorrect {
             completionHandler(.failure(.WRONG_DISEASE_TARGET))
@@ -151,7 +151,7 @@ class NationalRulesVerifier {
 
     // MARK: - Recoveery
 
-    public func verifyRecovery(recovery: PastInfection, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    func verifyRecovery(recovery: PastInfection, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         if recovery.disease != Disease.SarsCov2.rawValue {
             completionHandler(.failure(.WRONG_DISEASE_TARGET))
             return

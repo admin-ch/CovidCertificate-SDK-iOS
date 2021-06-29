@@ -11,7 +11,7 @@
 
 import Foundation
 
-public protocol TrustlistManagerProtocol {
+protocol TrustlistManagerProtocol {
     static var jwsVerifier: JWSVerifier { get }
     var revocationListUpdater: TrustListUpdate { get }
     var trustCertificateUpdater: TrustListUpdate { get }
@@ -25,7 +25,7 @@ public protocol TrustlistManagerProtocol {
 class TrustlistManager: TrustlistManagerProtocol {
     // MARK: - JWS verification
 
-    public static var jwsVerifier: JWSVerifier {
+    static var jwsVerifier: JWSVerifier {
         guard let data = Bundle.module.url(forResource: "swiss_governmentrootcaii", withExtension: "der") else {
             fatalError("Signing CA not in Bundle")
         }
@@ -92,7 +92,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     }
 }
 
-public class TrustListUpdate {
+class TrustListUpdate {
     // MARK: - Operation queue handling
 
     private let operationQueue = OperationQueue()
@@ -103,7 +103,7 @@ public class TrustListUpdate {
 
     private var lastError: NetworkError?
 
-    internal let trustStorage: TrustStorageProtocol
+    let trustStorage: TrustStorageProtocol
 
     // MARK: - Add Check Operation
 
@@ -114,7 +114,7 @@ public class TrustListUpdate {
         forceUpdateQueue.maxConcurrentOperationCount = 1
     }
 
-    public func forceUpdate(completion: @escaping (() -> Void)) {
+    func forceUpdate(completion: @escaping (() -> Void)) {
         let updateAlreadyRunnning = forceUpdateOperation != nil
 
         if !updateAlreadyRunnning {
@@ -132,7 +132,7 @@ public class TrustListUpdate {
         }
     }
 
-    public func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
+    func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
         DispatchQueue.global().async {
             let updateNeeeded = !self.isListStillValid() || forceUpdate
             let updateAlreadyRunnning = self.updateOperation != nil
@@ -155,12 +155,12 @@ public class TrustListUpdate {
 
     // MARK: - Update
 
-    internal func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
+    func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
         // download data and update local storage
         return nil
     }
 
-    internal func isListStillValid() -> Bool {
+    func isListStillValid() -> Bool {
         return true
     }
 
