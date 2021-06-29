@@ -22,24 +22,38 @@ public enum CovidCertificateSDK {
         instance = ChCovidCert(environment: environment, apiKey: apiKey, trustListManager: TrustlistManager())
     }
 
-    public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
-        instancePrecondition()
-        return instance.decode(encodedData: encodedData)
+    public enum Verifier {
+
+        public static func decode(encodedData: String) -> Result<DGCVerifierHolder, CovidCertError> {
+            instancePrecondition()
+            switch instance.decode(encodedData: encodedData) {
+            case let .success(dgc):
+                return .success(.init(dgc: dgc))
+            case let .failure(error):
+                return .failure(error)
+            }
+        }
+
+        public static func check(cose: DGCVerifierHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+            instancePrecondition()
+            return instance.check(cose: cose.dgc, forceUpdate: forceUpdate, completionHandler)
+        }
+        
     }
 
-    public static func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        instancePrecondition()
-        return instance.checkSignature(cose: cose, forceUpdate: forceUpdate, completionHandler)
-    }
+    public enum Wallet {
 
-    public static func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        instancePrecondition()
-        return instance.checkRevocationStatus(dgc: dgc, forceUpdate: forceUpdate, completionHandler)
-    }
+        public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
+            instancePrecondition()
+            return instance.decode(encodedData: encodedData)
+        }
 
-    public static func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
-        instancePrecondition()
-        return instance.checkNationalRules(dgc: dgc, forceUpdate: forceUpdate, completionHandler)
+
+        public static func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+            instancePrecondition()
+            return instance.check(cose: cose, forceUpdate: forceUpdate, completionHandler)
+        }
+
     }
 
     public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {

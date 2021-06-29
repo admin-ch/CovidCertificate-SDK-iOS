@@ -108,7 +108,47 @@ public struct ChCovidCert {
         return .success(DGCHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    public func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    internal func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+
+        let group = DispatchGroup()
+
+        var signatureResult: Result<ValidationResult, ValidationError>?
+        var revocationStatusResult: Result<ValidationResult, ValidationError>?
+        var nationalRulesResult: Result<VerificationResult, NationalRulesError>?
+
+        group.enter()
+        checkSignature(cose: cose, forceUpdate: forceUpdate) { result in
+            signatureResult = result
+            group.leave()
+        }
+
+        group.enter()
+        checkRevocationStatus(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
+            revocationStatusResult = result
+            group.leave()
+        }
+
+        group.enter()
+        checkNationalRules(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
+            nationalRulesResult = result
+            group.leave()
+        }
+
+        group.notify(queue: .main) {
+            guard let signatureResult = signatureResult,
+                  let revocationStatusResult = revocationStatusResult,
+                  let nationalRulesResult = nationalRulesResult else {
+                assertionFailure()
+                return
+            }
+
+            completionHandler(.init(signature: signatureResult,
+                                    revocationStatus: revocationStatusResult,
+                                    nationalRules: nationalRulesResult))
+        }
+    }
+
+    internal func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch cose.cwt.isValid() {
         case let .success(isValid):
             if !isValid {
