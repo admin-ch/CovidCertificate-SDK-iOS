@@ -14,7 +14,7 @@ extension Data {
         return map { String(format: "%02x ", $0) }.joined()
     }
 
-    public var bytes: [UInt8] {
+    var bytes: [UInt8] {
         return [UInt8](self)
     }
 

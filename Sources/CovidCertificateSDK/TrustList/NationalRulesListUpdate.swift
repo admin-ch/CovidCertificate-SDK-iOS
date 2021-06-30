@@ -19,7 +19,7 @@ class NationalRulesListUpdate: TrustListUpdate {
 
     // MARK: - Update
 
-    override internal func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
+    override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadIgnoringLocalCache: ignoreLocalCache)
         let (data, _, error) = session.synchronousDataTask(with: request)
 
@@ -57,12 +57,12 @@ class NationalRulesListUpdate: TrustListUpdate {
         return nil
     }
 
-    override internal func isListStillValid() -> Bool {
+    override func isListStillValid() -> Bool {
         return trustStorage.nationalRulesListIsStillValid()
     }
 }
 
-public extension Data {
+extension Data {
     static func data(base64urlEncoded: String) -> Data? {
         let paddingLength = 4 - base64urlEncoded.count % 4
         let padding = (paddingLength < 4) ? String(repeating: "=", count: paddingLength) : ""

@@ -15,7 +15,7 @@ import Foundation
 class TestTrustlistManager: TrustlistManagerProtocol {
     // MARK: - JWS verification
 
-    public static var jwsVerifier: JWSVerifier {
+    static var jwsVerifier: JWSVerifier {
         guard let data = Bundle.module.url(forResource: "swiss_governmentrootcaii", withExtension: "der") else {
             fatalError("Signing CA not in Bundle")
         }
@@ -62,7 +62,7 @@ class TestTrustlistManager: TrustlistManagerProtocol {
 class TestTrustListUpdate: TrustListUpdate {
     // MARK: - Update
 
-    override internal func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
+    override func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
         // update active certificates service
         sleep(1)
         return nil

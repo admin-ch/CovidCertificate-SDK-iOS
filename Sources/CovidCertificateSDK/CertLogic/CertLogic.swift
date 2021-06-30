@@ -12,17 +12,17 @@ import Foundation
 import JSON
 import jsonlogic
 
-public enum CertLogicCommonError: String, Error {
+enum CertLogicCommonError: String, Error {
     case RULE_PARSING_FAILED
 }
 
-public enum CertLogicValidationError: Error {
+enum CertLogicValidationError: Error {
     case JSON_ERROR
     case TESTS_FAILED(tests: [String: String])
     case TEST_COULD_NOT_BE_PERFORMED(test: String)
 }
 
-public class CertLogic {
+class CertLogic {
     private static let acceptanceCriteriaKey: String = "acceptance-criteria"
     private static let vaccineImmunityKey: String = "vaccine-immunity"
     private static let singleVaccineValidityOffsetKey: String = "single-vaccine-validity-offset"
@@ -35,12 +35,12 @@ public class CertLogic {
     var valueSets: JSON = []
     let calendar: Calendar
 
-    public var maxValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int }
-    public var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int }
-    public var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int }
-    public var ratValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int }
+    var maxValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int }
+    var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int }
+    var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int }
+    var ratValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int }
 
-    public init?() {
+    init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
             return nil
         }
@@ -49,7 +49,7 @@ public class CertLogic {
         calendar = tmpCalendar
     }
 
-    public func updateData(rules: JSON, valueSets: JSON) -> Result<Void, CertLogicCommonError> {
+    func updateData(rules: JSON, valueSets: JSON) -> Result<Void, CertLogicCommonError> {
         guard let array = rules.array else {
             return .failure(.RULE_PARSING_FAILED)
         }
@@ -58,7 +58,7 @@ public class CertLogic {
         return .success(())
     }
 
-    public func checkRules(hcert: EuHealthCert, validationClock: Date = Date()) -> Result<Void, CertLogicValidationError> {
+    func checkRules(hcert: EuHealthCert, validationClock: Date = Date()) -> Result<Void, CertLogicValidationError> {
         var external = JSON(
             ["validationClock": ISO8601DateFormatter().string(from: validationClock),
              "validationClockAtStartOfDay": ISO8601DateFormatter().string(from: calendar.startOfDay(for: validationClock))]

@@ -11,7 +11,7 @@
 
 import Foundation
 
-public protocol TrustStorageProtocol {
+protocol TrustStorageProtocol {
     func revokedCertificates() -> [String]
     func updateRevocationList(_ list: RevocationList) -> Bool
     func revocationListIsValid() -> Bool
@@ -45,13 +45,13 @@ class TrustStorage: TrustStorageProtocol {
 
     // MARK: - Revocation List
 
-    public func revokedCertificates() -> [String] {
+    func revokedCertificates() -> [String] {
         return revocationQueue.sync {
             return self.revocationStorage.revocationList.revokedCerts
         }
     }
 
-    public func updateRevocationList(_ list: RevocationList) -> Bool {
+    func updateRevocationList(_ list: RevocationList) -> Bool {
         revocationQueue.sync {
             self.revocationStorage.revocationList = list
             self.revocationStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
@@ -148,18 +148,18 @@ class TrustStorage: TrustStorageProtocol {
 }
 
 class RevocationStorage: Codable {
-    public var revocationList = RevocationList()
-    public var lastRevocationListDownload: Int64 = 0
+    var revocationList = RevocationList()
+    var lastRevocationListDownload: Int64 = 0
 }
 
 class ActiveCertificatesStorage: Codable {
-    public var activeCertificates: [TrustCertificate] = []
-    public var certificateSince: String = ""
-    public var certificateValidDuration: Int64 = 0
-    public var lastCertificateListDownload: Int64 = 0
+    var activeCertificates: [TrustCertificate] = []
+    var certificateSince: String = ""
+    var certificateValidDuration: Int64 = 0
+    var lastCertificateListDownload: Int64 = 0
 }
 
 class NationalRulesStorage: Codable {
-    public var nationalRulesList = NationalRulesList()
-    public var lastNationalRulesListDownload: Int64 = 0
+    var nationalRulesList = NationalRulesList()
+    var lastNationalRulesListDownload: Int64 = 0
 }

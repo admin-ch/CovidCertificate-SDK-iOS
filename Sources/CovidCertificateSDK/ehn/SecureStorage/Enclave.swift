@@ -27,7 +27,7 @@
 
 import Foundation
 
-public enum Enclave {
+enum Enclave {
     static let encryptAlg = SecKeyAlgorithm.eciesEncryptionCofactorVariableIVX963SHA256AESGCM
     static let signAlg = SecKeyAlgorithm.ecdsaSignatureMessageX962SHA512
 
@@ -159,7 +159,7 @@ public enum Enclave {
         return (isValid, err)
     }
 
-    public static func sign(
+    static func sign(
         data: Data,
         with key: SecKey,
         using algorithm: SecKeyAlgorithm? = nil,
