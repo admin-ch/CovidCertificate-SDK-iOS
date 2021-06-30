@@ -53,6 +53,13 @@ public struct DGCHolder {
         return nil
     }
 
+    public var expiresAt: Date? {
+        if let i = cwt.exp?.asNumericDate() {
+            return Date(timeIntervalSince1970: i)
+        }
+        return nil
+    }
+
     let cose: Cose
     let cwt: CWT
     public let keyId: Data
