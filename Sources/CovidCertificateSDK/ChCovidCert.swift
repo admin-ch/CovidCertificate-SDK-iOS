@@ -88,7 +88,7 @@ struct ChCovidCert {
         #if DEBUG
             print(encodedData)
         #endif
-        guard let unprefixedEncodedString = removeScheme(prefix: PREFIX, from: encodedData) else {
+        guard let unprefixedEncodedString = removeSchemes(prefixes: [PREFIX, LIGHT_PREFIX], from: encodedData) else {
             return .failure(.INVALID_SCHEME_PREFIX)
         }
 
@@ -294,11 +294,14 @@ struct ChCovidCert {
     }
 
     /// Strips a given scheme prefix from the encoded EHN health certificate
-    func removeScheme(prefix: String, from encodedString: String) -> String? {
-        guard encodedString.starts(with: prefix) else {
-            return nil
+    func removeSchemes(prefixes: [String], from encodedString: String) -> String? {
+        for prefix in prefixes {
+            guard encodedString.starts(with: prefix) else {
+                continue
+            }
+            return String(encodedString.dropFirst(prefix.count))
         }
-        return String(encodedString.dropFirst(prefix.count))
+        return nil
     }
 
     /// Base45-decodes an EHN health certificate
