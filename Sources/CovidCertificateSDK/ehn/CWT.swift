@@ -14,12 +14,14 @@ struct CWT {
     let iat: CBOR?
     let euHealthCert: EuHealthCert
     let decodedPayload: [CBOR: CBOR]
+    let isLightCertificate: Bool
 
     enum PayloadKeys: Int {
         case iss = 1
         case iat = 6
         case exp = 4
         case hcert = -260
+        case lightCert = -250
 
         enum HcertKeys: Int {
             case euHealthCertV1 = 1
@@ -59,11 +61,17 @@ struct CWT {
         exp = decodedPayload[PayloadKeys.exp]
         iat = decodedPayload[PayloadKeys.iat]
 
-        guard let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
+        if let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
               let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
-              let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) else {
+              let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) {
+            euHealthCert = healthCert
+            isLightCertificate = false
+        } else if let lightCertData = decodedPayload[PayloadKeys.lightCert]?.asData(),
+                  let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: lightCertData) {
+            euHealthCert = healthCert
+            isLightCertificate = true
+        } else {
             return nil
         }
-        euHealthCert = healthCert
     }
 }

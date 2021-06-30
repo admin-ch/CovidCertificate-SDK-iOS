@@ -70,6 +70,7 @@ public struct DGCHolder {
 
 struct ChCovidCert {
     private let PREFIX = "HC1:"
+    private let LIGHT_PREFIX = "LT1:"
 
     private let trustListManager: TrustlistManagerProtocol
     private let nationalRules = NationalRulesVerifier()
@@ -121,17 +122,24 @@ struct ChCovidCert {
             group.leave()
         }
 
-        group.enter()
-        checkRevocationStatus(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
-            revocationStatusResult = result
-            group.leave()
+        if !cose.cwt.isLightCertificate {
+            group.enter()
+            checkRevocationStatus(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
+                revocationStatusResult = result
+                group.leave()
+            }
+
+            group.enter()
+            checkNationalRules(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
+                nationalRulesResult = result
+                group.leave()
+            }
+        } else {
+            // Skip revocation and national rules check for light certificates
+            revocationStatusResult = .success(.init(isValid: true, payload: cose.healthCert, error: nil))
+            nationalRulesResult = .success(.init(isValid: true, validUntil: nil, validFrom: nil, dateError: nil))
         }
 
-        group.enter()
-        checkNationalRules(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
-            nationalRulesResult = result
-            group.leave()
-        }
 
         group.notify(queue: .main) {
             guard let signatureResult = signatureResult,
@@ -159,7 +167,7 @@ struct ChCovidCert {
             return
         }
 
-        if cose.healthCert.certType == nil {
+        if cose.healthCert.certType == nil, !cose.cwt.isLightCertificate {
             completionHandler(.failure(.SIGNATURE_TYPE_INVALID(.CERT_TYPE_AMBIGUOUS)))
             return
         }
