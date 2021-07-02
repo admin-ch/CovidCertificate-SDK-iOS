@@ -14,74 +14,14 @@ import Foundation
 import Gzip
 import JSON
 
-public enum CovidCertError: Error, Equatable {
-    case NOT_IMPLEMENTED
-    case INVALID_SCHEME_PREFIX
-    case BASE_45_DECODING_FAILED
-    case DECOMPRESSION_FAILED
-    case COSE_DESERIALIZATION_FAILED
-    case HCERT_IS_INVALID
-
-    public var errorCode: String {
-        switch self {
-        case .NOT_IMPLEMENTED:
-            return "D|NI"
-        case .INVALID_SCHEME_PREFIX:
-            return "D|ISP"
-        case .BASE_45_DECODING_FAILED:
-            return "D|B45"
-        case .DECOMPRESSION_FAILED:
-            return "D|ZLB"
-        case .COSE_DESERIALIZATION_FAILED:
-            return "D|CDF"
-        case .HCERT_IS_INVALID:
-            return "D|HII"
-        }
-    }
-}
-
-public struct DGCHolder {
-    public var healthCert: EuHealthCert {
-        return cwt.euHealthCert
-    }
-
-    public var issuedAt: Date? {
-        if let i = cwt.iat?.asNumericDate() {
-            return Date(timeIntervalSince1970: i)
-        }
-
-        return nil
-    }
-
-    public var expiresAt: Date? {
-        if let i = cwt.exp?.asNumericDate() {
-            return Date(timeIntervalSince1970: i)
-        }
-        return nil
-    }
-
-    let cose: Cose
-    let cwt: CWT
-    public let keyId: Data
-
-    init(cwt: CWT, cose: Cose, keyId: Data) {
-        self.cwt = cwt
-        self.cose = cose
-        self.keyId = keyId
-    }
-
-    public func hasValidSignature(for publicKey: SecKey) -> Bool {
-        cose.hasValidSignature(for: publicKey)
-    }
-}
-
-struct ChCovidCert {
-    private let PREFIX = "HC1:"
-
+/// Main class for handling SDK logic
+struct CovidCertificateImpl {
     private let trustListManager: TrustlistManagerProtocol
+
     private let nationalRules = NationalRulesVerifier()
 
     let environment: SDKEnvironment
+
     let apiKey: String
 
     init(environment: SDKEnvironment, apiKey: String, trustListManager: TrustlistManagerProtocol) {
@@ -90,11 +30,13 @@ struct ChCovidCert {
         self.trustListManager = trustListManager
     }
 
-    func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
+    func decode(encodedData: String) -> Result<CertificateHolder, CovidCertError> {
         #if DEBUG
             print(encodedData)
         #endif
-        guard let unprefixedEncodedString = removeScheme(prefix: PREFIX, from: encodedData) else {
+
+        guard let type = getType(from: encodedData),
+              let unprefixedEncodedString = removeScheme(prefix: type.prefix, from: encodedData) else {
             return .failure(.INVALID_SCHEME_PREFIX)
         }
 
@@ -107,15 +49,15 @@ struct ChCovidCert {
         }
 
         guard let cose = cose(from: decompressedData),
-              let cwt = CWT(from: cose.payload),
+              let cwt = CWT(from: cose.payload, type: type),
               let keyId = cose.keyId else {
             return .failure(.COSE_DESERIALIZATION_FAILED)
         }
 
-        return .success(DGCHolder(cwt: cwt, cose: cose, keyId: keyId))
+        return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(cose: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
@@ -128,16 +70,21 @@ struct ChCovidCert {
             group.leave()
         }
 
-        group.enter()
-        checkRevocationStatus(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
-            revocationStatusResult = result
-            group.leave()
-        }
+        switch cose.certificate {
+        case let certificate as DCCCert:
+            group.enter()
+            checkRevocationStatus(certificate: certificate, forceUpdate: forceUpdate) { result in
+                revocationStatusResult = result
+                group.leave()
+            }
 
-        group.enter()
-        checkNationalRules(dgc: cose.healthCert, forceUpdate: forceUpdate) { result in
-            nationalRulesResult = result
-            group.leave()
+            group.enter()
+            checkNationalRules(certificate: certificate, forceUpdate: forceUpdate) { result in
+                nationalRulesResult = result
+                group.leave()
+            }
+        default:
+            fatalError("Unsupported Certificate type")
         }
 
         group.notify(queue: .main) {
@@ -154,7 +101,7 @@ struct ChCovidCert {
         }
     }
 
-    func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkSignature(cose: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch cose.cwt.isValid() {
         case let .success(isValid):
             if !isValid {
@@ -166,10 +113,16 @@ struct ChCovidCert {
             return
         }
 
-        if cose.healthCert.certType == nil {
-            completionHandler(.failure(.SIGNATURE_TYPE_INVALID(.CERT_TYPE_AMBIGUOUS)))
-            return
+        switch cose.certificate {
+        case let certificate as DCCCert:
+            if certificate.immunisationType == nil {
+                completionHandler(.failure(.SIGNATURE_TYPE_INVALID(.CERT_TYPE_AMBIGUOUS)))
+                return
+            }
+        default:
+            break
         }
+
 
         trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
             if let e = error?.asValidationError() {
@@ -178,28 +131,28 @@ struct ChCovidCert {
                 let list = self.trustListManager.trustStorage.activeCertificatePublicKeys()
                 let validationError = list.hasValidSignature(for: cose)
 
-                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: cose.healthCert, error: validationError)))
+                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: cose.certificate, error: validationError)))
             }
         })
     }
 
-    func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
 
             if let e = error?.asValidationError() {
                 completionHandler(.failure(e))
             } else {
                 let list = self.trustListManager.trustStorage.revokedCertificates()
-                let isRevoked = dgc.certIdentifiers().contains { list.contains($0) }
+                let isRevoked = certificate.certIdentifiers().contains { list.contains($0) }
                 let error: ValidationError? = isRevoked ? .REVOKED : nil
 
-                completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: dgc, error: error)))
+                completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: certificate, error: error)))
             }
         })
     }
 
-    func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
-        if dgc.certType == nil {
+    func checkNationalRules(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+        if certificate.immunisationType == nil {
             completionHandler(.failure(.NO_VALID_PRODUCT))
             return
         }
@@ -232,17 +185,17 @@ struct ChCovidCert {
                     return
                 }
 
-                switch certLogic.checkRules(hcert: dgc) {
+                switch certLogic.checkRules(hcert: certificate) {
                 case .success:
-                    switch dgc.certType {
+                    switch certificate.immunisationType {
                     case .recovery:
-                        completionHandler(.success(VerificationResult(isValid: true, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validUntilDate, dateError: nil)))
+                        completionHandler(.success(VerificationResult(isValid: true, validUntil: certificate.pastInfections?.first?.validUntilDate, validFrom: certificate.pastInfections?.first?.validUntilDate, dateError: nil)))
                     case .vaccination:
 
-                        completionHandler(.success(VerificationResult(isValid: true, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: nil)))
+                        completionHandler(.success(VerificationResult(isValid: true, validUntil: certificate.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: certificate.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: nil)))
                     case .test:
 
-                        completionHandler(.success(VerificationResult(isValid: true, validUntil: dgc.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: dgc.tests?.first?.validFromDate, dateError: nil)))
+                        completionHandler(.success(VerificationResult(isValid: true, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: nil)))
                     default:
                         completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     }
@@ -254,21 +207,21 @@ struct ChCovidCert {
                     case "VR-CH-0001": completionHandler(.failure(.NOT_FULLY_PROTECTED))
                     case "VR-CH-0002": completionHandler(.failure(.NO_VALID_PRODUCT))
                     case "VR-CH-0003": completionHandler(.failure(.NO_VALID_DATE))
-                    case "VR-CH-0004": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: .NOT_YET_VALID)))
-                    case "VR-CH-0005": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: .NOT_YET_VALID)))
-                    case "VR-CH-0006": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: dgc.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: .EXPIRED)))
+                    case "VR-CH-0004": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: certificate.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: .NOT_YET_VALID)))
+                    case "VR-CH-0005": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: certificate.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: .NOT_YET_VALID)))
+                    case "VR-CH-0006": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.vaccinations?.first?.getValidUntilDate(maximumValidityInDays: Int(maxValidity)), validFrom: certificate.vaccinations?.first?.getValidFromDate(daysAfterFirstShot: Int(daysAfterFirstShot)), dateError: .EXPIRED)))
                     case "TR-CH-0000": completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     case "TR-CH-0001": completionHandler(.failure(.POSITIVE_RESULT))
                     case "TR-CH-0002": completionHandler(.failure(.WRONG_TEST_TYPE))
                     case "TR-CH-0003": completionHandler(.failure(.NO_VALID_PRODUCT))
                     case "TR-CH-0004": completionHandler(.failure(.NO_VALID_DATE))
-                    case "TR-CH-0005": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: dgc.tests?.first?.validFromDate, dateError: .NOT_YET_VALID)))
-                    case "TR-CH-0006": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: dgc.tests?.first?.validFromDate, dateError: .EXPIRED)))
-                    case "TR-CH-0007": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: dgc.tests?.first?.validFromDate, dateError: .EXPIRED)))
+                    case "TR-CH-0005": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: .NOT_YET_VALID)))
+                    case "TR-CH-0006": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: .EXPIRED)))
+                    case "TR-CH-0007": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: .EXPIRED)))
                     case "RR-CH-0000": completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     case "RR-CH-0001": completionHandler(.failure(.NO_VALID_DATE))
-                    case "RR-CH-0002": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validFromDate, dateError: .NOT_YET_VALID)))
-                    case "RR-CH-0003": completionHandler(.success(VerificationResult(isValid: false, validUntil: dgc.pastInfections?.first?.validUntilDate, validFrom: dgc.pastInfections?.first?.validFromDate, dateError: .EXPIRED)))
+                    case "RR-CH-0002": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.pastInfections?.first?.validUntilDate, validFrom: certificate.pastInfections?.first?.validFromDate, dateError: .NOT_YET_VALID)))
+                    case "RR-CH-0003": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.pastInfections?.first?.validUntilDate, validFrom: certificate.pastInfections?.first?.validFromDate, dateError: .EXPIRED)))
                     default:
                         completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     }
@@ -298,6 +251,15 @@ struct ChCovidCert {
             return nil
         }
         return String(encodedString.dropFirst(prefix.count))
+    }
+
+    func getType(from string: String) -> CertificateType? {
+        for type in CertificateType.allCases {
+            if string.starts(with: type.prefix) {
+                return type
+            }
+        }
+        return nil
     }
 
     /// Base45-decodes an EHN health certificate

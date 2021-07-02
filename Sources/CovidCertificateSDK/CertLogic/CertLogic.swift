@@ -58,7 +58,7 @@ class CertLogic {
         return .success(())
     }
 
-    func checkRules(hcert: EuHealthCert, validationClock: Date = Date()) -> Result<Void, CertLogicValidationError> {
+    func checkRules(hcert: DCCCert, validationClock: Date = Date()) -> Result<Void, CertLogicValidationError> {
         var external = JSON(
             ["validationClock": ISO8601DateFormatter().string(from: validationClock),
              "validationClockAtStartOfDay": ISO8601DateFormatter().string(from: calendar.startOfDay(for: validationClock))]

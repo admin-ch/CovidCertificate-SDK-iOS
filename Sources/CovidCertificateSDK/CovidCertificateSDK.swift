@@ -11,7 +11,7 @@
 
 import Foundation
 
-private var instance: ChCovidCert!
+private var instance: CovidCertificateImpl!
 
 public enum CovidCertificateSDK {
     /// The current version of the SDK
@@ -19,23 +19,23 @@ public enum CovidCertificateSDK {
 
     public static func initialize(environment: SDKEnvironment, apiKey: String) {
         precondition(instance == nil, "CovidCertificateSDK already initialized")
-        instance = ChCovidCert(environment: environment, apiKey: apiKey, trustListManager: TrustlistManager())
+        instance = CovidCertificateImpl(environment: environment, apiKey: apiKey, trustListManager: TrustlistManager())
     }
 
     public enum Verifier {
-        public static func decode(encodedData: String) -> Result<DGCVerifierHolder, CovidCertError> {
+        public static func decode(encodedData: String) -> Result<VerifierCertificateHolder, CovidCertError> {
             instancePrecondition()
             switch instance.decode(encodedData: encodedData) {
-            case let .success(dgc):
-                return .success(.init(dgc: dgc))
+            case let .success(holder):
+                return .success(VerifierCertificateHolder(holder: holder))
             case let .failure(error):
                 return .failure(error)
             }
         }
 
-        public static func check(cose: DGCVerifierHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+        public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            instance.check(cose: cose.dgc, forceUpdate: forceUpdate) { result in
+            instance.check(cose: holder.value, forceUpdate: forceUpdate) { result in
                 switch result.nationalRules {
                 // only expose networking errors and the success case for verification apps
                 case .success,
@@ -54,14 +54,14 @@ public enum CovidCertificateSDK {
     }
 
     public enum Wallet {
-        public static func decode(encodedData: String) -> Result<DGCHolder, CovidCertError> {
+        public static func decode(encodedData: String) -> Result<CertificateHolder, CovidCertError> {
             instancePrecondition()
             return instance.decode(encodedData: encodedData)
         }
 
-        public static func check(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+        public static func check(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(cose: cose, forceUpdate: forceUpdate, completionHandler)
+            return instance.check(cose: holder, forceUpdate: forceUpdate, completionHandler)
         }
     }
 

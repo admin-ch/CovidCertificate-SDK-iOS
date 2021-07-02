@@ -10,20 +10,12 @@
 
 import Foundation
 
-public struct DGCVerifierHolder {
-    let dgc: DGCHolder
+public enum CertificateType: CaseIterable {
+    case dcccCert
 
-    init(dgc: DGCHolder) {
-        self.dgc = dgc
-    }
-
-    // Only expose properties needed for verification apps
-
-    public var person: Person {
-        dgc.healthCert.person
-    }
-
-    public var dateOfBirth: String {
-        dgc.healthCert.dateOfBirth
+    var prefix: String {
+        switch self {
+        case .dcccCert: return "HC1:"
+        }
     }
 }
