@@ -16,7 +16,7 @@ public struct DCCCert: CovidCertificate, Codable {
     public let pastInfections: [PastInfection]?
     public let tests: [Test]?
 
-    public var type: CertificateType { .dcccCert }
+    public var type: CertificateType { .dccCert }
 
     public var immunisationType: ImmunisationType? {
         if let v = vaccinations, v.count == 1,

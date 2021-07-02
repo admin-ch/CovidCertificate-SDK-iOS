@@ -11,11 +11,11 @@
 import Foundation
 
 public enum CertificateType: CaseIterable {
-    case dcccCert
+    case dccCert
 
     var prefix: String {
         switch self {
-        case .dcccCert: return "HC1:"
+        case .dccCert: return "HC1:"
         }
     }
 
