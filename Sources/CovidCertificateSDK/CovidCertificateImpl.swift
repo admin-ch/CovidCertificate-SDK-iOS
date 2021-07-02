@@ -83,6 +83,10 @@ struct CovidCertificateImpl {
                 nationalRulesResult = result
                 group.leave()
             }
+        case let certificate as LightCert:
+            // Skip revocation and national rules check for light certificates
+            revocationStatusResult = .success(.init(isValid: true, payload: certificate, error: nil))
+            nationalRulesResult = .success(.init(isValid: true, validUntil: nil, validFrom: nil, dateError: nil))
         default:
             fatalError("Unsupported Certificate type")
         }
