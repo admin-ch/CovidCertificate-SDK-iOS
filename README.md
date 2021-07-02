@@ -32,39 +32,30 @@ This version points to the HEAD of the `main` branch and will always fetch the l
 
  ## Architecture
 
-The SDK needs to be initialized with an environment. This allows for different verification rules per environment or other environment specific settings.
+The SDK needs to be initialized with an environment. This allows for different verification rules per environment or other environment-specific settings.
 
 After initialization the following pipeline should be used:
 
 1) Decode the base45 and prefixed string to retrieve a Digital Covid Certificate
 
-2) Verify the signature of the Certificate
-
-3) Check the revocation list. Currently always returns a valid `ValidationResult`
-
-4) Check for rules specific to countries such as validity of vaccines or tests
+2) Verify the Certificate by calling the `.check` method. Internally this verifies the signature, revocation status and national rules
 
 All these checks check against verification properties that are loaded from a server. These returned properties use a property to specify how long they are valid (like `max-age` in general networking). With the parameter `forceUpdate`, these properties can be forced to update.
 
+CovidCertificateSDK offers a `Verifier` and `Wallet` namespace these have to be used according to the purpose of the app. 
+
 ### Decoding
 ```swift
-public func decode(encodedData: String) -> Result<DGCHolder, CovidCertError>
+let result: Result<VerifierCertificateHolder, CovidCertError> = CovidCertificateSDK.Verifier.decode(encodedData: qrCodeString)
 ```
 
-### Verify Signature
+### Verification
 ```swift
-public static func checkSignature(cose: DGCHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void)
-```
-
-### Check Revocation List
-Currently only stubs
-```swift
-public static func checkRevocationStatus(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void)
-```
-
-### Check National Specific Rules
-```swift
-public static func checkNationalRules(dgc: EuHealthCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void)
+CovidCertificateSDK.Verifier.check(holder: certificateHolder) { result: CheckResults in
+        result.signatureResult
+        result.revocationStatus
+        result.nationalRules
+}
 ```
 
  ## References
