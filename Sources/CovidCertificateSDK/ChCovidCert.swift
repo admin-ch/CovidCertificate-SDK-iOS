@@ -147,7 +147,6 @@ struct ChCovidCert {
             nationalRulesResult = .success(.init(isValid: true, validUntil: nil, validFrom: nil, dateError: nil))
         }
 
-
         group.notify(queue: .main) {
             guard let signatureResult = signatureResult,
                   let revocationStatusResult = revocationStatusResult,

@@ -62,8 +62,8 @@ struct CWT {
         iat = decodedPayload[PayloadKeys.iat]
 
         if let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
-              let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
-              let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) {
+           let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
+           let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) {
             euHealthCert = healthCert
             isLightCertificate = false
         } else if let lightCertData = decodedPayload[PayloadKeys.lightCert]?.asData(),
