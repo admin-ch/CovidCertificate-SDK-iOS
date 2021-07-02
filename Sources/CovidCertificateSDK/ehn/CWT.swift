@@ -49,7 +49,7 @@ struct CWT {
         return .success(true)
     }
 
-    init?(from cbor: CBOR, type: CertificateType) {
+    init?(from cbor: CBOR, type _: CertificateType) {
         guard let decodedPayloadCwt = cbor.decodeBytestring()?.asMap() else {
             return nil
         }

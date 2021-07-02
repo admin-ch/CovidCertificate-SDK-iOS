@@ -123,7 +123,6 @@ struct CovidCertificateImpl {
             break
         }
 
-
         trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { error in
             if let e = error?.asValidationError() {
                 completionHandler(.failure(e))

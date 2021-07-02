@@ -58,7 +58,7 @@ public enum CovidCertificateSDK {
             instancePrecondition()
             let result = instance.decode(encodedData: encodedData)
             switch result {
-             case let .success(holder) where holder.certificate.type.canBeStoredInWallet == false:
+            case let .success(holder) where holder.certificate.type.canBeStoredInWallet == false:
                 return .failure(.CAN_NOT_BE_STORED_IN_WALLET)
             default:
                 return result

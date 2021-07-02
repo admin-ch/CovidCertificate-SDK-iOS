@@ -14,7 +14,7 @@ public struct VerifierCertificateHolder {
     let value: CertificateHolder
 
     init(holder: CertificateHolder) {
-        self.value = holder
+        value = holder
     }
 
     // Only expose properties needed for verification apps
