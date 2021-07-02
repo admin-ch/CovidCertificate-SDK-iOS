@@ -18,4 +18,8 @@ public enum CertificateType: CaseIterable {
         case .dcccCert: return "HC1:"
         }
     }
+
+    var canBeStoredInWallet: Bool {
+        return true
+    }
 }
