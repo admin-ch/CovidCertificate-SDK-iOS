@@ -57,7 +57,7 @@ struct CovidCertificateImpl {
         return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(cose: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
@@ -65,12 +65,12 @@ struct CovidCertificateImpl {
         var nationalRulesResult: Result<VerificationResult, NationalRulesError>?
 
         group.enter()
-        checkSignature(cose: cose, forceUpdate: forceUpdate) { result in
+        checkSignature(holder: holder, forceUpdate: forceUpdate) { result in
             signatureResult = result
             group.leave()
         }
 
-        switch cose.certificate {
+        switch holder.certificate {
         case let certificate as DCCCert:
             group.enter()
             checkRevocationStatus(certificate: certificate, forceUpdate: forceUpdate) { result in
@@ -101,8 +101,8 @@ struct CovidCertificateImpl {
         }
     }
 
-    func checkSignature(cose: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        switch cose.cwt.isValid() {
+    func checkSignature(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+        switch holder.cwt.isValid() {
         case let .success(isValid):
             if !isValid {
                 completionHandler(.failure(.CWT_EXPIRED))
@@ -113,7 +113,7 @@ struct CovidCertificateImpl {
             return
         }
 
-        switch cose.certificate {
+        switch holder.certificate {
         case let certificate as DCCCert:
             if certificate.immunisationType == nil {
                 completionHandler(.failure(.SIGNATURE_TYPE_INVALID(.CERT_TYPE_AMBIGUOUS)))
@@ -128,9 +128,9 @@ struct CovidCertificateImpl {
                 completionHandler(.failure(e))
             } else {
                 let list = self.trustListManager.trustStorage.activeCertificatePublicKeys()
-                let validationError = list.hasValidSignature(for: cose)
+                let validationError = list.hasValidSignature(for: holder)
 
-                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: cose.certificate, error: validationError)))
+                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: holder.certificate, error: validationError)))
             }
         })
     }

@@ -50,7 +50,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let expectations = expectation(description: "async job")
 
         let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
-        customVerifier.checkSignature(cose: certificateHolder, forceUpdate: false) { result in
+        customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -72,7 +72,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTFail("testVariousFloatAndSignedIntCBORDates failed")
             return
         }
-        verifier.checkSignature(cose: certificateHolder, forceUpdate: false) { result in
+        verifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case .success:
                 XCTFail("testVariousFloatAndSignedIntCBORDates failed")
@@ -94,7 +94,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTFail("Could not decode")
             return
         }
-        verifier.checkSignature(cose: certificateHolder, forceUpdate: false) { result in
+        verifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case .success:
                 XCTFail("Should fail")
@@ -121,7 +121,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 //        }
 //
 //        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager(publicKeys: keys))
-//        customVerifier.checkSignature(cose: dgcHolder) { result in
+//        customVerifier.checkSignature(holder: dgcHolder) { result in
 //            if case let .success(r) = result {
 //                XCTAssertTrue(r.isValid)
 //            } else {
@@ -140,7 +140,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let certificateHolder = try? verifier.decode(encodedData: hcert).get()
         XCTAssertNotNil(certificateHolder)
 
-        verifier.checkSignature(cose: certificateHolder!, forceUpdate: false) { result in
+        verifier.checkSignature(holder: certificateHolder!, forceUpdate: false) { result in
             let res: ValidationResult? = try? result.get()
             XCTAssertNotNil(res)
             XCTAssertTrue(res!.isValid)

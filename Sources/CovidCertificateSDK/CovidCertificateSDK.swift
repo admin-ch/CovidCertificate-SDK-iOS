@@ -35,7 +35,7 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            instance.check(cose: holder.value, forceUpdate: forceUpdate) { result in
+            instance.check(holder: holder.value, forceUpdate: forceUpdate) { result in
                 switch result.nationalRules {
                 // only expose networking errors and the success case for verification apps
                 case .success,
@@ -67,7 +67,7 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(cose: holder, forceUpdate: forceUpdate, completionHandler)
+            return instance.check(holder: holder, forceUpdate: forceUpdate, completionHandler)
         }
     }
 
