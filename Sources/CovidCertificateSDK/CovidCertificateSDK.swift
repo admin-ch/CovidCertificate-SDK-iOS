@@ -37,14 +37,18 @@ public enum CovidCertificateSDK {
             instancePrecondition()
             instance.check(holder: holder.value, forceUpdate: forceUpdate) { result in
                 switch result.nationalRules {
-                // only expose networking errors and the success case for verification apps
-                case .success,
-                     .failure(.NETWORK_NO_INTERNET_CONNECTION),
+                // don't expose the validity range for verification apps
+                case let .success(nationalRulesResult):
+                    return completionHandler(CheckResults(signature: result.signature,
+                                                          revocationStatus: result.revocationStatus,
+                                                          nationalRules: .success(.init(isValid: nationalRulesResult.isValid, validUntil: nil, validFrom: nil, dateError: nil))))
+                // expose networking errors for verification apps
+                case .failure(.NETWORK_NO_INTERNET_CONNECTION),
                      .failure(.NETWORK_PARSE_ERROR),
                      .failure(.NETWORK_ERROR):
                     return completionHandler(result)
                 case .failure:
-                    // Strip specific national rules error for verification apps
+                // Strip specific national rules error for verification apps
                     return completionHandler(.init(signature: result.signature,
                                                    revocationStatus: result.revocationStatus,
                                                    nationalRules: .failure(.UNKNOWN_TEST_FAILURE)))
