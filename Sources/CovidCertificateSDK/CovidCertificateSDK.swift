@@ -48,7 +48,7 @@ public enum CovidCertificateSDK {
                      .failure(.NETWORK_ERROR):
                     return completionHandler(result)
                 case .failure:
-                // Strip specific national rules error for verification apps
+                    // Strip specific national rules error for verification apps
                     return completionHandler(.init(signature: result.signature,
                                                    revocationStatus: result.revocationStatus,
                                                    nationalRules: .failure(.UNKNOWN_TEST_FAILURE)))
