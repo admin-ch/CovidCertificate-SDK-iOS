@@ -42,7 +42,7 @@ After initialization the following pipeline should be used:
 
 All these checks check against verification properties that are loaded from a server. These returned properties use a property to specify how long they are valid (like `max-age` in general networking). With the parameter `forceUpdate`, these properties can be forced to update.
 
-CovidCertificateSDK offers a `Verifier` and `Wallet` namespace these have to be used according to the purpose of the app. 
+CovidCertificateSDK offers a `Verifier` and `Wallet` namespace. Methods in the Wallet namespace must only be used by the official COVID Certificate App.
 
 ### Decoding
 ```swift
