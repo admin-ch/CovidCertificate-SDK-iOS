@@ -56,13 +56,7 @@ public enum CovidCertificateSDK {
     public enum Wallet {
         public static func decode(encodedData: String) -> Result<CertificateHolder, CovidCertError> {
             instancePrecondition()
-            let result = instance.decode(encodedData: encodedData)
-            switch result {
-            case let .success(holder) where holder.certificate.type.canBeStoredInWallet == false:
-                return .failure(.CAN_NOT_BE_STORED_IN_WALLET)
-            default:
-                return result
-            }
+            return instance.decode(encodedData: encodedData)
         }
 
         public static func check(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
