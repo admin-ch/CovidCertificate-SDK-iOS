@@ -84,9 +84,13 @@ struct CovidCertificateImpl {
                 group.leave()
             }
         case let certificate as LightCert:
-            // Skip revocation and national rules check for light certificates
+            // Skip revocation check for light certificates
             revocationStatusResult = .success(.init(isValid: true, payload: certificate, error: nil))
-            nationalRulesResult = .success(.init(isValid: true, validUntil: nil, validFrom: nil, dateError: nil))
+
+            nationalRulesResult = .success(.init(isValid: holder.expiresAt?.isAfter(Date()) ?? false,
+                                                 validUntil: holder.expiresAt,
+                                                 validFrom: holder.issuedAt,
+                                                 dateError: nil))
         default:
             fatalError("Unsupported Certificate type")
         }
@@ -132,7 +136,7 @@ struct CovidCertificateImpl {
                 completionHandler(.failure(e))
             } else {
                 let list = self.trustListManager.trustStorage.activeCertificatePublicKeys(useFilters: holder.certificate.type.trustListUseFilters)
-                let validationError = list.hasValidSignature(for: cose)
+                let validationError = list.hasValidSignature(for: holder)
 
                 completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: holder.certificate, error: validationError)))
             }

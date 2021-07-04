@@ -11,19 +11,19 @@
 import Foundation
 
 public enum CertificateType: CaseIterable {
-    case dcccCert
+    case dccCert
     case lightCert
 
     var prefix: String {
         switch self {
-        case .dcccCert: return "HC1:"
+        case .dccCert: return "HC1:"
         case .lightCert: return "LT1:"
         }
     }
 
     var trustListUseFilters: [String?] {
         switch self {
-        case .dcccCert: return [nil, "dcc"]
+        case .dccCert: return [nil, "dcc"]
         case .lightCert: return ["light"]
         }
     }

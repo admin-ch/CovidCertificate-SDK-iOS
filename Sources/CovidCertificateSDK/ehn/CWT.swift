@@ -61,7 +61,7 @@ struct CWT {
         iat = decodedPayload[PayloadKeys.iat]
 
         switch type {
-        case .dcccCert:
+        case .dccCert:
             if let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
                let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
                let healthCert = try? CodableCBORDecoder().decode(DCCCert.self, from: certData) {
