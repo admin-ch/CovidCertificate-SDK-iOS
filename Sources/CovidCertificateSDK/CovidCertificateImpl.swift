@@ -131,7 +131,7 @@ struct CovidCertificateImpl {
             if let e = error?.asValidationError() {
                 completionHandler(.failure(e))
             } else {
-                let list = self.trustListManager.trustStorage.activeCertificatePublicKeys(use: cose.certificate.type.trustListUseFilter)
+                let list = self.trustListManager.trustStorage.activeCertificatePublicKeys(useFilters: holder.certificate.type.trustListUseFilters)
                 let validationError = list.hasValidSignature(for: cose)
 
                 completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: holder.certificate, error: validationError)))

@@ -93,7 +93,7 @@ class TestTrustStorage: TrustStorageProtocol {
 
     // MARK: - Active Certificates
 
-    func activeCertificatePublicKeys(use _: String?) -> [TrustListPublicKey] {
+    func activeCertificatePublicKeys(useFilters: [String?]) -> [TrustListPublicKey] {
         return publicKeys
     }
 
