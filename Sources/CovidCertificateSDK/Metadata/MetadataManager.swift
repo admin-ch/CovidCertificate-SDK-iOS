@@ -13,11 +13,7 @@ import UIKit
 
 class MetadataManager {
 
-    // MARK: - Shared instance
-
-    static let shared = MetadataManager()
-
-    private init() {
+    init() {
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
