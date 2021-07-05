@@ -17,7 +17,6 @@ public enum CovidCertError: Error, Equatable {
     case DECOMPRESSION_FAILED
     case COSE_DESERIALIZATION_FAILED
     case HCERT_IS_INVALID
-    case CAN_NOT_BE_STORED_IN_WALLET
 
     public var errorCode: String {
         switch self {
@@ -33,8 +32,6 @@ public enum CovidCertError: Error, Equatable {
             return "D|CDF"
         case .HCERT_IS_INVALID:
             return "D|HII"
-        case .CAN_NOT_BE_STORED_IN_WALLET:
-            return "D|NSIW"
         }
     }
 }
