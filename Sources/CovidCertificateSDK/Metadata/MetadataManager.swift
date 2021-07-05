@@ -12,11 +12,9 @@ import Foundation
 import UIKit
 
 class MetadataManager {
-
     init() {
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
-
 
     @UBUserDefault(key: "covidcertififcate.metadata.covidcertififcate.current", defaultValue: fallbackMetadata)
     static var currentMetadata: MetadataReponse
@@ -64,7 +62,7 @@ class MetadataManager {
             return
         }
 
-        URLSession.certificatePinned.dataTask(with: request, completionHandler: { data, response, error in
+        URLSession.certificatePinned.dataTask(with: request, completionHandler: { data, response, _ in
             guard let _ = response as? HTTPURLResponse,
                   let data = data
             else {
@@ -79,7 +77,6 @@ class MetadataManager {
             }
         }).resume()
     }
-
 
     // In case the metadata has not yet been loaded at least once from the request, we use the bundled metadata as fallback
     private static var fallbackMetadata: MetadataReponse {
