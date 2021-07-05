@@ -16,12 +16,12 @@ import Foundation
 /// Number, Date, Array, or Dictionary) are supported out of the box.
 /// To store `Codable` types in `UserDefaults`, please conform to `UBCodable`.
 /// To store `RawRepresentable` types in `UserDefaults`, please conform to `UBRawRepresentable`.
-public protocol UBUserDefaultValue {
+protocol UBUserDefaultValue {
     init?(with object: Any)
     func object() -> Any?
 }
 
-public extension UBUserDefaultValue {
+extension UBUserDefaultValue {
     init?(with object: Any) {
         guard let value = object as? Self else { return nil }
         self = value
@@ -61,9 +61,9 @@ extension Float: UBPListValue {}
 
 // MARK: - Codable Values
 
-public protocol UBCodable: Codable, UBUserDefaultValue {}
+protocol UBCodable: Codable, UBUserDefaultValue {}
 
-public extension UBUserDefaultValue where Self: UBCodable {
+extension UBUserDefaultValue where Self: UBCodable {
     init?(with object: Any) {
         guard let value = (object as? Data).flatMap({ try? JSONDecoder().decode(Self.self, from: $0) }) else { return nil }
         self = value
@@ -76,9 +76,9 @@ public extension UBUserDefaultValue where Self: UBCodable {
 
 // MARK: - RawRepresentable Values
 
-public protocol UBRawRepresentable: RawRepresentable, UBUserDefaultValue {}
+protocol UBRawRepresentable: RawRepresentable, UBUserDefaultValue {}
 
-public extension UBUserDefaultValue where Self: UBRawRepresentable {
+extension UBUserDefaultValue where Self: UBRawRepresentable {
     init?(with object: Any) {
         guard let value = object as? Self.RawValue else {
             return nil
@@ -94,12 +94,12 @@ public extension UBUserDefaultValue where Self: UBRawRepresentable {
 // MARK: - Arrays
 
 extension Array: UBUserDefaultValue where Element: UBUserDefaultValue {
-    public init?(with object: Any) {
+    init?(with object: Any) {
         guard let value = (object as? [Any])?.compactMap(Element.init(with:)) else { return nil }
         self = value
     }
 
-    public func object() -> Any? {
+    func object() -> Any? {
         compactMap { $0.object() }
     }
 }
@@ -107,12 +107,12 @@ extension Array: UBUserDefaultValue where Element: UBUserDefaultValue {
 // MARK: - Optionals
 
 extension Optional: UBUserDefaultValue where Wrapped: UBUserDefaultValue {
-    public init?(with object: Any) {
+    init?(with object: Any) {
         guard let value = Wrapped(with: object) else { return nil }
         self = .some(value)
     }
 
-    public func object() -> Any? {
+    func object() -> Any? {
         switch self {
         case let .some(value):
             return value.object()
@@ -143,20 +143,20 @@ extension Optional: UBUserDefaultValue where Wrapped: UBUserDefaultValue {
 ///       var lastUsedGpsMode: GpsMode? // where enum GpsMode: UBRawRepresentable
 ///
 @propertyWrapper
-public struct UBUserDefault<Value: UBUserDefaultValue> {
+struct UBUserDefault<Value: UBUserDefaultValue> {
     let key: String
     let defaultValue: Value
     var userDefaults: UserDefaults
 
     /// :nodoc:
-    public init(key: String, defaultValue: Value, userDefaults: UserDefaults = .standard) {
+    init(key: String, defaultValue: Value, userDefaults: UserDefaults = .standard) {
         self.key = key
         self.defaultValue = defaultValue
         self.userDefaults = userDefaults
     }
 
     /// :nodoc:
-    public var wrappedValue: Value {
+    var wrappedValue: Value {
         get {
             userDefaults.object(forKey: key).flatMap(Value.init(with:))
                 ?? defaultValue
