@@ -5,8 +5,8 @@ import jsonlogic
 import XCTest
 
 final class CovidCertificateSDKTests: XCTestCase {
-    var verifier: ChCovidCert {
-        let ver = ChCovidCert(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager())
+    var verifier: CovidCertificateImpl {
+        let ver = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager())
         return ver
     }
 
@@ -43,14 +43,14 @@ final class CovidCertificateSDKTests: XCTestCase {
         let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc=", andY: "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM=")
         let keys: [TrustListPublicKey] = [key].compactMap { $0 }
 
-        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+        guard let certificateHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTAssertTrue(false)
             return
         }
         let expectations = expectation(description: "async job")
 
-        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
-        customVerifier.checkSignature(cose: dgcHolder, forceUpdate: false) { result in
+        let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
+        customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -68,11 +68,11 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let expectations = expectation(description: "async job")
 
-        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+        guard let certificateHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTFail("testVariousFloatAndSignedIntCBORDates failed")
             return
         }
-        verifier.checkSignature(cose: dgcHolder, forceUpdate: false) { result in
+        verifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case .success:
                 XCTFail("testVariousFloatAndSignedIntCBORDates failed")
@@ -90,11 +90,11 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let expectations = expectation(description: "async job")
 
-        guard let dgcHolder = try? verifier.decode(encodedData: hcert).get() else {
+        guard let certificateHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTFail("Could not decode")
             return
         }
-        verifier.checkSignature(cose: dgcHolder, forceUpdate: false) { result in
+        verifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case .success:
                 XCTFail("Should fail")
@@ -121,7 +121,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 //        }
 //
 //        let customVerifier = ChCovidCert(environment: SDKEnvironment.dev, trustListManager: TestTrustlistManager(publicKeys: keys))
-//        customVerifier.checkSignature(cose: dgcHolder) { result in
+//        customVerifier.checkSignature(holder: dgcHolder) { result in
 //            if case let .success(r) = result {
 //                XCTAssertTrue(r.isValid)
 //            } else {
@@ -137,20 +137,25 @@ final class CovidCertificateSDKTests: XCTestCase {
         let signatureExpectation = expectation(description: "signature check")
         let revocationStatus = expectation(description: "revocation status")
 
-        let dgcHolder = try? verifier.decode(encodedData: hcert).get()
-        XCTAssertNotNil(dgcHolder)
+        let certificateHolder = try? verifier.decode(encodedData: hcert).get()
+        XCTAssertNotNil(certificateHolder)
 
-        verifier.checkSignature(cose: dgcHolder!, forceUpdate: false) { result in
+        verifier.checkSignature(holder: certificateHolder!, forceUpdate: false) { result in
             let res: ValidationResult? = try? result.get()
             XCTAssertNotNil(res)
             XCTAssertTrue(res!.isValid)
             signatureExpectation.fulfill()
         }
-        verifier.checkRevocationStatus(dgc: dgcHolder!.healthCert, forceUpdate: false) { result in
-            let res: ValidationResult? = try? result.get()
-            XCTAssertNotNil(res)
-            XCTAssertTrue(res!.isValid)
-            revocationStatus.fulfill()
+        switch certificateHolder!.certificate {
+        case let certificate as DCCCert:
+            verifier.checkRevocationStatus(certificate: certificate, forceUpdate: false) { result in
+                let res: ValidationResult? = try? result.get()
+                XCTAssertNotNil(res)
+                XCTAssertTrue(res!.isValid)
+                revocationStatus.fulfill()
+            }
+        default:
+            fatalError("Unsupported Certificate type")
         }
 
         waitForExpectations(timeout: 60, handler: nil)
@@ -174,13 +179,13 @@ final class CovidCertificateSDKTests: XCTestCase {
     func testVaccineDiseaseTargetedHasToBeSarsCoV2() {
         let hcert_targets_covid = "HC1:NCFTW2SX7YUO/232Y9F*A3.2%K74MH8 RCOI3%4DHQ/-BN0R:XKJFR%PEFD3M%T7EDYO35ZI7OHIYVOA2:$5JDNJMOTE9./3GIAO7E:N00F89WVVY7FDRLFJLFWTQ87HOD1P4MVRYQ32BQTV/9WI+V%DKBW5A6G23FFV83GHCXT1OA0M59*E7PAU IUSQJG4112JBE.G49VA1%DTDI160VCOC1SFKRUY13K31G0Y1JD90CCBQFS5V6WYA.J5Q35Z2TR01+13TNK4J9NG9LL0GT7ETB5HI%NVHJC:888O12W5KSSDO0T8BP54MW2B$A3GHY.APKJ3JI%RMP6BLD5X.7JOJ612C:J*70 E3%M9Z+L5ZB*UIG7TIMIQ%KOAI5-H-OR3ZIDV23ZK53LTE3ZKQI/N $RW6EWLBKQ6*:P%6U6Q55XI93KU%OOL1RG9 VP$T63PHJ23JP1WIQUW4-K4JT2HBO2JRU41I7QY:H217NBSZ.0T4AYVRI$JE F+PPX8CSTE72L5WU+VV%J789OTUJ5ZRO%BS8LYLOK29SEWWRR1061VV*CQF RZ7PFQVNPG"
 
-        let dgcHolder = try? verifier.decode(encodedData: hcert_targets_covid).get()
-        XCTAssertNotNil(dgcHolder)
+        let certificateHolder = try? verifier.decode(encodedData: hcert_targets_covid).get()
+        XCTAssertNotNil(certificateHolder)
 
         let successExpectation = expectation(description: "succes")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: dgcHolder!.healthCert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: certificateHolder!.certificate as! DCCCert, forceUpdate: false) { result in
             switch result {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTFail("Disease target sarscov should pass")
@@ -191,10 +196,10 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let hcert_does_not_target_covid = "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH%TAIOOP-IPOIZLH4G5EDBUV2ZMIN9HNO4*J8OX4W$C2VL*LA 43/IE%TE6UG+ZEAT1HQ13W1:O1YUI%F1PN1/T1J$HTR9/O14SI.J9DYHZROVZ05QNZ 20OP748$NI4L6-O16VH6ZL4XP:N6ON1 *L:O8PN1QP5O PLU9A/RUX96 B0V1ZZB.T12.H.ZJ$%HN 9GTBIQ1EK0ZIEQKERQ8IY1I$HH%U8 9PS5OH6*ZUFXFE.R:YN/P3JRH8LHGL2-LH/CJTK96L6SR9MU9RP5 R1:PI/E2$4J6AL.+I9UV6$0+BNPHNBC7CTR3$VDY0DUFRLN/Y0Y/K9/IIF0%:K6*K$X4FUTD14//E3:FL.B$JDBLEH-BL1H6TK-CI:ULOPD6LF20HFJC3DAYJDPKDUDBQEAJJKHHGEC8ZI9$JAQJKZ%K+EPM+8172WLC0NQ-/RRCTCIMCJENCB%BK8YN2MI8DL8HN96URFW3:F3.BXDU$ZRMEO7DSPCEK45PJ3+UND5K/831-7KH12$DUBFUA60JFADAA%8G*QLEG"
-        let invalidDgcHolder = try? verifier.decode(encodedData: hcert_does_not_target_covid).get()
-        XCTAssertNotNil(invalidDgcHolder)
+        let invalidCertificateHolder = try? verifier.decode(encodedData: hcert_does_not_target_covid).get()
+        XCTAssertNotNil(invalidCertificateHolder)
 
-        verifier.checkNationalRules(dgc: invalidDgcHolder!.healthCert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalidCertificateHolder!.certificate as! DCCCert, forceUpdate: false) { result in
             switch result {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTAssertTrue(true)
@@ -212,7 +217,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         return d
     }
 
-    private func generateVacineCert(dn: UInt64, sd: UInt64, ma: String, mp: String, tg: String, vp: String, todayIsDateComponentsAfterVaccination: DateComponents) -> EuHealthCert {
+    private func generateVacineCert(dn: UInt64, sd: UInt64, ma: String, mp: String, tg: String, vp: String, todayIsDateComponentsAfterVaccination: DateComponents) -> DCCCert {
         let today = Calendar.current.startOfDay(for: Date())
         let time = Calendar.current.date(byAdding: todayIsDateComponentsAfterVaccination, to: today)!
         let vaccineDate = dateFormatter.string(from: time)
@@ -242,7 +247,7 @@ final class CovidCertificateSDKTests: XCTestCase {
              "ver": "1.0.0"
            }
         """
-        return try! JSONDecoder().decode(EuHealthCert.self, from: test.data(using: .utf8)!)
+        return try! JSONDecoder().decode(DCCCert.self, from: test.data(using: .utf8)!)
     }
 
     func testVaccineMustBeInWhitelist() {
@@ -250,7 +255,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -261,7 +266,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let invalid_hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001600", mp: "Sputnik-VII", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
-        verifier.checkNationalRules(dgc: invalid_hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
             switch result {
             case .failure(.NO_VALID_PRODUCT):
                 XCTAssertTrue(true)
@@ -279,7 +284,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let today = Calendar.current.startOfDay(for: Date())
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -299,7 +304,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let today = Calendar.current.startOfDay(for: Date())
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -324,7 +329,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let today = Calendar.current.startOfDay(for: Date())
         let time = Calendar.current.date(byAdding: DateComponents(day: -15), to: today)!
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -338,7 +343,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_cert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -14))
 
-        verifier.checkNationalRules(dgc: invalid_cert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_cert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertFalse(r.isValid)
@@ -358,7 +363,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpcetation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -370,7 +375,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_hcert = generateVacineCert(dn: 1, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
 
-        verifier.checkNationalRules(dgc: invalid_hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
             switch result {
             case .failure(.NOT_FULLY_PROTECTED):
                 XCTAssertTrue(true)
@@ -384,7 +389,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
     /// TEST TESTS
     let isoDateFormatter = ISO8601DateFormatter()
-    private func generateTestCert(testType: String, testResultType: TestResult, name: String, disease: String, sampleCollectionWasAgo: DateComponents) -> EuHealthCert {
+    private func generateTestCert(testType: String, testResultType: TestResult, name: String, disease: String, sampleCollectionWasAgo: DateComponents) -> DCCCert {
         let now = Date()
         let sampleCollection = Calendar.current.date(byAdding: sampleCollectionWasAgo, to: now)!
         let testResult = Calendar.current.date(byAdding: DateComponents(hour: 10), to: sampleCollection)!
@@ -417,7 +422,7 @@ final class CovidCertificateSDKTests: XCTestCase {
              "ver": "1.0.0"
            }
         """
-        return try! JSONDecoder().decode(EuHealthCert.self, from: test.data(using: .utf8)!)
+        return try! JSONDecoder().decode(DCCCert.self, from: test.data(using: .utf8)!)
     }
 
     func testTestDiseaseTargetedHasToBeSarsCoV2() {
@@ -426,7 +431,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpecation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -438,7 +443,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_hcert = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: "12345", sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(dgc: invalid_hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
             switch result {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTAssertTrue(true)
@@ -458,7 +463,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation2 = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert_rat, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert_rat, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -469,7 +474,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
         let hcert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(dgc: hcert_pcr, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert_pcr, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -481,7 +486,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_cert = generateTestCert(testType: "asdbas", testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(dgc: invalid_cert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_cert, forceUpdate: false) { result in
             switch result {
             case .failure(.WRONG_TEST_TYPE):
                 XCTAssertTrue(true)
@@ -497,7 +502,7 @@ final class CovidCertificateSDKTests: XCTestCase {
     func testTestHasToBeInWhitelist() {
         let invalid_cert_rat = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
         let expectation = self.expectation(description: "async task")
-        verifier.checkNationalRules(dgc: invalid_cert_rat, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_cert_rat, forceUpdate: false) { result in
             switch result {
             case .failure(.NO_VALID_PRODUCT):
                 XCTAssertTrue(true)
@@ -514,7 +519,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let invalid_cert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
         let expectation = self.expectation(description: "async task")
 
-        verifier.checkNationalRules(dgc: invalid_cert_pcr, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_cert_pcr, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -535,7 +540,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let now = Date()
         let time = Calendar.current.date(byAdding: DateComponents(hour: -71), to: now)!
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 /// TEST MUST BE VALID
@@ -549,7 +554,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let invalid_hcert = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -72))
-        verifier.checkNationalRules(dgc: invalid_hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 /// TEST MUST BE INVALID
@@ -569,7 +574,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let time = Calendar.current.date(byAdding: DateComponents(hour: -23), to: now)!
 
         let correctExpectation = expectation(description: "correct")
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 /// TEST MUST BE VALID
@@ -584,7 +589,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -24))
         let wrongExpectation = expectation(description: "wrong")
-        verifier.checkNationalRules(dgc: invalid_hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 /// TEST MUST BE INVALID
@@ -605,7 +610,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert_rat, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert_rat, forceUpdate: false) { result in
             switch result {
             case .failure(.POSITIVE_RESULT):
                 XCTAssertTrue(true)
@@ -616,7 +621,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let hcert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Positive, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -71))
-        verifier.checkNationalRules(dgc: hcert_pcr, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert_pcr, forceUpdate: false) { result in
             switch result {
             case .failure(.POSITIVE_RESULT):
                 XCTAssertTrue(true)
@@ -636,7 +641,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         return tmpCalendar
     }
 
-    private func generateRecoveryCert(validSinceNow: DateComponents, validFromNow: DateComponents, firstResultWasAgo: DateComponents, tg: String) -> EuHealthCert {
+    private func generateRecoveryCert(validSinceNow: DateComponents, validFromNow: DateComponents, firstResultWasAgo: DateComponents, tg: String) -> DCCCert {
         let calendar = getCalendar()
         let now = calendar.startOfDay(for: Date())
         let validFrom = calendar.date(byAdding: validSinceNow, to: now)!
@@ -665,7 +670,7 @@ final class CovidCertificateSDKTests: XCTestCase {
              "ver": "1.0.0"
            }
         """
-        return try! JSONDecoder().decode(EuHealthCert.self, from: test.data(using: .utf8)!)
+        return try! JSONDecoder().decode(DCCCert.self, from: test.data(using: .utf8)!)
     }
 
     func testRecoveryDiseaseTargetedHasToBeSarsCoV2() {
@@ -674,7 +679,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -685,7 +690,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 6), firstResultWasAgo: DateComponents(day: -20), tg: "abcdef")
-        verifier.checkNationalRules(dgc: invalid, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: invalid, forceUpdate: false) { result in
             switch result {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTAssertTrue(true)
@@ -747,7 +752,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 // SHOULD BE VALID
@@ -759,7 +764,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
         // the certificate should not be valid anymore, since it was issued yesterday 179 days ago (hence yesterday was the 180th day)
         let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
-        verifier.checkNationalRules(dgc: hcert_invalid, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert_invalid, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 // SHOULD BE INVALID
@@ -778,7 +783,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(dgc: hcert, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 // SHOULD BE VALID
@@ -789,7 +794,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             successExpectation.fulfill()
         }
         let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -9), tg: Disease.SarsCov2.rawValue)
-        verifier.checkNationalRules(dgc: hcert_invalid, forceUpdate: false) { result in
+        verifier.checkNationalRules(certificate: hcert_invalid, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 // SHOULD BE INVALID

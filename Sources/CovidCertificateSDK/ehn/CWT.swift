@@ -12,7 +12,7 @@ struct CWT {
     let iss: String?
     let exp: CBOR?
     let iat: CBOR?
-    let euHealthCert: EuHealthCert
+    let certificate: CovidCertificate
     let decodedPayload: [CBOR: CBOR]
 
     enum PayloadKeys: Int {
@@ -49,7 +49,7 @@ struct CWT {
         return .success(true)
     }
 
-    init?(from cbor: CBOR) {
+    init?(from cbor: CBOR, type _: CertificateType) {
         guard let decodedPayloadCwt = cbor.decodeBytestring()?.asMap() else {
             return nil
         }
@@ -61,9 +61,9 @@ struct CWT {
 
         guard let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
               let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
-              let healthCert = try? CodableCBORDecoder().decode(EuHealthCert.self, from: certData) else {
+              let healthCert = try? CodableCBORDecoder().decode(DCCCert.self, from: certData) else {
             return nil
         }
-        euHealthCert = healthCert
+        certificate = healthCert
     }
 }

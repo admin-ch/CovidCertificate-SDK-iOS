@@ -10,20 +10,9 @@
 
 import Foundation
 
-public struct DGCVerifierHolder {
-    let dgc: DGCHolder
-
-    init(dgc: DGCHolder) {
-        self.dgc = dgc
-    }
-
-    // Only expose properties needed for verification apps
-
-    public var person: Person {
-        dgc.healthCert.person
-    }
-
-    public var dateOfBirth: String {
-        dgc.healthCert.dateOfBirth
-    }
+public protocol CovidCertificate {
+    var person: Person { get }
+    var dateOfBirth: String { get }
+    var version: String { get }
+    var type: CertificateType { get }
 }

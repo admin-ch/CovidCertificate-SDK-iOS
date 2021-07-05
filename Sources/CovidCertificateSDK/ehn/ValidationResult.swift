@@ -9,6 +9,6 @@ import Foundation
 
 public struct ValidationResult {
     public let isValid: Bool
-    public let payload: EuHealthCert
+    public let payload: CovidCertificate
     public let error: ValidationError?
 }

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftCBOR
 
-public struct EuHealthCert: Codable {
+public struct DCCCert: CovidCertificate, Codable {
     public let person: Person
     public let dateOfBirth: String
     public let version: String
@@ -16,7 +16,9 @@ public struct EuHealthCert: Codable {
     public let pastInfections: [PastInfection]?
     public let tests: [Test]?
 
-    public var certType: CertType? {
+    public var type: CertificateType { .dccCert }
+
+    public var immunisationType: ImmunisationType? {
         if let v = vaccinations, v.count == 1,
            self.pastInfections.isNilOrEmpty(),
            self.tests.isNilOrEmpty() {
@@ -53,7 +55,7 @@ public struct EuHealthCert: Codable {
     }
 }
 
-public enum CertType: String, Codable {
+public enum ImmunisationType: String, Codable {
     case test = "t"
     case recovery = "r"
     case vaccination = "v"

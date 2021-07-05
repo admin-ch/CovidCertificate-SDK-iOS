@@ -46,9 +46,9 @@ extension Date {
     }
 }
 
-extension EuHealthCert {
+extension DCCCert {
     func certIdentifiers() -> [String] {
-        switch certType {
+        switch immunisationType {
         case .vaccination:
             return vaccinations!.map { vac in
                 vac.certificateIdentifier

@@ -54,7 +54,7 @@ class TrustListPublicKey {
 }
 
 extension Array where Element == TrustListPublicKey {
-    func hasValidSignature(for holder: DGCHolder) -> ValidationError? {
+    func hasValidSignature(for holder: CertificateHolder) -> ValidationError? {
         let filteredList = filter { $0.keyId == holder.keyId.base64EncodedString() }
 
         guard filteredList.count > 0 else {
