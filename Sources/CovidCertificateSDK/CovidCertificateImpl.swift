@@ -28,6 +28,8 @@ struct CovidCertificateImpl {
         self.environment = environment
         self.apiKey = apiKey
         self.trustListManager = trustListManager
+
+        MetadataManager.shared.load()
     }
 
     func decode(encodedData: String) -> Result<CertificateHolder, CovidCertError> {
