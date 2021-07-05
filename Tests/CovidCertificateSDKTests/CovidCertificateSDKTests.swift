@@ -166,10 +166,6 @@ final class CovidCertificateSDKTests: XCTestCase {
 //            }
     }
 
-    func testNationalRulesVerifier() {
-        _ = NationalRulesVerifier()
-    }
-
     func testCWTIsNotExpired() {}
 
     func testCWTIsNotIssuedInTheFuture() {}

@@ -18,7 +18,7 @@ import JSON
 struct CovidCertificateImpl {
     private let trustListManager: TrustlistManagerProtocol
 
-    private let nationalRules = NationalRulesVerifier()
+    private let metadataManager = MetadataManager()
 
     let environment: SDKEnvironment
 
@@ -238,6 +238,10 @@ struct CovidCertificateImpl {
 
     func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
         trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+    }
+
+    func updateMetadata() {
+        metadataManager.load()
     }
 
     func allRecoveriesAreValid(recoveries _: [PastInfection]) -> Bool {

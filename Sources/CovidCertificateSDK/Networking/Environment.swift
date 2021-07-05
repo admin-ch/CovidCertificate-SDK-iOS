@@ -44,4 +44,8 @@ public enum SDKEnvironment {
     var activeCertificatesService: Endpoint {
         return trustBackend.endpoint("keys/list", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
+
+    func metadata() -> Endpoint {
+        return trustBackend.endpoint("metadata", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
+    }
 }
