@@ -9,11 +9,15 @@
  */
 
 import Foundation
+#if canImport(UIKit)
 import UIKit
+#endif
 
 class MetadataManager {
     init() {
+        #if canImport(UIKit)
         NotificationCenter.default.addObserver(self, selector: #selector(applicationDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
+        #endif
     }
 
     @UBUserDefault(key: "covidcertififcate.metadata.covidcertififcate.current", defaultValue: fallbackMetadata)
