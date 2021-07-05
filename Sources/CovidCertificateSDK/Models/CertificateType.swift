@@ -21,10 +21,10 @@ public enum CertificateType: CaseIterable {
         }
     }
 
-    var trustListUseFilters: [String?] {
+    var trustListUseFilters: [String] {
         switch self {
-        case .dccCert: return [nil, "dcc"]
-        case .lightCert: return ["light"]
+        case .dccCert: return ["sig", "t", "v", "r"]
+        case .lightCert: return ["l"]
         }
     }
 }
