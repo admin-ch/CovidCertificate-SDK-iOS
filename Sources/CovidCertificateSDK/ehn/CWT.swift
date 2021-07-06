@@ -25,6 +25,10 @@ struct CWT {
         enum HcertKeys: Int {
             case euHealthCertV1 = 1
         }
+
+        enum LightCertKeys: Int {
+            case lightCertV1 = 1
+        }
     }
 
     func isValid(now: Date = Date()) -> Result<Bool, ValidationError> {
@@ -70,8 +74,9 @@ struct CWT {
                 return nil
             }
         case .lightCert:
-            if let lightCertData = decodedPayload[PayloadKeys.lightCert]?.asData(),
-               let healthCert = try? CodableCBORDecoder().decode(LightCert.self, from: lightCertData) {
+            if let lightCertMap = decodedPayload[PayloadKeys.lightCert]?.asMap(),
+               let certData = lightCertMap[PayloadKeys.LightCertKeys.lightCertV1]?.asData(),
+               let healthCert = try? CodableCBORDecoder().decode(LightCert.self, from: certData) {
                 certificate = healthCert
             } else {
                 return nil
