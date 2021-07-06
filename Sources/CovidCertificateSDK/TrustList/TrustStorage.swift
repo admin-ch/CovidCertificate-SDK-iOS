@@ -94,7 +94,7 @@ class TrustStorage: TrustStorageProtocol {
         return certificateQueue.sync {
             return self.activeCertificatesStorage.activeCertificates.compactMap { t in
                 // only return certificate if use is contained in the useFilters array
-                guard useFilters.contains(where: { t.use == $0 || t.use.contains($0) }) else {
+                guard useFilters.contains(where: { t.use.contains($0) }) else {
                     return nil
                 }
                 if t.alg == "RS256" {
