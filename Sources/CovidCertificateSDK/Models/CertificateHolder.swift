@@ -33,6 +33,13 @@ public struct CertificateHolder {
         return nil
     }
 
+    var expiresAt: Date? {
+        if let i = cwt.exp?.asNumericDate() {
+            return Date(timeIntervalSince1970: i)
+        }
+        return nil
+    }
+
     public func hasValidSignature(for publicKey: SecKey) -> Bool {
         cose.hasValidSignature(for: publicKey)
     }

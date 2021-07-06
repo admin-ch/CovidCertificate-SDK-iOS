@@ -19,6 +19,7 @@ struct CWT {
         case iss = 1
         case iat = 6
         case exp = 4
+        case lightCert = -250
         case hcert = -260
 
         enum HcertKeys: Int {
@@ -49,7 +50,7 @@ struct CWT {
         return .success(true)
     }
 
-    init?(from cbor: CBOR, type _: CertificateType) {
+    init?(from cbor: CBOR, type: CertificateType) {
         guard let decodedPayloadCwt = cbor.decodeBytestring()?.asMap() else {
             return nil
         }
@@ -59,11 +60,22 @@ struct CWT {
         exp = decodedPayload[PayloadKeys.exp]
         iat = decodedPayload[PayloadKeys.iat]
 
-        guard let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
-              let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
-              let healthCert = try? CodableCBORDecoder().decode(DCCCert.self, from: certData) else {
-            return nil
+        switch type {
+        case .dccCert:
+            if let hCertMap = decodedPayload[PayloadKeys.hcert]?.asMap(),
+               let certData = hCertMap[PayloadKeys.HcertKeys.euHealthCertV1]?.asData(),
+               let healthCert = try? CodableCBORDecoder().decode(DCCCert.self, from: certData) {
+                certificate = healthCert
+            } else {
+                return nil
+            }
+        case .lightCert:
+            if let lightCertData = decodedPayload[PayloadKeys.lightCert]?.asData(),
+               let healthCert = try? CodableCBORDecoder().decode(LightCert.self, from: lightCertData) {
+                certificate = healthCert
+            } else {
+                return nil
+            }
         }
-        certificate = healthCert
     }
 }
