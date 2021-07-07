@@ -18,10 +18,6 @@ class AcceptedProducts {
 
     // MARK: - Vaccination API
 
-    func vaccineIsAccepted(vaccination: Vaccination) -> Bool {
-        return acceptedVaccines.entries.contains { $0.code == vaccination.medicinialProduct }
-    }
-
     func totalNumberOfDoses(vaccination: Vaccination) -> UInt64? {
         let entry = acceptedVaccines.entries.first { $0.code == vaccination.medicinialProduct }
         return entry?.totalDosisNumber

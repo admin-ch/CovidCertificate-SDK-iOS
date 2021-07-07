@@ -285,7 +285,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(r.validFrom!.isSimiliar(to: Calendar.current.startOfDay(for: Date())))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 179), to: today)!))
+                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 364), to: today)!))
             default:
                 XCTFail("Should be valid today")
             }
@@ -305,7 +305,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(r.validFrom!.isSimiliar(to: Calendar.current.startOfDay(for: Date())))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 179), to: today)!))
+                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 364), to: today)!))
             default:
                 XCTFail("Should be valid today")
             }
@@ -315,29 +315,29 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    /// A vaccine which only needs one shot is only valid after 15 days
-    func testVaccine1of1IsValidAfter15Days() {
-        let hcert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
+    /// A vaccine which only needs one shot is only valid after 21 days
+    func testVaccine1of1IsValidAfter21Days() {
+        let hcert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -21))
 
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
         let today = Calendar.current.startOfDay(for: Date())
-        let time = Calendar.current.date(byAdding: DateComponents(day: -15), to: today)!
+        let time = Calendar.current.date(byAdding: DateComponents(day: -21), to: today)!
 
         verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(r.validFrom!.isSimiliar(to: today))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 179), to: time)!))
+                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 364), to: time)!))
             default:
                 XCTFail("Should be vali")
             }
             successExpectation.fulfill()
         }
 
-        let invalid_cert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -14))
+        let invalid_cert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -20))
 
         verifier.checkNationalRules(certificate: invalid_cert, forceUpdate: false) { result in
             switch result {
@@ -495,21 +495,6 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testTestHasToBeInWhitelist() {
-        let invalid_cert_rat = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
-        let expectation = self.expectation(description: "async task")
-        verifier.checkNationalRules(certificate: invalid_cert_rat, forceUpdate: false) { result in
-            switch result {
-            case .failure(.NO_VALID_PRODUCT):
-                XCTAssertTrue(true)
-            default:
-                XCTFail("Not in whitelist should fail")
-            }
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 60, handler: nil)
-    }
-
     func testPcrTestsAreAlwaysAccepted() {
         // pcr tests are always accepte
         let invalid_cert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
@@ -563,11 +548,11 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testRatIsValidFor24h() {
-        let hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
+    func testRatIsValidFor48h() {
+        let hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -47))
 
         let now = Date()
-        let time = Calendar.current.date(byAdding: DateComponents(hour: -23), to: now)!
+        let time = Calendar.current.date(byAdding: DateComponents(hour: -47), to: now)!
 
         let correctExpectation = expectation(description: "correct")
         verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
@@ -583,7 +568,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             correctExpectation.fulfill()
         }
 
-        let invalid_hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -24))
+        let invalid_hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -48))
         let wrongExpectation = expectation(description: "wrong")
         verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
             switch result {
@@ -706,7 +691,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let validTestResult = dateFormatter.date(from: "2021-05-08")!
-        let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: validTestResult)!
+        let calculatedValidUntil = Calendar.current.date(byAdding: DateComponents(day: 179), to: validTestResult)!
 
         let calculatedValidFrom = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: validTestResult)!
 
