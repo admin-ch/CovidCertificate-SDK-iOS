@@ -31,14 +31,20 @@ struct CWT {
         }
     }
 
-    func isValid(now: Date = Date()) -> Result<Bool, ValidationError> {
+    enum CWTValidationState {
+        case valid
+        case notYetValid
+        case expired
+    }
+
+    func isValid(now: Date = Date()) -> Result<CWTValidationState, ValidationError> {
         if let cwtExp = exp {
             guard let exp = cwtExp.asNumericDate() else {
                 return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
             }
             let expireDate = Date(timeIntervalSince1970: exp)
             if expireDate.isBefore(now) {
-                return .success(false)
+                return .success(.expired)
             }
         }
 
@@ -48,10 +54,10 @@ struct CWT {
             }
             let issuedAt = Date(timeIntervalSince1970: Double(iat))
             if issuedAt.isAfter(now) {
-                return .success(false)
+                return .success(.notYetValid)
             }
         }
-        return .success(true)
+        return .success(.valid)
     }
 
     init?(from cbor: CBOR, type: CertificateType) {

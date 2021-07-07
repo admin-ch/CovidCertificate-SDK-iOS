@@ -34,6 +34,7 @@ public enum ValidationError: Error, Equatable {
     case KEY_NOT_IN_TRUST_LIST
     case PUBLIC_KEY_EXPIRED
     case CWT_EXPIRED
+    case CWT_NOT_YET_VALID
     case ISSUED_IN_FUTURE
     case UNSUITABLE_PUBLIC_KEY_TYPE
     case KEY_CREATION_ERROR
@@ -56,6 +57,7 @@ public enum ValidationError: Error, Equatable {
         case .KEY_CREATION_ERROR: return "Cannot create key from data"
         case let .KEYSTORE_ERROR(cause): return cause
         case .CWT_EXPIRED: return "The CWT expiary date has been reached"
+        case .CWT_NOT_YET_VALID: return "The CWT is not yet valid"
         case .ISSUED_IN_FUTURE: return "The CWT was issued in the future"
         case .REVOKED: return "Certificate was revoked"
         case .SIGNATURE_TYPE_INVALID: return "The certificate is not valid according to specification"
@@ -77,6 +79,7 @@ public enum ValidationError: Error, Equatable {
         case .KEY_CREATION_ERROR: return ""
         case .KEYSTORE_ERROR: return ""
         case .CWT_EXPIRED: return "S|CWTE"
+        case .CWT_NOT_YET_VALID: return "S|CWTNV"
         case .ISSUED_IN_FUTURE: return ""
         case .REVOKED: return "R|REV"
         case let .SIGNATURE_TYPE_INVALID(wrapped): return "S|TIV|" + wrapped.errorCode

@@ -87,7 +87,17 @@ struct CovidCertificateImpl {
             // Skip revocation check for light certificates
             revocationStatusResult = nil
 
-            nationalRulesResult = .success(.init(isValid: holder.expiresAt?.isAfter(Date()) ?? false,
+            // a light certificate is not valid if the CWT has expired
+            // all other CWT invalid cases are already handled in the signature check
+            var isValid = true
+            switch holder.cwt.isValid() {
+            case .success(.expired):
+                isValid = false
+            default:
+                break
+            }
+
+            nationalRulesResult = .success(.init(isValid: isValid,
                                                  validUntil: holder.expiresAt,
                                                  validFrom: holder.issuedAt,
                                                  dateError: nil))
@@ -133,9 +143,15 @@ struct CovidCertificateImpl {
                 }
 
                 switch holder.cwt.isValid() {
-                case let .success(isValid):
-                    if !isValid {
+                case let .success(cwtValidation):
+                    switch cwtValidation {
+                    case .valid:
+                        break
+                    case .expired:
                         completionHandler(.failure(.CWT_EXPIRED))
+                        return
+                    case .notYetValid:
+                        completionHandler(.failure(.CWT_NOT_YET_VALID))
                         return
                     }
                 case let .failure(error):
