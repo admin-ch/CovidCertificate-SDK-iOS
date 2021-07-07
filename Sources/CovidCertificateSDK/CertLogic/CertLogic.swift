@@ -35,6 +35,7 @@ class CertLogic {
     var valueSets: JSON = []
     let calendar: Calendar
 
+    var maxRecoveryValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.recoveryOffsetValidUntil].int }
     var maxValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int }
     var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int }
     var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int }

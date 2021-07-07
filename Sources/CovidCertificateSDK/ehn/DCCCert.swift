@@ -157,15 +157,6 @@ public struct Vaccination: Codable {
         }
     }
 
-    /// Vaccines are valid for 180 days
-    public var validUntilDate: Date? {
-        guard let dateOfVaccination = self.dateOfVaccination,
-              let date = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: dateOfVaccination) else {
-            return nil
-        }
-        return date
-    }
-
     public func getValidUntilDate(maximumValidityInDays: Int) -> Date? {
         guard let dateOfVaccination = self.dateOfVaccination,
               let date = Calendar.current.date(byAdding: DateComponents(day: maximumValidityInDays), to: dateOfVaccination) else {
@@ -327,9 +318,9 @@ public struct PastInfection: Codable {
         return date
     }
 
-    public var validUntilDate: Date? {
+    public func getValidUntilDate(maximumValidityInDays: Int) -> Date? {
         guard let firstPositiveTestResultDate = self.firstPositiveTestResultDate,
-              let date = Calendar.current.date(byAdding: DateComponents(day: MAXIMUM_VALIDITY_IN_DAYS), to: firstPositiveTestResultDate) else {
+              let date = Calendar.current.date(byAdding: DateComponents(day: maximumValidityInDays), to: firstPositiveTestResultDate) else {
             return nil
         }
         return date
