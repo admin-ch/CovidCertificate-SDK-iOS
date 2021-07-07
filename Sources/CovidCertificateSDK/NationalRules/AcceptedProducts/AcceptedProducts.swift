@@ -17,7 +17,7 @@ class AcceptedProducts {
     private let acceptedVaccines: AcceptedVaccines
 
     // MARK: - Vaccination API
-    
+
     func totalNumberOfDoses(vaccination: Vaccination) -> UInt64? {
         let entry = acceptedVaccines.entries.first { $0.code == vaccination.medicinialProduct }
         return entry?.totalDosisNumber
