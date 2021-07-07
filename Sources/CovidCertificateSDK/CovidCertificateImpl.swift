@@ -83,9 +83,9 @@ struct CovidCertificateImpl {
                 nationalRulesResult = result
                 group.leave()
             }
-        case let certificate as LightCert:
+        case is LightCert:
             // Skip revocation check for light certificates
-            revocationStatusResult = .success(.init(isValid: true, payload: certificate, error: nil))
+            revocationStatusResult = nil
 
             nationalRulesResult = .success(.init(isValid: holder.expiresAt?.isAfter(Date()) ?? false,
                                                  validUntil: holder.expiresAt,
@@ -97,7 +97,6 @@ struct CovidCertificateImpl {
 
         group.notify(queue: .main) {
             guard let signatureResult = signatureResult,
-                  let revocationStatusResult = revocationStatusResult,
                   let nationalRulesResult = nationalRulesResult else {
                 assertionFailure()
                 return
