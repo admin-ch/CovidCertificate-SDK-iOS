@@ -36,6 +36,7 @@ struct CWT {
         case notYetValid
         case expired
     }
+
     func isValid(now: Date = Date()) -> Result<CWTValidationState, ValidationError> {
         if let cwtExp = exp {
             guard let exp = cwtExp.asNumericDate() else {
