@@ -110,17 +110,6 @@ struct CovidCertificateImpl {
     }
 
     func checkSignature(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        switch holder.cwt.isValid() {
-        case let .success(isValid):
-            if !isValid {
-                completionHandler(.failure(.CWT_EXPIRED))
-                return
-            }
-        case let .failure(error):
-            completionHandler(.failure(error))
-            return
-        }
-
         switch holder.certificate {
         case let certificate as DCCCert:
             if certificate.immunisationType == nil {
@@ -136,9 +125,20 @@ struct CovidCertificateImpl {
                 completionHandler(.failure(e))
             } else {
                 let list = self.trustListManager.trustStorage.activeCertificatePublicKeys(useFilters: holder.certificate.type.trustListUseFilters)
-                let validationError = list.hasValidSignature(for: holder)
-
-                completionHandler(.success(ValidationResult(isValid: validationError == nil, payload: holder.certificate, error: validationError)))
+                if let validationError = list.hasValidSignature(for: holder) {
+                    completionHandler(.success(ValidationResult(isValid: false, payload: holder.certificate, error: validationError)))
+                } else {
+                    switch holder.cwt.isValid() {
+                    case let .success(isValid):
+                        if !isValid {
+                            completionHandler(.failure(.CWT_EXPIRED))
+                            return
+                        }
+                    case let .failure(error):
+                        completionHandler(.failure(error))
+                        return
+                    }
+                }
             }
         })
     }
