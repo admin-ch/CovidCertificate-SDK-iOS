@@ -24,6 +24,6 @@ public struct VerifierCertificateHolder {
     }
 
     public var dateOfBirth: String {
-        value.certificate.dateOfBirth
+        value.certificate.dateOfBirthFormatted
     }
 }
