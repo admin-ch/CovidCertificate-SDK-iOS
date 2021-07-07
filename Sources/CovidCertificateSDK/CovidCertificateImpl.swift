@@ -87,7 +87,15 @@ struct CovidCertificateImpl {
             // Skip revocation check for light certificates
             revocationStatusResult = nil
 
-            nationalRulesResult = .success(.init(isValid: holder.expiresAt?.isAfter(Date()) ?? false,
+            var isValid = true
+            switch holder.cwt.isValid() {
+            case .success(.expired):
+                isValid = false
+            default:
+                break
+            }
+
+            nationalRulesResult = .success(.init(isValid: isValid,
                                                  validUntil: holder.expiresAt,
                                                  validFrom: holder.issuedAt,
                                                  dateError: nil))
