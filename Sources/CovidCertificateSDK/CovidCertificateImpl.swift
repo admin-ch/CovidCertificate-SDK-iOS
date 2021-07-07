@@ -87,6 +87,8 @@ struct CovidCertificateImpl {
             // Skip revocation check for light certificates
             revocationStatusResult = nil
 
+            // a light certificate is not valid if the CWT has expired
+            // all other CWT invalid cases are already handled in the signature check
             var isValid = true
             switch holder.cwt.isValid() {
             case .success(.expired):
