@@ -42,4 +42,5 @@ public enum NationalRulesError: Error, Equatable {
 public enum NationalRulesDateError: Error, Equatable {
     case NOT_YET_VALID
     case EXPIRED
+    case NO_VALID_DATE
 }
