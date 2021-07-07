@@ -133,9 +133,15 @@ struct CovidCertificateImpl {
                 }
 
                 switch holder.cwt.isValid() {
-                case let .success(isValid):
-                    if !isValid {
+                case let .success(cwtValidation):
+                    switch cwtValidation {
+                    case .valid:
+                        break
+                    case .expired:
                         completionHandler(.failure(.CWT_EXPIRED))
+                        return
+                    case .notYetValid:
+                        completionHandler(.failure(.CWT_NOT_YET_VALID))
                         return
                     }
                 case let .failure(error):
