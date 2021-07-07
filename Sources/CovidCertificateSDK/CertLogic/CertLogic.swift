@@ -39,7 +39,6 @@ class CertLogic {
         case recoveryOffsetValidUntil = "recovery-offset-valid-until"
     }
 
-
     var rules: [JSON] = []
     var valueSets: JSON = []
     let calendar: Calendar
@@ -51,8 +50,8 @@ class CertLogic {
     var singleVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.singleVaccineValidityOffsetKey.rawValue].int }
     var twoVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.twoVaccineValidityOffsetKey.rawValue].int }
 
-    var oneDoseVaccines: [String] { valueSets[JsonLogicKeys.oneDoseVaccine.rawValue].array?.compactMap({ $0.string }) ?? [] }
-    var twoDoseVaccines: [String] { valueSets[JsonLogicKeys.twoDoseVaccine.rawValue].array?.compactMap({ $0.string }) ?? [] }
+    var oneDoseVaccines: [String] { valueSets[JsonLogicKeys.oneDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
+    var twoDoseVaccines: [String] { valueSets[JsonLogicKeys.twoDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
 
     init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
@@ -121,8 +120,8 @@ class CertLogic {
         guard let validUntil = vaccination.getValidUntilDate(maximumValidityInDays: Int(maxValidity)) else { return nil }
 
         guard let validFrom = vaccination.getValidFromDate(singleVaccineValidityOffset: Int(singleVaccineValidityOffset),
-                                                     twoVaccineValidityOffset: Int(twoVaccineValidityOffset),
-                                                     totalDoses: totalDoses) else { return nil }
+                                                           twoVaccineValidityOffset: Int(twoVaccineValidityOffset),
+                                                           totalDoses: totalDoses) else { return nil }
 
         return (from: validFrom, until: validUntil)
     }
