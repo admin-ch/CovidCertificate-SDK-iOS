@@ -23,23 +23,35 @@ enum CertLogicValidationError: Error {
 }
 
 class CertLogic {
-    private static let acceptanceCriteriaKey: String = "acceptance-criteria"
-    private static let vaccineImmunityKey: String = "vaccine-immunity"
-    private static let singleVaccineValidityOffsetKey: String = "single-vaccine-validity-offset"
-    private static let pcrTestValidityKey: String = "pcr-test-validity"
-    private static let ratTestValidityKey: String = "rat-test-validity"
-    private static let recoveryOffsetValidFrom: String = "recovery-offset-valid-from"
-    private static let recoveryOffsetValidUntil: String = "recovery-offset-valid-until"
+    enum JsonLogicKeys: String {
+        case oneDoseVaccine = "one-dose-vaccines-with-offset"
+        case twoDoseVaccine = "two-dose-vaccines"
+        case acceptanceCriteria = "acceptance-criteria"
+    }
+
+    enum AcceptanceCriteriaKeys: String {
+        case vaccineImmunityKey = "vaccine-immunity"
+        case singleVaccineValidityOffsetKey = "single-vaccine-validity-offset"
+        case twoVaccineValidityOffsetKey = "two-doses-vaccine-validity-offset"
+        case pcrTestValidityKey = "pcr-test-validity"
+        case ratTestValidityKey = "rat-test-validity"
+        case recoveryOffsetValidFrom = "recovery-offset-valid-from"
+        case recoveryOffsetValidUntil = "recovery-offset-valid-until"
+    }
 
     var rules: [JSON] = []
     var valueSets: JSON = []
     let calendar: Calendar
 
-    var maxRecoveryValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.recoveryOffsetValidUntil].int }
-    var maxValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.vaccineImmunityKey].int }
-    var daysAfterFirstShot: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.singleVaccineValidityOffsetKey].int }
-    var pcrValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.pcrTestValidityKey].int }
-    var ratValidity: Int64? { valueSets[CertLogic.acceptanceCriteriaKey][CertLogic.ratTestValidityKey].int }
+    var maxRecoveryValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.recoveryOffsetValidUntil.rawValue].int }
+    var maxValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.vaccineImmunityKey.rawValue].int }
+    var pcrValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.pcrTestValidityKey.rawValue].int }
+    var ratValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.ratTestValidityKey.rawValue].int }
+    var singleVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.singleVaccineValidityOffsetKey.rawValue].int }
+    var twoVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.twoVaccineValidityOffsetKey.rawValue].int }
+
+    var oneDoseVaccines: [String] { valueSets[JsonLogicKeys.oneDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
+    var twoDoseVaccines: [String] { valueSets[JsonLogicKeys.twoDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
 
     init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
@@ -86,5 +98,31 @@ class CertLogic {
         } else {
             return .failure(.TESTS_FAILED(tests: failedTests))
         }
+    }
+
+    private func getTotalDoses(for vaccination: String?) -> Int? {
+        guard let vaccination = vaccination else { return nil }
+        if oneDoseVaccines.contains(vaccination) {
+            return 1
+        } else if twoDoseVaccines.contains(vaccination) {
+            return 2
+        }
+        return nil
+    }
+
+    func getValidityRange(vaccination: Vaccination?) -> (from: Date, until: Date)? {
+        guard let vaccination = vaccination,
+              let maxValidity = maxValidity,
+              let singleVaccineValidityOffset = singleVaccineValidityOffset,
+              let twoVaccineValidityOffset = twoVaccineValidityOffset,
+              let totalDoses = getTotalDoses(for: vaccination.medicinialProduct) else { return nil }
+
+        guard let validUntil = vaccination.getValidUntilDate(maximumValidityInDays: Int(maxValidity)) else { return nil }
+
+        guard let validFrom = vaccination.getValidFromDate(singleVaccineValidityOffset: Int(singleVaccineValidityOffset),
+                                                           twoVaccineValidityOffset: Int(twoVaccineValidityOffset),
+                                                           totalDoses: totalDoses) else { return nil }
+
+        return (from: validFrom, until: validUntil)
     }
 }

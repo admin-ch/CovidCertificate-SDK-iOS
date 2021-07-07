@@ -115,42 +115,18 @@ public struct Vaccination: Codable {
         return dateFormatter.date(from: vaccinationDate)
     }
 
-    /// A vaccine which originally had a total dosis number of 2 and now is marked as 1 means that the person who got the shot was previously infected, hence has full protection with just one shot
-    public var hadPastInfection: Bool {
-        guard let totalDoses = AcceptedProducts.shared.totalNumberOfDoses(vaccination: self) else {
-            return false
-        }
-        return totalDoses > self.totalDoses
-    }
-
-    public var validFromDate: Date? {
-        guard let dateOfVaccination = self.dateOfVaccination,
-              let totalDoses = AcceptedProducts.shared.totalNumberOfDoses(vaccination: self)
+    public func getValidFromDate(singleVaccineValidityOffset: Int,
+                                 twoVaccineValidityOffset: Int,
+                                 totalDoses: Int) -> Date? {
+        guard let dateOfVaccination = self.dateOfVaccination
         else {
             return nil
         }
 
-        // if this is a vaccine, which only needs one shot AND we had no previous infections, the vaccine is valid 15 days after the date of vaccination
-        if !hadPastInfection,
-           totalDoses == 1 {
-            return Calendar.current.date(byAdding: DateComponents(day: 15), to: dateOfVaccination)
-        } else {
-            // in any other case the vaccine is valid from the date of vaccination
-            return dateOfVaccination
-        }
-    }
-
-    public func getValidFromDate(daysAfterFirstShot: Int) -> Date? {
-        guard let dateOfVaccination = self.dateOfVaccination,
-              let totalDoses = AcceptedProducts.shared.totalNumberOfDoses(vaccination: self)
-        else {
-            return nil
-        }
-
-        // if this is a vaccine, which only needs one shot AND we had no previous infections, the vaccine is valid 15 days after the date of vaccination
-        if !hadPastInfection,
-           totalDoses == 1 {
-            return Calendar.current.date(byAdding: DateComponents(day: daysAfterFirstShot), to: dateOfVaccination)
+        if totalDoses == 1 {
+            return Calendar.current.date(byAdding: DateComponents(day: singleVaccineValidityOffset), to: dateOfVaccination)
+        } else if totalDoses == 2 {
+            return Calendar.current.date(byAdding: DateComponents(day: twoVaccineValidityOffset), to: dateOfVaccination)
         } else {
             // in any other case the vaccine is valid from the date of vaccination
             return dateOfVaccination
