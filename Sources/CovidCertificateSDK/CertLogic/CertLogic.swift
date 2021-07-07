@@ -101,7 +101,7 @@ class CertLogic {
     }
 
     private func getTotalDoses(for vaccination: String?) -> Int? {
-        guard let vaccination = vaccination else { return 2 }
+        guard let vaccination = vaccination else { return nil }
         if oneDoseVaccines.contains(vaccination) {
             return 1
         } else if twoDoseVaccines.contains(vaccination) {
