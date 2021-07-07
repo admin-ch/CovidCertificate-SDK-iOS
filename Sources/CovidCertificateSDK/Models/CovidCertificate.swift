@@ -16,3 +16,18 @@ public protocol CovidCertificate {
     var version: String { get }
     var type: CertificateType { get }
 }
+
+public extension CovidCertificate {
+    var dateOfBirthFormatted: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        if let date = dateFormatter.date(from: dateOfBirth) {
+            let prettyDateFormatter = DateFormatter()
+            prettyDateFormatter.dateFormat = "dd.MM.yyyy"
+            return prettyDateFormatter.string(from: date)
+        }
+
+        // Fall back to raw value if we cannot parse it
+        return dateOfBirth
+    }
+}
