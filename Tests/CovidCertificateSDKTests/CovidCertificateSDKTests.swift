@@ -63,7 +63,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testVariousFloatAndSignedIntCBORDates() {
+    func testCWTExpiredWithInvalidSignature() {
         let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6LDAI81POIF:0S1E2-I534LRHRXQQHIZC4.OI1RM8ZA*LP$V25$0$/AQ$3H-8R6TU:C//CW$5 -D1$4C5PE/H:Y0D$0M+8H:H00M-$4U/HYE9/MVKQC*LA 436IAXPMHQ1*P1TU12XE %POH6JK5 *JAYUQJATK25M9:OQPAU:IAJ0AGY0OWCR/C+T44%4GIP77TLXKQ/S1E5E6J90J7*KP/S57TT65:9TNIF 35:U47AL+T4 %23NJ.43CGJ8X2+36D-I/2DBAJDAJCNB-43 X4VV2 73-E3GG3V20-7TZD5CC9T0HQ+4CNNG.85$07LPMIH-O92UQKRQT02.MPDB9SH9C9QG3FSZN0/4P/5CA7G6ME1SDQ6CS4:ZJ83B-6THC1G%5TW5A 6YO67N659EWEWJ2T7+VCK19ASG+7G7WH0JSZARUA82WIAQ/+IY%NT2G5+GG 95MD5FN:3VJXRUN3U.LF:HKVTFZIP.4X7GHBBJ17IN6$MQV7SH.5941GPG"
 
         let expectations = expectation(description: "async job")
@@ -74,8 +74,32 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
         verifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
-            case .success:
+            case let .success(res):
+                XCTAssert(!res.isValid)
+            case .failure:
                 XCTFail("testVariousFloatAndSignedIntCBORDates failed")
+            }
+            expectations.fulfill()
+        }
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+
+    func testCWTExpired() {
+        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6LDAI81POI-.08WAJVIT:RVGAS7IMYLSA3/-2E%5VR5VVBJZI+EBI.CXBDX*TT*C.BD-8DUVDAVT USVJCYMCNST/DCMMC*8DY5TJ*S7BCH*S*NI WJUQ6395R4I-B5ET42HPPEPHCRSV85EPAC5ADNJSQ*Q6NY4U47Q7N0D4%IUOD4*EV3LCT58DKD5C9/.D +GC4EFI9+CA3NK%9E+-C-ZAOCARJC/MH8RFQNIW0IGOA9FEP+9A.DNPL%*G4IJ0JAXD15IAXMFU*GSHGRKMXGG6DBYCB-1JMJKR.KI91L4DWZJ$7K+ CNED*ZLZ9C%PD8DJI7JSTNB95D26MFVE2K8$JBPKC.U2ZEDUOFPEAYU/UIGSUKRQNN94E8TNP8EF-GDPIL/NST*QGTA4W7.Y7N31D$5B:UPZUUUH-F9216AGWU5ES4ASO96584HMXLQZAMK%AQOR5CBT:72+R+.NE3MQ8B4*LG+D.PKZQFH6THHV5-B4/N-B9 36YJD1W7ENVW$F"
+
+        let expectations = expectation(description: "async job")
+
+        guard let certificateHolder = try? verifier.decode(encodedData: hcert).get() else {
+            XCTFail("Could not decode")
+            return
+        }
+        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "S/yUgaRwgbGh73OGTAaidN+WSf16Tak3oYi4KwjeA4g=", andY: "4nWXiEKZkApaDwzXrUcA1zphiCSry8Xd4zqNL5XVREw=")
+        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
+        customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
+            switch result {
+            case .success:
+                XCTFail("Should fail")
             case let .failure(error):
                 // we should fail with CWT expired
                 XCTAssertTrue(error.errorCode == ValidationError.CWT_EXPIRED.errorCode)
@@ -85,8 +109,8 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testInvalidDateInCBORCausesError() {
-        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6RLQI81POIF:0:3BAG1PZIQ+Q%SQXZI3VUD%N/+P.SS  QS+G3WOHVU978MRLQ+Q.OIVTQA+QWQ23E2F/8X*G3M9JUPY0BZW4:.AY73CIBVQFM83IMJTLJ8UJARN*FN4DJV53/G7-43Z23EG3%971IN/AJVC7SP499TVW5KK9+OC+G9QJPNF67J6QW67KQ9G66PP33M/TEJG3LKBXBJFF02JNEJOA+MY55V90*F7$17IK8D:6NY4R35OBA4DN/VM/H5J35 96$ 8BX7/JP9398C5Y47Z.4Z6NC1R4SO* PUHLO$GAHLW 70SO:GOLIROGO3T59YLLYP-HQLTQ9R0+L69/9-3AKI6-Q6R3RX76QW6.V99Q9E$BDZIE9JIRF71A4-9SCA6LFOSNENSUC75HF KP8EFXOTJ.K274M.SY$N/U6ZVA69E$JDVPLW1KD0KCZG-3NKWJ33W6BAO87CAF%OS-WKMY1SQPWPQBMT2IV2CVC16F9U2BQUM9:SV246:%UHII9K4HZB/.U-CW6%L$UJ68NS%D.GTPPQN2PRW8610FNS32"
+    func testVariousFloatAndSignedIntCBORDates() {
+        let hcert = "HC1:6BF3TDJ%B6FL:TSOGOAHPH*OW*PQDI7YO-96W*OHAS0C6RLQI81POIF:0:3BAG1PZIQ+Q%SQXZI3VUD%N/+P.SS  QS+G3WOHVU978MRLQ+Q.OIVTQA+QWQ23E2F/8X*G3M9JUPY0BZW4:.AY73CIBVQFM83IMJTLJ8UJARN*FN4DJV53/G7-43Z23EG3%971IN/AJVC7SP499TVW5KK9+OC+G9QJPNF67J6QW67KQ9G66PP33M/TEJG3LKBXBJFF02JNEJOA+MY55V90*F7$17IK8D:6NY4R35OBA4DN/VM/H5J35 96$ 8BX7/JP9398C5Y47Z.4Z6NC1R4SO* PUHLO$GAHLW 70SO:GOLIROGO3T59YLLYP-HQLTQ9R0+L69/9-3AKI6-Q6R3RX76QW6.V99Q9E$BDZIE9JIRF71A4-9SCA6LFOSNENSUC75HF KP8EFXOTJ.K274M.SY$N/U6ZVA69E$JDVPLW1KD0K%XG$GNHYGB5TA2PR-9+RD NFXHPW6TSLBD:FX7QV:GYF8+2LH EC.U:05 WT*+M3CWH/UXKJ8RFI1J71QYDF0N1YPR%8M$EWVSN%GP69TL5UCOI"
 
         let expectations = expectation(description: "async job")
 
@@ -94,7 +118,10 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTFail("Could not decode")
             return
         }
-        verifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
+        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "8OvCEph8PWTFDrLaObg5c6gK9HI0tfJUMmma/WfvlVE=", andY: "uJ2i55ZbAVpMhklwqZfVKhLXeO0Yrz69qKoh2Y86FR8=")
+        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
+        customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
             case .success:
                 XCTFail("Should fail")
