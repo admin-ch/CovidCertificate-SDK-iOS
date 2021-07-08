@@ -53,7 +53,10 @@ struct CWT {
                 return .failure(.SIGNATURE_TYPE_INVALID(.CWT_HEADER_PARSE_ERROR))
             }
             let issuedAt = Date(timeIntervalSince1970: Double(iat))
-            if issuedAt.isAfter(now) {
+            let timeDifference = now.timeIntervalSince(issuedAt)
+            // if issued at is more than 5minutes in the future consider the signature as notYetValid
+            // in order to compensate for client server time skew
+            if timeDifference < -5.0 * 60 {
                 return .success(.notYetValid)
             }
         }
