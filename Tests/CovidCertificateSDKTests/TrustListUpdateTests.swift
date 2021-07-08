@@ -17,7 +17,7 @@ final class TrustListUpdateTest: XCTestCase {
         let operationQueue = OperationQueue()
         operationQueue.maxConcurrentOperationCount = .max
 
-        for _ in 0...10000 {
+        for _ in 0 ... 10000 {
             operationQueue.addOperation {
                 update.addCheckOperation(forceUpdate: true, checkOperation: { _ in })
                 Thread.sleep(forTimeInterval: 0.1)
