@@ -32,7 +32,6 @@ class CertLogic {
     enum AcceptanceCriteriaKeys: String {
         case vaccineImmunityKey = "vaccine-immunity"
         case singleVaccineValidityOffsetKey = "single-vaccine-validity-offset"
-        case twoVaccineValidityOffsetKey = "two-doses-vaccine-validity-offset"
         case pcrTestValidityKey = "pcr-test-validity"
         case ratTestValidityKey = "rat-test-validity"
         case recoveryOffsetValidFrom = "recovery-offset-valid-from"
@@ -48,7 +47,7 @@ class CertLogic {
     var pcrValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.pcrTestValidityKey.rawValue].int }
     var ratValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.ratTestValidityKey.rawValue].int }
     var singleVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.singleVaccineValidityOffsetKey.rawValue].int }
-    var twoVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.twoVaccineValidityOffsetKey.rawValue].int }
+    var twoVaccineValidityOffset: Int64 = 0
 
     var oneDoseVaccines: [String] { valueSets[JsonLogicKeys.oneDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
     var twoDoseVaccines: [String] { valueSets[JsonLogicKeys.twoDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
@@ -114,7 +113,6 @@ class CertLogic {
         guard let vaccination = vaccination,
               let maxValidity = maxValidity,
               let singleVaccineValidityOffset = singleVaccineValidityOffset,
-              let twoVaccineValidityOffset = twoVaccineValidityOffset,
               let totalDoses = getTotalDoses(for: vaccination.medicinialProduct) else { return nil }
 
         guard let validUntil = vaccination.getValidUntilDate(maximumValidityInDays: Int(maxValidity)) else { return nil }

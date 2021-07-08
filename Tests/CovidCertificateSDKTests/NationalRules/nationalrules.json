@@ -178,9 +178,7 @@
                   {
                     "var": "payload.v.0.dt"
                   },
-                  {
-                    "var": "external.valueSets.acceptance-criteria.two-doses-vaccine-validity-offset"
-                  },
+                  0,
                   "day"
                 ]
               }
@@ -672,7 +670,6 @@
     ],
     "acceptance-criteria": {
       "single-vaccine-validity-offset": 21,
-      "two-doses-vaccine-validity-offset": 0,
       "vaccine-immunity": 364,
       "rat-test-validity": 48,
       "pcr-test-validity": 72,
