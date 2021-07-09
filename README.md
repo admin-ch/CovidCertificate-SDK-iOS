@@ -7,9 +7,6 @@
 
 This is the Swiss implementation of the Electronic Health Certificates (EHN) Specification [[1](https://github.com/ehn-digital-green-development/hcert-spec)] used to verify the validity of Digital Covid Certificates. It is partly based on the reference implementation of EHN's `ValidationCore` [[2](https://github.com/ehn-digital-green-development/ValidationCore/tree/main/Sources/ValidationCore)]. 
  
- ## Work in Progress
-
-The CovidCertificateSDK for iOS is work in progress and is not yet complete. We are continuing the development of this library, and the API is likely to change. Please contact the BIT before using / integrating this SDK in your app.
  
 ## Installation
 
@@ -32,7 +29,9 @@ This version points to the HEAD of the `main` branch and will always fetch the l
 
  ## Architecture
 
-The SDK needs to be initialized with an environment. This allows for different verification rules per environment or other environment-specific settings.
+The SDK needs to be initialized with an environment and a api key. This allows for different verification rules per environment or other environment-specific settings.
+
+If you intend to integrate the CovidCertificate-SDK-iOS into your app, please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch) to get a token assigned.
 
 After initialization the following pipeline should be used:
 
