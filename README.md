@@ -6,7 +6,7 @@
  ## Introduction
 
 This is the implementation of the [Electronic Health Certificates (EHN) specification](https://github.com/ehn-digital-green-development/hcert-spec)
-used to verify the validity of COVID Certificates [in Switzerland](https://github.com/admin-ch/CovidCertificate-App-Android).
+used to verify the validity of COVID Certificates [in Switzerland](https://github.com/admin-ch/CovidCertificate-App-iOS).
 
 It is partly based on the reference implementation of EHN's `ValidationCore` [[2](https://github.com/ehn-digital-green-development/ValidationCore/tree/main/Sources/ValidationCore)]. 
 
@@ -21,8 +21,7 @@ We welcome all pull requests that improve the quality of the source code.
 
 * iOS App: [CovidCertificate-App-iOS](https://github.com/admin-ch/CovidCertificate-App-iOS)
 * Android App: [CovidCertificate-App-Android](https://github.com/admin-ch/CovidCertificate-App-Android)
-* Androiid SDK: [CovidCertificate-SDK-Android](https://github.com/admin-ch/CovidCertificate-SDK-Android)
-* Verifier Service: [CovidCertificate-App-Verifier-Service](https://github.com/admin-ch/CovidCertificate-App-Verifier-Service)
+* Android SDK: [CovidCertificate-SDK-Android](https://github.com/admin-ch/CovidCertificate-SDK-Android)
 * For all others, see the [Github organisation](https://github.com/admin-ch/)
  
 ## Installation
@@ -68,7 +67,8 @@ The verification process consists of three parts that need to be successful in o
 
 ## Usage
 
-The SDK needs to be initialized with an environment and a api key. This allows for different verification rules per environment or other environment-specific settings.
+The SDK needs to be initialized with an environment and a API token. 
+This allows for different verification rules per environment or other environment-specific settings.
 
 If you intend to integrate the CovidCertificate-SDK-iOS into your app, please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch) to get a token assigned.
 
@@ -78,7 +78,9 @@ After initialization the following pipeline should be used:
 
 2) Verify the Certificate by calling the `.check` method. Internally this verifies the signature, revocation status and national rules
 
-All these checks check against verification properties that are loaded from a server. These returned properties use a property to specify how long they are valid (like `max-age` in general networking). With the parameter `forceUpdate`, these properties can be forced to update.
+All these checks check against verification properties that are loaded from a server. 
+These returned properties use a property to specify how long they are valid (like `max-age` in general networking). 
+With the parameter `forceUpdate`, these properties can be forced to update.
 
 CovidCertificateSDK offers a `Verifier` and `Wallet` namespace. Methods in the Wallet namespace must only be used by the official COVID Certificate App.
 
