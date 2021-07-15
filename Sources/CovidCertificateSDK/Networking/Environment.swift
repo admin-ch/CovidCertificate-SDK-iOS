@@ -30,7 +30,7 @@ public enum SDKEnvironment {
     public static let applicationJwtPlusJws: String = "application/json+jws"
 
     func revocationListService(since: String?) -> Endpoint {
-        var queryParameters: [String: String]? = nil
+        var queryParameters: [String: String]?
 
         if let since = since {
             queryParameters = ["since": since]

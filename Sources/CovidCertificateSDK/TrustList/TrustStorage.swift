@@ -53,9 +53,9 @@ class TrustStorage: TrustStorageProtocol {
 
     func updateRevocationList(_ list: RevocationList) -> Bool {
         revocationQueue.sync {
-            list.revokedCerts.forEach{ self.revocationStorage.revocationList.revokedCerts.insert($0) }
+            list.revokedCerts.forEach { self.revocationStorage.revocationList.revokedCerts.insert($0) }
             self.revocationStorage.revocationList.validDuration = list.validDuration
-            
+
             self.revocationStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
             return self.revocationSecureStorage.saveSynchronously(self.revocationStorage)
         }
