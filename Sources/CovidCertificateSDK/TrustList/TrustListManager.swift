@@ -98,6 +98,8 @@ class TrustListUpdate {
     private let operationQueue = OperationQueue()
     private let forceUpdateQueue = OperationQueue()
 
+    private let internalQueue = DispatchQueue(label: "TrustListUpdateInternalDispatchQueue")
+
     private var updateOperation: Operation?
     private var forceUpdateOperation: Operation?
 
@@ -115,25 +117,27 @@ class TrustListUpdate {
     }
 
     func forceUpdate(completion: @escaping (() -> Void)) {
-        let updateAlreadyRunnning = forceUpdateOperation != nil
+        internalQueue.sync {
+            let updateAlreadyRunnning = forceUpdateOperation != nil
 
-        if !updateAlreadyRunnning {
-            forceUpdateOperation = BlockOperation(block: { [weak self] in
-                guard let strongSelf = self else { return }
-                strongSelf.startForceUpdate()
-            })
+            if !updateAlreadyRunnning {
+                forceUpdateOperation = BlockOperation(block: { [weak self] in
+                    guard let strongSelf = self else { return }
+                    strongSelf.startForceUpdate()
+                })
 
-            // !: initialized just above
-            forceUpdateQueue.addOperation(forceUpdateOperation!)
-        }
+                // !: initialized just above
+                forceUpdateQueue.addOperation(forceUpdateOperation!)
+            }
 
-        forceUpdateQueue.addOperation {
-            completion()
+            forceUpdateQueue.addOperation {
+                completion()
+            }
         }
     }
 
     func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
-        DispatchQueue.global().async {
+        internalQueue.async {
             let updateNeeeded = !self.isListStillValid() || forceUpdate
             let updateAlreadyRunnning = self.updateOperation != nil
 
@@ -165,18 +169,22 @@ class TrustListUpdate {
     }
 
     private func startUpdate() {
-        lastError = synchronousUpdate(ignoreLocalCache: true)
-        updateOperation = nil
+        internalQueue.sync {
+            lastError = synchronousUpdate(ignoreLocalCache: true)
+            updateOperation = nil
+        }
     }
 
     private func startForceUpdate() {
-        let error = synchronousUpdate(ignoreLocalCache: true)
-        // Only reset lastError if synchronousUpdate was successful
-        if error == nil {
-            operationQueue.addOperation {
-                self.lastError = nil
+        internalQueue.sync {
+            let error = synchronousUpdate(ignoreLocalCache: true)
+            // Only reset lastError if synchronousUpdate was successful
+            if error == nil {
+                operationQueue.addOperation {
+                    self.lastError = nil
+                }
             }
+            forceUpdateOperation = nil
         }
-        forceUpdateOperation = nil
     }
 }
