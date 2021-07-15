@@ -16,20 +16,26 @@ class RevocationListUpdate: TrustListUpdate {
 
     let session = URLSession.certificatePinned
 
+    @UBUserDefault(key: "covidcertififcate.revocations.nextSince", defaultValue: nil)
+    var nextSince: String?
+
     // MARK: - Update
 
     override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         // download data and update local storage
-        let request = CovidCertificateSDK.currentEnvironment.revocationListService.request(reloadIgnoringLocalCache: ignoreLocalCache)
-        let (data, _, error) = session.synchronousDataTask(with: request)
+        let request = CovidCertificateSDK.currentEnvironment.revocationListService(since: nextSince).request(reloadIgnoringLocalCache: ignoreLocalCache)
+        let (data, response, error) = session.synchronousDataTask(with: request)
 
         if error != nil {
             return error?.asNetworkError()
         }
 
-        guard let d = data else {
+        guard let d = data,
+              let httpResponse = response as? HTTPURLResponse else {
             return .NETWORK_PARSE_ERROR
         }
+
+        nextSince = httpResponse.value(forHeaderField: "x-next-since")
 
         let semaphore = DispatchSemaphore(value: 0)
         var outcome: Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)

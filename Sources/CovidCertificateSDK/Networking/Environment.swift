@@ -29,8 +29,16 @@ public enum SDKEnvironment {
 
     public static let applicationJwtPlusJws: String = "application/json+jws"
 
-    var revocationListService: Endpoint {
-        return trustBackend.endpoint("revocationList", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
+    func revocationListService(since: String?) -> Endpoint {
+        var queryParameters: [String: String]? = nil
+
+        if let since = since {
+            queryParameters = ["since": since]
+        }
+
+        return trustBackend.endpoint("revocationList",
+                                     queryParameters: queryParameters,
+                                     headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
     var nationalRulesListService: Endpoint {
