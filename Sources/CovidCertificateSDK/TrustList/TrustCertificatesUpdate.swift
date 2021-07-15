@@ -31,6 +31,8 @@ class TrustCertificatesUpdate: TrustListUpdate {
             return errorActive?.asNetworkError()
         }
 
+        // obtain up-to field from activeCertificatesService
+        // this is needed to sychronize the both request done in this method
         guard let d = dataActive,
               let httpResponse = response as? HTTPURLResponse,
               let upTo = httpResponse.value(forHeaderField: "up-to") else {
