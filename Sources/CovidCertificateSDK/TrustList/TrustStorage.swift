@@ -12,7 +12,7 @@
 import Foundation
 
 protocol TrustStorageProtocol {
-    func revokedCertificates() -> [String]
+    func revokedCertificates() -> Set<String>
     func updateRevocationList(_ list: RevocationList) -> Bool
     func revocationListIsValid() -> Bool
 
@@ -45,7 +45,7 @@ class TrustStorage: TrustStorageProtocol {
 
     // MARK: - Revocation List
 
-    func revokedCertificates() -> [String] {
+    func revokedCertificates() -> Set<String> {
         return revocationQueue.sync {
             return self.revocationStorage.revocationList.revokedCerts
         }
@@ -53,7 +53,9 @@ class TrustStorage: TrustStorageProtocol {
 
     func updateRevocationList(_ list: RevocationList) -> Bool {
         revocationQueue.sync {
-            self.revocationStorage.revocationList = list
+            list.revokedCerts.forEach{ self.revocationStorage.revocationList.revokedCerts.insert($0) }
+            self.revocationStorage.revocationList.validDuration = list.validDuration
+            
             self.revocationStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
             return self.revocationSecureStorage.saveSynchronously(self.revocationStorage)
         }
