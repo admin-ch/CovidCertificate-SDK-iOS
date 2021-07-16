@@ -33,6 +33,10 @@ public struct CertificateHolder {
         return nil
     }
 
+    public var issuer: String? {
+        return cwt.iss
+    }
+
     var expiresAt: Date? {
         if let i = cwt.exp?.asNumericDate() {
             return Date(timeIntervalSince1970: i)
