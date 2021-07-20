@@ -17,14 +17,13 @@ public enum SDKEnvironment {
     case prod
 
     var trustBackend: Backend {
-        let version = "v1"
         switch self {
         case .dev:
-            return Backend("https://www.cc-d.bit.admin.ch/trust", version: version)
+            return Backend("https://www.cc-d.bit.admin.ch/trust", version: "v1")
         case .abn:
-            return Backend("https://www.cc-a.bit.admin.ch/trust", version: version)
+            return Backend("https://www.cc-a.bit.admin.ch/trust", version: "v1")
         case .prod:
-            return Backend("https://www.cc.bit.admin.ch/trust", version: version)
+            return Backend("https://www.cc.bit.admin.ch/trust", version: "v1")
         }
     }
 
@@ -38,17 +37,12 @@ public enum SDKEnvironment {
         return trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
-    func trustCertificatesService(since: String, upTo: String) -> Endpoint {
-        return trustBackend.endpoint("keys/updates",
-                                     queryParameters: ["certFormat": "IOS",
-                                                       "since": since,
-                                                       "upTo": upTo],
-                                     headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
-                                     overwriteVersion: "v2")
+    func trustCertificatesService(since: String) -> Endpoint {
+        return trustBackend.endpoint("keys/updates", queryParameters: ["certFormat": "IOS", "since": since], headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
     var activeCertificatesService: Endpoint {
-        return trustBackend.endpoint("keys/list", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
+        return trustBackend.endpoint("keys/list", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 
     func metadata() -> Endpoint {
