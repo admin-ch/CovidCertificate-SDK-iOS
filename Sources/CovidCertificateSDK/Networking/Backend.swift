@@ -20,15 +20,17 @@ struct Backend {
         self.version = version
     }
 
-    var versionedURL: URL {
-        baseURL.appendingPathComponent(version ?? "")
+    func getVersionedURL(overwriteVersion: String? = nil) -> URL {
+        baseURL.appendingPathComponent(overwriteVersion ?? version ?? "")
     }
 
     func endpoint(_ path: String, method: Endpoint.Method = .get,
                   queryParameters: [String: String]? = nil,
-                  headers: [String: String]? = nil, body: Encodable? = nil) -> Endpoint
+                  headers: [String: String]? = nil,
+                  body: Encodable? = nil,
+                  overwriteVersion: String? = nil) -> Endpoint
     {
-        var components = URLComponents(url: versionedURL.appendingPathComponent(path), resolvingAgainstBaseURL: true)!
+        var components = URLComponents(url: getVersionedURL(overwriteVersion: overwriteVersion).appendingPathComponent(path), resolvingAgainstBaseURL: true)!
         if let queryParameters = queryParameters {
             let sortedKeys = Array(queryParameters.keys).sorted()
             components.queryItems = sortedKeys.map { URLQueryItem(name: $0, value: queryParameters[$0]) }
