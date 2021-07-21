@@ -21,7 +21,7 @@ struct Backend {
     }
 
     func getVersionedURL(overwriteVersion: String? = nil) -> URL {
-           baseURL.appendingPathComponent(overwriteVersion ?? version ?? "")
+        baseURL.appendingPathComponent(overwriteVersion ?? version ?? "")
     }
 
     func endpoint(_ path: String, method: Endpoint.Method = .get,
