@@ -46,6 +46,12 @@ extension Date {
     }
 }
 
+extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespaces)
+    }
+}
+
 extension DCCCert {
     func certIdentifiers() -> [String] {
         switch immunisationType {

@@ -47,8 +47,8 @@ public struct DCCCert: CovidCertificate, Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         person = try container.decode(Person.self, forKey: .person)
-        version = try container.decode(String.self, forKey: .version)
-        dateOfBirth = try container.decode(String.self, forKey: .dateOfBirth)
+        version = try container.decode(String.self, forKey: .version).trimmed
+        dateOfBirth = try container.decode(String.self, forKey: .dateOfBirth).trimmed
         vaccinations = try? container.decode([Vaccination].self, forKey: .vaccinations)
         tests = try? container.decode([Test].self, forKey: .tests)
         pastInfections = try? container.decode([PastInfection].self, forKey: .pastInfections)
@@ -72,6 +72,14 @@ public struct Person: Codable {
         case standardizedGivenName = "gnt"
         case familyName = "fn"
         case standardizedFamilyName = "fnt"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        givenName = try? container.decode(String.self, forKey: .givenName).trimmed
+        standardizedGivenName = try? container.decode(String.self, forKey: .standardizedGivenName).trimmed
+        familyName = try? container.decode(String.self, forKey: .familyName).trimmed
+        standardizedFamilyName = try container.decode(String.self, forKey: .standardizedFamilyName).trimmed
     }
 }
 
@@ -98,6 +106,20 @@ public struct Vaccination: Codable {
         case country = "co"
         case certificateIssuer = "is"
         case certificateIdentifier = "ci"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        disease = try container.decode(String.self, forKey: .disease).trimmed
+        vaccine = try container.decode(String.self, forKey: .vaccine).trimmed
+        medicinialProduct = try container.decode(String.self, forKey: .medicinialProduct).trimmed
+        marketingAuthorizationHolder = try container.decode(String.self, forKey: .marketingAuthorizationHolder).trimmed
+        doseNumber = try container.decode(UInt64.self, forKey: .doseNumber)
+        totalDoses = try container.decode(UInt64.self, forKey: .totalDoses)
+        vaccinationDate = try container.decode(String.self, forKey: .vaccinationDate).trimmed
+        country = try container.decode(String.self, forKey: .country).trimmed
+        certificateIssuer = try container.decode(String.self, forKey: .certificateIssuer).trimmed
+        certificateIdentifier = try container.decode(String.self, forKey: .certificateIdentifier).trimmed
     }
 
     public var isTargetDiseaseCorrect: Bool {
@@ -179,6 +201,21 @@ public struct Test: Codable {
         case country = "co"
         case certificateIssuer = "is"
         case certificateIdentifier = "ci"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        disease = try container.decode(String.self, forKey: .disease).trimmed
+        type = try container.decode(String.self, forKey: .type).trimmed
+        naaTestName = try? container.decode(String.self, forKey: .naaTestName).trimmed
+        ratTestNameAndManufacturer = try? container.decode(String.self, forKey: .ratTestNameAndManufacturer).trimmed
+        timestampSample = try container.decode(String.self, forKey: .timestampSample).trimmed
+        timestampResult = try? container.decode(String.self, forKey: .timestampResult).trimmed
+        result = try container.decode(String.self, forKey: .result).trimmed
+        testCenter = try? container.decode(String.self, forKey: .testCenter).trimmed
+        country = try container.decode(String.self, forKey: .country).trimmed
+        certificateIssuer = try container.decode(String.self, forKey: .certificateIssuer).trimmed
+        certificateIdentifier = try container.decode(String.self, forKey: .certificateIdentifier).trimmed
     }
 
     public var validFromDate: Date? {
@@ -274,6 +311,17 @@ public struct PastInfection: Codable {
         case validFrom = "df"
         case validUntil = "du"
         case certificateIdentifier = "ci"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        disease = try container.decode(String.self, forKey: .disease).trimmed
+        dateFirstPositiveTest = try container.decode(String.self, forKey: .dateFirstPositiveTest).trimmed
+        countryOfTest = try container.decode(String.self, forKey: .countryOfTest).trimmed
+        certificateIssuer = try container.decode(String.self, forKey: .certificateIssuer).trimmed
+        validFrom = try container.decode(String.self, forKey: .validFrom).trimmed
+        validUntil = try container.decode(String.self, forKey: .validUntil).trimmed
+        certificateIdentifier = try container.decode(String.self, forKey: .certificateIdentifier).trimmed
     }
 
     var dateFormatter: DateFormatter {
