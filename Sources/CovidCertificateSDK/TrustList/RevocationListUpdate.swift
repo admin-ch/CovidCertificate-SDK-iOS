@@ -52,8 +52,6 @@ class RevocationListUpdate: TrustListUpdate {
                 return .NETWORK_PARSE_ERROR
             }
 
-            nextSince = nextSinceHeader
-
             // get the `up-to-date` from HTTP headers to decide whether we are at the end
             guard let upToDate = httpResponse.value(forHeaderField: "up-to-date") else {
                 return .NETWORK_PARSE_ERROR
@@ -74,6 +72,8 @@ class RevocationListUpdate: TrustListUpdate {
             }
 
             _ = trustStorage.updateRevocationList(result)
+
+            nextSince = nextSinceHeader
 
             // start another request, as long as revocations are coming in
             listNeedsUpdate = upToDate == Self.falseConstant
