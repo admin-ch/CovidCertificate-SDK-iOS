@@ -12,6 +12,6 @@
 import Foundation
 
 public class RevocationList: Codable, JWTExtension {
-    public var revokedCerts: [String] = []
+    public var revokedCerts: Set<String> = []
     public var validDuration: Int64 = 0
 }

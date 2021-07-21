@@ -78,7 +78,7 @@ class TestTrustStorage: TrustStorageProtocol {
 
     // MARK: - Revocation list
 
-    func revokedCertificates() -> [String] {
+    func revokedCertificates() -> Set<String> {
         return []
     }
 
