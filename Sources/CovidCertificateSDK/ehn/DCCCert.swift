@@ -76,9 +76,9 @@ public struct Person: Codable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        givenName = try container.decode(String.self, forKey: .givenName).trimmed
-        standardizedGivenName = try container.decode(String.self, forKey: .standardizedGivenName).trimmed
-        familyName = try container.decode(String.self, forKey: .familyName).trimmed
+        givenName = try? container.decode(String.self, forKey: .givenName).trimmed
+        standardizedGivenName = try? container.decode(String.self, forKey: .standardizedGivenName).trimmed
+        familyName = try? container.decode(String.self, forKey: .familyName).trimmed
         standardizedFamilyName = try container.decode(String.self, forKey: .standardizedFamilyName).trimmed
     }
 }
