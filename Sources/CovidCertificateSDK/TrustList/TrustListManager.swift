@@ -76,7 +76,7 @@ class TrustlistManager: TrustlistManagerProtocol {
             strongSelf.forceUpdate(completionHandler: completionHandler)
         })
 
-        timer?.schedule(deadline: .now() + updateTimeInterval, repeating: updateTimeInterval)
+        timer?.schedule(deadline: .now(), repeating: updateTimeInterval)
 
         timer?.resume()
     }
