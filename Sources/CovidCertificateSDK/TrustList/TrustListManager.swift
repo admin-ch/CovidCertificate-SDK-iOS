@@ -69,7 +69,6 @@ class TrustlistManager: TrustlistManagerProtocol {
     }
 
     func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
-
         timer = DispatchSource.makeTimerSource(queue: timerQueue)
 
         timer?.setEventHandler(handler: { [weak self] in
