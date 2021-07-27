@@ -55,7 +55,9 @@ class TrustlistManager: TrustlistManagerProtocol {
     var nationalRulesListUpdater: TrustListUpdate
 
     private let operationQueue = OperationQueue()
-    private var timer: Timer?
+
+    private let timerQueue = DispatchQueue(label: "TrustlistManagerQueue")
+    private var timer: DispatchSourceTimer?
 
     // MARK: - Init
 
@@ -67,12 +69,17 @@ class TrustlistManager: TrustlistManagerProtocol {
     }
 
     func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
-        timer = Timer.scheduledTimer(withTimeInterval: updateTimeInterval, repeats: true, block: { [weak self] _ in
+
+        timer = DispatchSource.makeTimerSource(queue: timerQueue)
+
+        timer?.setEventHandler(handler: { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.forceUpdate(completionHandler: completionHandler)
         })
 
-        timer?.fire()
+        timer?.schedule(deadline: .now() + updateTimeInterval, repeating: updateTimeInterval)
+
+        timer?.resume()
     }
 
     private func forceUpdate(completionHandler: @escaping (() -> Void)) {
