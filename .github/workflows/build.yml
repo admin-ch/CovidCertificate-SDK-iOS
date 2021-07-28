@@ -21,7 +21,7 @@ jobs:
       run: fastlane tests
 
     - name: Publish Unit Test Results
-      uses: EnricoMi/publish-unit-test-result-action/composite@v1
+      uses: EnricoMi/publish-unit-test-result-action/composite@95a3aff882d4abe2838b187c66477be7fbf3ddb8
       if: always()
       with:
         files: build/*.xml
