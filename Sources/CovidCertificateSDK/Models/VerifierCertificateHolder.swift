@@ -26,4 +26,8 @@ public struct VerifierCertificateHolder {
     public var dateOfBirth: String {
         value.certificate.dateOfBirthFormatted
     }
+
+    public var certificateType: CertificateType {
+        value.certificate.type
+    }
 }
