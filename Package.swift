@@ -30,7 +30,7 @@ let package = Package(
         .target(
             name: "CovidCertificateSDK",
             dependencies: ["Gzip", "SwiftCBOR", "base45-swift", "SwiftJWT", "jsonlogic"],
-            exclude: ["ehn/LICENSE.txt"],
+            exclude: ["ehn/LICENSE.txt", "Helpers/Bundle+Loader.swift"],
             resources: [
                 .process("Resources"),
             ]
