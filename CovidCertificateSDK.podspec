@@ -9,6 +9,7 @@ Pod::Spec.new do |spec|
   spec.swift_versions = "5.3"
   spec.source       = { :git => "https://github.com/admin-ch/CovidCertificate-SDK-iOS.git", :branch => "feature/cocoapods" }
   spec.source_files  = "Sources/CovidCertificateSDK", "Sources/CovidCertificateSDK/**/*.{h,m,swift}"
+  spec.resource_bundles = {'CovidCertificateSDK' => ['Sources/CovidCertificateSDK/Resources/*'] }
 
   spec.dependency "GzipSwift", "~>5.1.1"
   spec.dependency "SwiftJWT", "~>3.6.1"
