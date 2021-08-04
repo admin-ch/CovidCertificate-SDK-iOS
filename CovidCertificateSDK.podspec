@@ -7,7 +7,7 @@ Pod::Spec.new do |spec|
   spec.author       = { "ubique" => "covidcertificatesdk@ubique.ch" }
   spec.platform     = :ios, "12.0"
   spec.swift_versions = "5.3"
-  spec.source       = { :git => "https://github.com/admin-ch/CovidCertificate-SDK-iOS.git", :branch => "feature/cocoapods" }
+  spec.source       = { :git => "https://github.com/admin-ch/CovidCertificate-SDK-iOS.git", :branch => "main" }
   spec.source_files  = "Sources/CovidCertificateSDK", "Sources/CovidCertificateSDK/**/*.{h,m,swift}"
   spec.resource_bundles = {'CovidCertificateSDK' => ['Sources/CovidCertificateSDK/Resources/*'] }
 
