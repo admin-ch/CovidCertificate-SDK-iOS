@@ -18,7 +18,8 @@ extension Foundation.Bundle {
         let myBundle = Bundle(for: BundleFinder.self)
 
         guard let resourceBundleURL = myBundle.url(
-            forResource: "CovidCertificateSDK", withExtension: "bundle")
+            forResource: "CovidCertificateSDK", withExtension: "bundle"
+        )
         else { fatalError("CovidCertificateSDK.bundle not found!") }
 
         guard let resourceBundle = Bundle(url: resourceBundleURL)
