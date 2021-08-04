@@ -42,6 +42,20 @@ CrowdNotifierSDK is available through [Swift Package Manager](https://swift.org/
 
 This version points to the HEAD of the `main` branch and will always fetch the latest development status. Releases will be made available using semantic versioning to ensure stability for depending projects.
 
+### Cocoapods
+
+CrowdNotifierSDK is available through [Cocoapods](https://cocoapods.org/)
+
+1. Add the following to your `Podfile`:
+
+  ```ruby
+
+  pod 'CrowdNotifierSDK', ~> '1.0'
+
+  ```
+
+This version points to the HEAD of the `main` branch and will always fetch the latest development status. Releases will be made available using semantic versioning to ensure stability for depending projects.
+
 
 ## How It Works
 
