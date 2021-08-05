@@ -28,7 +28,7 @@ We welcome all pull requests that improve the quality of the source code.
 
 ### Swift Package Manager
 
-CrowdNotifierSDK is available through [Swift Package Manager](https://swift.org/package-manager)
+CovidCertificateSDK is available through [Swift Package Manager](https://swift.org/package-manager)
 
 1. Add the following to your `Package.swift` file:
 
@@ -37,6 +37,20 @@ CrowdNotifierSDK is available through [Swift Package Manager](https://swift.org/
   dependencies: [
       .package(url: "https://github.com/admin-ch/CovidCertificate-SDK-iOS.git", .branch("main"))
   ]
+
+  ```
+
+This version points to the HEAD of the `main` branch and will always fetch the latest development status. Releases will be made available using semantic versioning to ensure stability for depending projects.
+
+### Cocoapods
+
+CovidCertificateSDK is available through [Cocoapods](https://cocoapods.org/)
+
+1. Add the following to your `Podfile`:
+
+  ```ruby
+
+  pod 'CovidCertificateSDK', ~> '1.0'
 
   ```
 
