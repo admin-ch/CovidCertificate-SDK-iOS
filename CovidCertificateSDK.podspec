@@ -5,7 +5,7 @@ Pod::Spec.new do |spec|
   spec.homepage     = "https://github.com/admin-ch/CovidCertificate-SDK-iOS"
   spec.license      = { :type => "MPL", :file => "LICENSE" }
   spec.author       = { "ubique" => "covidcertificatesdk@ubique.ch" }
-  spec.platform     = :ios, "11.0"
+  spec.platform     = :ios, "12.0"
   spec.swift_versions = "5.3"
   spec.source       = { :git => "https://github.com/admin-ch/CovidCertificate-SDK-iOS.git", :tag => "v#{spec.version}" }
   spec.source_files  = "Sources/CovidCertificateSDK", "Sources/CovidCertificateSDK/**/*.{h,m,swift}"
