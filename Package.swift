@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "CovidCertificateSDK",
     platforms: [
-        .iOS(.v12),
+        .iOS(.v11),
         .macOS("10.14"),
     ],
     products: [
