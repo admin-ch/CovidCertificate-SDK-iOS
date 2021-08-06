@@ -50,7 +50,7 @@ CovidCertificateSDK is available through [Cocoapods](https://cocoapods.org/)
 
   ```ruby
 
-  pod 'CovidCertificateSDK', ~> '1.0'
+  pod 'CovidCertificateSDK', '~> 1.0'
 
   ```
 
