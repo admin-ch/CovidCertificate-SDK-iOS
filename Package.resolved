@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/ehn-digital-green-development/base45-swift",
         "state": {
           "branch": "main",
-          "revision": "db4ccbe535b91d780a08997708c6abf189e98661",
+          "revision": "b2fd6c1ff48f6ea1d2877368afd326700427f261",
           "version": null
         }
       },
@@ -51,7 +51,7 @@
         "repositoryURL": "https://github.com/admin-ch/json-logic-swift",
         "state": {
           "branch": "master",
-          "revision": "f0f9fa1f6d7326f59bf45e1d31548134cd8cb6f4",
+          "revision": "aca1c4a7daf696bb94528dbffda4601ef1b37600",
           "version": null
         }
       },
@@ -96,7 +96,7 @@
         "repositoryURL": "https://github.com/eu-digital-green-certificates/SwiftCBOR",
         "state": {
           "branch": "master",
-          "revision": "b76024995f6909e4615f943c7a03268fd29778fc",
+          "revision": "9774e16082ff5c62dc071a3a1bcceeb108bb9c3f",
           "version": null
         }
       }
