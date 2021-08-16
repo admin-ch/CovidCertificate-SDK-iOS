@@ -185,12 +185,23 @@ extension SecTrust {
     ///                            `Error`.
     /// - Throws:                  The `Error` produced by the `errorProducer` closure.
     func validate() throws {
-        var error: CFError?
-        let status = SecTrustEvaluateWithError(self, &error)
+        if #available(iOS 12.0, *) {
+            var error: CFError?
 
-        guard status, error == nil else {
-            throw CertificateValidationError.validationFailed
+            let status = SecTrustEvaluateWithError(self, &error)
+
+            guard status, error == nil else {
+                throw CertificateValidationError.validationFailed
+            }
+        } else {
+            var result = SecTrustResultType.invalid
+            let status = SecTrustEvaluate(self, &result)
+
+            guard status.isSuccess, result.isSuccess else {
+                throw CertificateValidationError.validationFailed
+            }
         }
+
     }
 
     /// Sets a custom certificate chain on `self`, allowing full validation of a self-signed certificate and its chain.
