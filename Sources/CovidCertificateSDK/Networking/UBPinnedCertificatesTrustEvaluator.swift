@@ -201,7 +201,6 @@ extension SecTrust {
                 throw CertificateValidationError.validationFailed
             }
         }
-
     }
 
     /// Sets a custom certificate chain on `self`, allowing full validation of a self-signed certificate and its chain.
