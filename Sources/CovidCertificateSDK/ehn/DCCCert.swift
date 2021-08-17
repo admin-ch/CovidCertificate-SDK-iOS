@@ -19,15 +19,15 @@ public struct DCCCert: CovidCertificate, Codable {
     public var type: CertificateType { .dccCert }
 
     public var immunisationType: ImmunisationType? {
-        if let v = vaccinations, v.count == 1,
+        if let v = vaccinations, v.count >= 1,
            self.pastInfections.isNilOrEmpty(),
            self.tests.isNilOrEmpty() {
             return .vaccination
-        } else if let p = pastInfections, p.count == 1,
+        } else if let p = pastInfections, p.count >= 1,
                   self.tests.isNilOrEmpty(),
                   self.vaccinations.isNilOrEmpty() {
             return .recovery
-        } else if let tests = self.tests, tests.count == 1,
+        } else if let tests = self.tests, tests.count >= 1,
                   self.pastInfections.isNilOrEmpty(),
                   self.vaccinations.isNilOrEmpty() {
             return .test
