@@ -22,6 +22,9 @@ public enum NationalRulesError: Error, Equatable {
     case NETWORK_PARSE_ERROR
     case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
     case UNKNOWN_TEST_FAILURE
+    case TOO_MANY_VACCINE_ENTRIES
+    case TOO_MANY_TEST_ENTRIES
+    case TOO_MANY_RECOVERY_ENTRIES
 
     public var errorCode: String {
         switch self {
@@ -35,6 +38,9 @@ public enum NationalRulesError: Error, Equatable {
         case .NETWORK_PARSE_ERROR: return "NE|PE"
         case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         case .UNKNOWN_TEST_FAILURE: return "N|UKN"
+        case .TOO_MANY_VACCINE_ENTRIES: return "N|TMVE"
+        case .TOO_MANY_TEST_ENTRIES: return "N|TMTE"
+        case .TOO_MANY_RECOVERY_ENTRIES: return "N|TMRE"
         }
     }
 }
