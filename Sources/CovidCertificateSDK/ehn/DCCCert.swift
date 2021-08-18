@@ -114,8 +114,19 @@ public struct Vaccination: Codable {
         vaccine = try container.decode(String.self, forKey: .vaccine).trimmed
         medicinialProduct = try container.decode(String.self, forKey: .medicinialProduct).trimmed
         marketingAuthorizationHolder = try container.decode(String.self, forKey: .marketingAuthorizationHolder).trimmed
-        doseNumber = try container.decode(UInt64.self, forKey: .doseNumber)
-        totalDoses = try container.decode(UInt64.self, forKey: .totalDoses)
+
+        if let dn = try? container.decode(Double.self, forKey: .doseNumber) {
+            doseNumber = UInt64(dn)
+        } else {
+            doseNumber = try container.decode(UInt64.self, forKey: .doseNumber)
+        }
+
+        if let dn = try? container.decode(Double.self, forKey: .totalDoses) {
+            totalDoses = UInt64(dn)
+        } else {
+            totalDoses = try container.decode(UInt64.self, forKey: .totalDoses)
+        }
+
         vaccinationDate = try container.decode(String.self, forKey: .vaccinationDate).trimmed
         country = try container.decode(String.self, forKey: .country).trimmed
         certificateIssuer = try container.decode(String.self, forKey: .certificateIssuer).trimmed
