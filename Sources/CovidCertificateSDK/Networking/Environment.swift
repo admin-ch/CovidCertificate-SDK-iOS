@@ -23,6 +23,7 @@ public enum SDKEnvironment {
         case .abn:
             return Backend("https://www.cc-a.bit.admin.ch/trust", version: "v1")
         case .prod:
+            
             return Backend("https://www.cc.bit.admin.ch/trust", version: "v1")
         }
     }
@@ -43,7 +44,7 @@ public enum SDKEnvironment {
     }
 
     var nationalRulesListService: Endpoint {
-        return trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
+        return trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
     }
 
     func trustCertificatesService(since: String, upTo: String) -> Endpoint {

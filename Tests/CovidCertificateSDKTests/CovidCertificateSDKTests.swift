@@ -10,9 +10,25 @@ final class CovidCertificateSDKTests: XCTestCase {
         return ver
     }
 
+    var dateFormatter: DateFormatter {
+        let d = DateFormatter()
+        d.dateFormat = "yyyy-MM-dd"
+        return d
+    }
+
+    // MARK: - Setup
+
     override class func setUp() {
         CovidCertificateSDK.initialize(environment: SDKEnvironment.dev, apiKey: "")
     }
+
+    // MARK: - Helpers
+
+    func areSameVaccineDates(_ date1: Date, _ date2: Date) -> Bool {
+        return dateFormatter.string(from: date1) == dateFormatter.string(from: date2)
+    }
+
+    // MARK: - Tests
 
     func testDevSignature() {
         let data = Data(base64Encoded: "hGpTaWduYXR1cmUxTqIBOCQESJpq386TFOsXQFkBCaQBZkNIIEJBRwQaYn+8rQYaYJ6JLTkBA6EBpGF2gapiY2l4HjAxOkNIOjgxQzlBMjVEQ0U4MkExNUQ1QzZDREVDRmJjb2JDSGJkbgFiZHRqMjAyMS0wNC0zMGJpc3gfQnVuZGVzYW10IGbDvHIgR2VzdW5kaGVpdCAoQkFHKWJtYW1PUkctMTAwMDMwMjE1Ym1wbEVVLzEvMjAvMTUwN2JzZAJidGdpODQwNTM5MDA2YnZwajExMTkzNDkwMDdjZG9iajE5NDMtMDItMDFjbmFtpGJmbmdNw7xsbGVyYmduZ0PDqWxpbmVjZm50Z01VRUxMRVJjZ250ZkNFTElORWN2ZXJlMS4wLjA=")!
@@ -234,12 +250,6 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    var dateFormatter: DateFormatter {
-        let d = DateFormatter()
-        d.dateFormat = "yyyy-MM-dd"
-        return d
-    }
-
     private func generateVacineCert(dn: UInt64, sd: UInt64, ma: String, mp: String, tg: String, vp: String, todayIsDateComponentsAfterVaccination: DateComponents) -> DCCCert {
         let today = Calendar.current.startOfDay(for: Date())
         let time = Calendar.current.date(byAdding: todayIsDateComponentsAfterVaccination, to: today)!
@@ -311,8 +321,8 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(r.validFrom!.isSimiliar(to: Calendar.current.startOfDay(for: Date())))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 364), to: today)!))
+                XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, today))
+                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364), to: today)!))
             default:
                 XCTFail("Should be valid today")
             }
@@ -331,8 +341,9 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(r.validFrom!.isSimiliar(to: Calendar.current.startOfDay(for: Date())))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 364), to: today)!))
+                XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, today))
+                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364), to: today)!))
+
             default:
                 XCTFail("Should be valid today")
             }
@@ -356,8 +367,8 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(r.validFrom!.isSimiliar(to: today))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(day: 364), to: time)!))
+                XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, today))
+                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364), to: time)!))
             default:
                 XCTFail("Should be vali")
             }
@@ -370,7 +381,9 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result {
             case let .success(r):
                 XCTAssertFalse(r.isValid)
-                XCTAssertTrue(r.validFrom!.isSimiliar(to: Calendar.current.startOfDay(for: Calendar.current.date(byAdding: DateComponents(day: 1), to: Date())!)))
+
+                let date = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: DateComponents(day: 1), to: Date())!)
+                XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, date))
             default:
                 XCTFail()
             }
@@ -413,6 +426,7 @@ final class CovidCertificateSDKTests: XCTestCase {
     /// TEST TESTS
     let isoDateFormatter = ISO8601DateFormatter()
     private func generateTestCert(testType: String, testResultType: TestResult, name: String, disease: String, sampleCollectionWasAgo: DateComponents) -> DCCCert {
+
         let now = Date()
         let sampleCollection = Calendar.current.date(byAdding: sampleCollectionWasAgo, to: now)!
         let testResult = Calendar.current.date(byAdding: DateComponents(hour: 10), to: sampleCollection)!
@@ -553,8 +567,8 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 /// TEST MUST BE VALID
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(r.validFrom!.isSimiliar(to: time))
-                XCTAssertTrue(r.validUntil!.isSimiliar(to: Calendar.current.date(byAdding: DateComponents(hour: 1), to: now)!))
+                XCTAssertTrue(r.validFrom!.isSimilar(to: time))
+                XCTAssertTrue(r.validUntil!.isSimilar(to: Calendar.current.date(byAdding: DateComponents(hour: 1), to: now)!))
             default:
                 XCTFail("Test should still be valid")
             }

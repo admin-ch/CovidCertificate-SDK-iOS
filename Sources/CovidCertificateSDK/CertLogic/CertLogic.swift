@@ -22,35 +22,21 @@ enum CertLogicValidationError: Error {
     case TEST_COULD_NOT_BE_PERFORMED(test: String)
 }
 
+class Validity {
+    let from: Date
+    let until: Date
+    
+    init(from: Date, until: Date) {
+        self.from = from
+        self.until = until
+    }
+}
+
 class CertLogic {
-    enum JsonLogicKeys: String {
-        case oneDoseVaccine = "one-dose-vaccines-with-offset"
-        case twoDoseVaccine = "two-dose-vaccines"
-        case acceptanceCriteria = "acceptance-criteria"
-    }
-
-    enum AcceptanceCriteriaKeys: String {
-        case vaccineImmunityKey = "vaccine-immunity"
-        case singleVaccineValidityOffsetKey = "single-vaccine-validity-offset"
-        case pcrTestValidityKey = "pcr-test-validity"
-        case ratTestValidityKey = "rat-test-validity"
-        case recoveryOffsetValidFrom = "recovery-offset-valid-from"
-        case recoveryOffsetValidUntil = "recovery-offset-valid-until"
-    }
-
     var rules: [JSON] = []
     var valueSets: JSON = []
+    var displayRules: [JSON] = []
     let calendar: Calendar
-
-    var maxRecoveryValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.recoveryOffsetValidUntil.rawValue].int }
-    var maxValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.vaccineImmunityKey.rawValue].int }
-    var pcrValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.pcrTestValidityKey.rawValue].int }
-    var ratValidity: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.ratTestValidityKey.rawValue].int }
-    var singleVaccineValidityOffset: Int64? { valueSets[JsonLogicKeys.acceptanceCriteria.rawValue][AcceptanceCriteriaKeys.singleVaccineValidityOffsetKey.rawValue].int }
-    var twoVaccineValidityOffset: Int64 = 0
-
-    var oneDoseVaccines: [String] { valueSets[JsonLogicKeys.oneDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
-    var twoDoseVaccines: [String] { valueSets[JsonLogicKeys.twoDoseVaccine.rawValue].array?.compactMap { $0.string } ?? [] }
 
     init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
@@ -61,33 +47,33 @@ class CertLogic {
         calendar = tmpCalendar
     }
 
-    func updateData(rules: JSON, valueSets: JSON) -> Result<Void, CertLogicCommonError> {
-        guard let array = rules.array else {
+    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON) -> Result<Void, CertLogicCommonError> {
+        guard let rulesArray = rules.array,
+              let displayRulesArray = displayRules.array else {
             return .failure(.RULE_PARSING_FAILED)
         }
-        self.rules = array
+        self.rules = rulesArray
         self.valueSets = valueSets
+        self.displayRules = displayRulesArray
         return .success(())
     }
 
     func checkRules(hcert: DCCCert, validationClock: Date = Date()) -> Result<Void, CertLogicValidationError> {
-        var external = JSON(
-            ["validationClock": ISO8601DateFormatter().string(from: validationClock),
-             "validationClockAtStartOfDay": ISO8601DateFormatter().string(from: calendar.startOfDay(for: validationClock))]
-        )
-        external["valueSets"] = valueSets
+        let external = externalJson(validationClock: validationClock)
+
         var failedTests: [String: String] = [:]
         guard let dccJson = try? JSONEncoder().encode(hcert) else {
             return .failure(.JSON_ERROR)
         }
+
         let context = JSON(["external": external, "payload": JSON(dccJson)])
         for rule in rules {
             let logic = rule["logic"]
             guard let result: Bool = try? applyRule(logic, to: context) else {
-                return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: rule["id"].string ?? "TEST_ID_UNKNOWN"))
+                return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: rule["identifier"].string ?? "TEST_ID_UNKNOWN"))
             }
             if !result {
-                failedTests.updateValue(rule["description"].string ?? "TEST_DESCRIPTION_UNKNOWN", forKey: rule["id"].string ?? "TEST_ID_UNKNOWN")
+                failedTests.updateValue(rule["description"].string ?? "TEST_DESCRIPTION_UNKNOWN", forKey: rule["identifier"].string ?? "TEST_ID_UNKNOWN")
                 // for now we break at the first occurence of an error
                 break
             }
@@ -99,28 +85,51 @@ class CertLogic {
         }
     }
 
-    private func getTotalDoses(for vaccination: String?) -> Int? {
-        guard let vaccination = vaccination else { return nil }
-        if oneDoseVaccines.contains(vaccination) {
-            return 1
-        } else if twoDoseVaccines.contains(vaccination) {
-            return 2
+    func getValidity(hcert: DCCCert, validationClock: Date = Date()) -> Result<Validity, CertLogicValidationError> {
+        let external = externalJson(validationClock: validationClock)
+
+        guard let dccJson = try? JSONEncoder().encode(hcert) else {
+            return .failure(.JSON_ERROR)
         }
-        return nil
+
+        let context = JSON(["external": external, "payload": JSON(dccJson)])
+
+        var startDate : Date? = nil
+        var endDate : Date? = nil
+
+        for displayRule in displayRules {
+            // get from date
+            if displayRule["id"] == "display-from-date" {
+                guard let result: Date = try? applyRule(displayRule["logic"], to: context) else {
+                    return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: displayRule["id"].string ?? "VALIDITY_TEST"))
+                }
+
+                startDate = result
+            }
+
+            // get end date
+            if displayRule["id"] == "display-until-date" {
+                guard let result: Date = try? applyRule(displayRule["logic"], to: context) else {
+                    return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: displayRule["id"].string ?? "VALIDITY_TEST"))
+                }
+
+                endDate = result
+            }
+        }
+
+        guard let s = startDate,
+              let e = endDate else {
+            return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "VALIDITY_TEST"))
+        }
+
+        return .success(Validity(from: s, until: e))
     }
 
-    func getValidityRange(vaccination: Vaccination?) -> (from: Date, until: Date)? {
-        guard let vaccination = vaccination,
-              let maxValidity = maxValidity,
-              let singleVaccineValidityOffset = singleVaccineValidityOffset,
-              let totalDoses = getTotalDoses(for: vaccination.medicinialProduct) else { return nil }
-
-        guard let validUntil = vaccination.getValidUntilDate(maximumValidityInDays: Int(maxValidity)) else { return nil }
-
-        guard let validFrom = vaccination.getValidFromDate(singleVaccineValidityOffset: Int(singleVaccineValidityOffset),
-                                                           twoVaccineValidityOffset: Int(twoVaccineValidityOffset),
-                                                           totalDoses: totalDoses) else { return nil }
-
-        return (from: validFrom, until: validUntil)
+    private func externalJson(validationClock: Date) -> JSON {
+        let formatter = ISO8601DateFormatter()
+        return JSON(
+            ["validationClock": formatter.string(from: validationClock),
+             "validationClockAtStartOfDay": formatter.string(from: calendar.startOfDay(for: validationClock)), "valueSets": valueSets]
+        )
     }
 }
