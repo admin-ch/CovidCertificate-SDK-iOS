@@ -29,7 +29,7 @@ class NationalRulesList: Codable, JWTExtension {
 
     var rules: JSON? = nil
     var valueSets: JSON? = nil
-    var displayRules : JSON? = nil
+    var displayRules: JSON? = nil
 
     enum CodingKeys: String, CodingKey {
         case validDuration

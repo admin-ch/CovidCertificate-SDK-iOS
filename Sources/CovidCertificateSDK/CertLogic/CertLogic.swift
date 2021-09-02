@@ -25,7 +25,7 @@ enum CertLogicValidationError: Error {
 class Validity {
     let from: Date
     let until: Date
-    
+
     init(from: Date, until: Date) {
         self.from = from
         self.until = until
@@ -94,8 +94,8 @@ class CertLogic {
 
         let context = JSON(["external": external, "payload": JSON(dccJson)])
 
-        var startDate : Date? = nil
-        var endDate : Date? = nil
+        var startDate: Date?
+        var endDate: Date?
 
         for displayRule in displayRules {
             // get from date

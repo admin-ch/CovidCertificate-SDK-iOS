@@ -216,7 +216,7 @@ struct CovidCertificateImpl {
                     completionHandler(.success(VerificationResult(isValid: true, validUntil: validity.until, validFrom: validity.from, dateError: nil)))
                     return
                 case let .failure(.TESTS_FAILED(tests)):
-                    var validity : Validity? = nil
+                    var validity: Validity?
                     if case let .success(sucessValidity) = certLogic.getValidity(hcert: certificate) {
                         validity = sucessValidity
                     }

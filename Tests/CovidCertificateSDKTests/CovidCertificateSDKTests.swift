@@ -426,7 +426,6 @@ final class CovidCertificateSDKTests: XCTestCase {
     /// TEST TESTS
     let isoDateFormatter = ISO8601DateFormatter()
     private func generateTestCert(testType: String, testResultType: TestResult, name: String, disease: String, sampleCollectionWasAgo: DateComponents) -> DCCCert {
-
         let now = Date()
         let sampleCollection = Calendar.current.date(byAdding: sampleCollectionWasAgo, to: now)!
         let testResult = Calendar.current.date(byAdding: DateComponents(hour: 10), to: sampleCollection)!
