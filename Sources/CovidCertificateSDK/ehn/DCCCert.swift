@@ -273,29 +273,15 @@ public struct Test: Codable {
         return ProductNameManager.shared.testTypeName(key: type)
     }
 
-    public var testName: String? {
+    public var manufacturerAndTestName: String? {
         switch type {
         case TestType.Pcr.rawValue:
             return naaTestName ?? "PCR"
         case TestType.Rat.rawValue:
-            return naaTestName
+            return ProductNameManager.shared.testManufacturerName(key: ratTestNameAndManufacturer) ?? ratTestNameAndManufacturer
         default:
             return nil
         }
-    }
-
-    public var manufacturer: String? {
-        if let val = ProductNameManager.shared.testManufacturerName(key: ratTestNameAndManufacturer) {
-            var r = val.replacingOccurrences(of: naaTestName ?? "", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
-
-            if let last = r.last, last == "," {
-                r.removeLast()
-            }
-
-            return r.isEmpty ? nil : r
-        }
-
-        return nil
     }
 }
 
