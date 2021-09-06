@@ -194,47 +194,33 @@ struct CovidCertificateImpl {
 
                 guard let certLogic = CertLogic(),
                       let valueSets = list.valueSets,
-                      let rules = list.rules
+                      let rules = list.rules,
+                      let displayRules = list.displayRules
                 else {
                     completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     return
                 }
 
-                if case .failure = certLogic.updateData(rules: rules, valueSets: valueSets) {
-                    completionHandler(.failure(.NETWORK_PARSE_ERROR))
-                    return
-                }
-
-                guard let pcrValidity = certLogic.pcrValidity,
-                      let ratValidity = certLogic.ratValidity,
-                      let maxRecoveryValidity = certLogic.maxRecoveryValidity else {
+                if case .failure = certLogic.updateData(rules: rules, valueSets: valueSets, displayRules: displayRules) {
                     completionHandler(.failure(.NETWORK_PARSE_ERROR))
                     return
                 }
 
                 switch certLogic.checkRules(hcert: certificate) {
                 case .success:
-                    switch certificate.immunisationType {
-                    case .recovery:
-                        completionHandler(.success(VerificationResult(isValid: true, validUntil: certificate.pastInfections?.first?.getValidUntilDate(maximumValidityInDays: Int(maxRecoveryValidity)), validFrom: certificate.pastInfections?.first?.validFromDate, dateError: nil)))
-                    case .vaccination:
-                        let validityRange = certLogic.getValidityRange(vaccination: certificate.vaccinations?.first)
-                        completionHandler(.success(VerificationResult(isValid: true,
-                                                                      validUntil: validityRange?.until,
-                                                                      validFrom: validityRange?.from,
-                                                                      dateError: validityRange != nil ? .NO_VALID_DATE : nil)))
-                    case .test:
-                        let validUntil = certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity),
-                                                                                     ratTestValidityInHours: Int(ratValidity))
-                        completionHandler(.success(VerificationResult(isValid: true,
-                                                                      validUntil: validUntil,
-                                                                      validFrom: certificate.tests?.first?.validFromDate,
-                                                                      dateError: nil)))
-                    default:
-                        completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                    guard case let .success(validity) = certLogic.getValidity(hcert: certificate) else {
+                        completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                        return
                     }
+
+                    completionHandler(.success(VerificationResult(isValid: true, validUntil: validity.until, validFrom: validity.from, dateError: nil)))
                     return
                 case let .failure(.TESTS_FAILED(tests)):
+                    var validity: Validity?
+                    if case let .success(sucessValidity) = certLogic.getValidity(hcert: certificate) {
+                        validity = sucessValidity
+                    }
+
                     switch tests.keys.first {
                     case "GR-CH-0001": completionHandler(.failure(.WRONG_DISEASE_TARGET))
                     case "VR-CH-0000": completionHandler(.failure(.TOO_MANY_VACCINE_ENTRIES))
@@ -242,35 +228,37 @@ struct CovidCertificateImpl {
                     case "VR-CH-0002": completionHandler(.failure(.NO_VALID_PRODUCT))
                     case "VR-CH-0003": completionHandler(.failure(.NO_VALID_DATE))
                     case "VR-CH-0004":
-                        let validityRange = certLogic.getValidityRange(vaccination: certificate.vaccinations?.first)
                         completionHandler(.success(VerificationResult(isValid: false,
-                                                                      validUntil: validityRange?.until,
-                                                                      validFrom: validityRange?.from,
+                                                                      validUntil: validity?.until,
+                                                                      validFrom: validity?.from,
                                                                       dateError: .NOT_YET_VALID)))
                     case "VR-CH-0005":
-                        let validityRange = certLogic.getValidityRange(vaccination: certificate.vaccinations?.first)
                         completionHandler(.success(VerificationResult(isValid: false,
-                                                                      validUntil: validityRange?.until,
-                                                                      validFrom: validityRange?.from,
+                                                                      validUntil: validity?.until,
+                                                                      validFrom: validity?.from,
                                                                       dateError: .NOT_YET_VALID)))
                     case "VR-CH-0006":
-                        let validityRange = certLogic.getValidityRange(vaccination: certificate.vaccinations?.first)
                         completionHandler(.success(VerificationResult(isValid: false,
-                                                                      validUntil: validityRange?.until,
-                                                                      validFrom: validityRange?.from,
+                                                                      validUntil: validity?.until,
+                                                                      validFrom: validity?.from,
                                                                       dateError: .EXPIRED)))
                     case "TR-CH-0000": completionHandler(.failure(.TOO_MANY_TEST_ENTRIES))
                     case "TR-CH-0001": completionHandler(.failure(.POSITIVE_RESULT))
                     case "TR-CH-0002": completionHandler(.failure(.WRONG_TEST_TYPE))
                     case "TR-CH-0003": completionHandler(.failure(.NO_VALID_PRODUCT))
                     case "TR-CH-0004": completionHandler(.failure(.NO_VALID_DATE))
-                    case "TR-CH-0005": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: .NOT_YET_VALID)))
-                    case "TR-CH-0006": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: .EXPIRED)))
-                    case "TR-CH-0007": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.tests?.first?.getValidUntilDate(pcrTestValidityInHours: Int(pcrValidity), ratTestValidityInHours: Int(ratValidity)), validFrom: certificate.tests?.first?.validFromDate, dateError: .EXPIRED)))
+                    case "TR-CH-0005":
+                        completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .NOT_YET_VALID)))
+                    case "TR-CH-0006":
+                        completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .EXPIRED)))
+                    case "TR-CH-0007":
+                        completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .EXPIRED)))
                     case "RR-CH-0000": completionHandler(.failure(.TOO_MANY_RECOVERY_ENTRIES))
                     case "RR-CH-0001": completionHandler(.failure(.NO_VALID_DATE))
-                    case "RR-CH-0002": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.pastInfections?.first?.getValidUntilDate(maximumValidityInDays: Int(maxRecoveryValidity)), validFrom: certificate.pastInfections?.first?.validFromDate, dateError: .NOT_YET_VALID)))
-                    case "RR-CH-0003": completionHandler(.success(VerificationResult(isValid: false, validUntil: certificate.pastInfections?.first?.getValidUntilDate(maximumValidityInDays: Int(maxRecoveryValidity)), validFrom: certificate.pastInfections?.first?.validFromDate, dateError: .EXPIRED)))
+                    case "RR-CH-0002":
+                        completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .NOT_YET_VALID)))
+                    case "RR-CH-0003":
+                        completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .EXPIRED)))
                     default:
                         completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                     }

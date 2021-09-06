@@ -19,6 +19,7 @@ class NationalRulesList: Codable, JWTExtension {
             if let newValue = requestData {
                 rules = JSON(newValue)["rules"]
                 valueSets = JSON(newValue)["valueSets"]
+                displayRules = JSON(newValue)["displayRules"]
             } else {
                 rules = nil
                 valueSets = nil
@@ -28,6 +29,7 @@ class NationalRulesList: Codable, JWTExtension {
 
     var rules: JSON? = nil
     var valueSets: JSON? = nil
+    var displayRules: JSON? = nil
 
     enum CodingKeys: String, CodingKey {
         case validDuration
