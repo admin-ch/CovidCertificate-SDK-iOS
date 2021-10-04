@@ -20,8 +20,8 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(name: "Gzip", url: "https://github.com/1024jp/GzipSwift", .upToNextMajor(from: "5.1.1")),
         .package(name: "SwiftJWT", url: "https://github.com/Kitura/Swift-JWT.git", from: "3.6.1"),
-        .package(url: "https://github.com/eu-digital-green-certificates/SwiftCBOR", .branch("master")),
-        .package(url: "https://github.com/ehn-digital-green-development/base45-swift", .branch("main")),
+        .package(url: "https://github.com/eu-digital-green-certificates/SwiftCBOR", from: "0.4.4"),
+        .package(url: "https://github.com/ehn-digital-green-development/base45-swift", from: "1.0.1"),
         .package(name: "jsonlogic", url: "https://github.com/eu-digital-green-certificates/json-logic-swift", .upToNextMajor(from: "1.1.8")),
     ],
     targets: [
