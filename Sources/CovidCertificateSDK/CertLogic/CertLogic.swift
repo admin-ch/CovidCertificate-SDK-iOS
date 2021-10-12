@@ -37,6 +37,7 @@ class CertLogic {
     var valueSets: JSON = []
     var displayRules: [JSON] = []
     let calendar: Calendar
+    let formatter = ISO8601DateFormatter()
 
     init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
@@ -126,10 +127,10 @@ class CertLogic {
     }
 
     private func externalJson(validationClock: Date) -> JSON {
-        let formatter = ISO8601DateFormatter()
-        return JSON(
+        var external = JSON(
             ["validationClock": formatter.string(from: validationClock),
-             "validationClockAtStartOfDay": formatter.string(from: calendar.startOfDay(for: validationClock)), "valueSets": valueSets]
-        )
+             "validationClockAtStartOfDay": formatter.string(from: calendar.startOfDay(for: validationClock))])
+        external["valueSets"] = valueSets
+        return external
     }
 }
