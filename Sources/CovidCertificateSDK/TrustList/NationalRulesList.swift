@@ -23,6 +23,7 @@ class NationalRulesList: Codable, JWTExtension {
             } else {
                 rules = nil
                 valueSets = nil
+                displayRules = nil
             }
         }
     }
@@ -47,6 +48,8 @@ class NationalRulesList: Codable, JWTExtension {
         if let newValue = requestData {
             rules = JSON(newValue)["rules"]
             valueSets = JSON(newValue)["valueSets"]
+            displayRules = JSON(newValue)["displayRules"]
+
         }
     }
 
