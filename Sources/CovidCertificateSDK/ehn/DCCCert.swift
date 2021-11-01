@@ -23,7 +23,7 @@ public struct DCCCert: CovidCertificate, Codable {
             return .vaccination
         } else if let p = pastInfections, p.count >= 1 {
             return .recovery
-        } else if let tests = self.tests, tests.count >= 1 {
+        } else if let tests = tests, tests.count >= 1 {
             return .test
         }
         return nil
@@ -145,7 +145,7 @@ public struct Vaccination: Codable {
     public func getValidFromDate(singleVaccineValidityOffset: Int,
                                  twoVaccineValidityOffset: Int,
                                  totalDoses: Int) -> Date? {
-        guard let dateOfVaccination = self.dateOfVaccination
+        guard let dateOfVaccination = dateOfVaccination
         else {
             return nil
         }
@@ -161,7 +161,7 @@ public struct Vaccination: Codable {
     }
 
     public func getValidUntilDate(maximumValidityInDays: Int) -> Date? {
-        guard let dateOfVaccination = self.dateOfVaccination,
+        guard let dateOfVaccination = dateOfVaccination,
               let date = Calendar.current.date(byAdding: DateComponents(day: maximumValidityInDays), to: dateOfVaccination) else {
             return nil
         }
@@ -326,7 +326,7 @@ public struct PastInfection: Codable {
     }
 
     public var validFromDate: Date? {
-        guard let firstPositiveTestResultDate = self.firstPositiveTestResultDate,
+        guard let firstPositiveTestResultDate = firstPositiveTestResultDate,
               let date = Calendar.current.date(byAdding: DateComponents(day: INFECTION_VALIDITY_OFFSET_IN_DAYS), to: firstPositiveTestResultDate) else {
             return nil
         }
@@ -334,7 +334,7 @@ public struct PastInfection: Codable {
     }
 
     public func getValidUntilDate(maximumValidityInDays: Int) -> Date? {
-        guard let firstPositiveTestResultDate = self.firstPositiveTestResultDate,
+        guard let firstPositiveTestResultDate = firstPositiveTestResultDate,
               let date = Calendar.current.date(byAdding: DateComponents(day: maximumValidityInDays), to: firstPositiveTestResultDate) else {
             return nil
         }
