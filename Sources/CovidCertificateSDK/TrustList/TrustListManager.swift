@@ -144,10 +144,10 @@ class TrustListUpdate {
 
     func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
         internalQueue.async {
-            let updateNeeeded = !self.isListStillValid() || forceUpdate
+            let updateNeeded = !self.isListStillValid() || forceUpdate
             let updateAlreadyRunnning = self.updateOperation != nil
 
-            if updateNeeeded, !updateAlreadyRunnning {
+            if updateNeeded, !updateAlreadyRunnning {
                 self.updateOperation = BlockOperation(block: { [weak self] in
                     guard let strongSelf = self else { return }
                     strongSelf.startUpdate()
