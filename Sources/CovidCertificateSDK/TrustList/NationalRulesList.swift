@@ -23,6 +23,7 @@ class NationalRulesList: Codable, JWTExtension {
             } else {
                 rules = nil
                 valueSets = nil
+                displayRules = nil
             }
         }
     }
@@ -45,8 +46,10 @@ class NationalRulesList: Codable, JWTExtension {
         requestData = try? container.decode(Data.self, forKey: .requestData)
 
         if let newValue = requestData {
-            rules = JSON(newValue)["rules"]
-            valueSets = JSON(newValue)["valueSets"]
+            let json = JSON(newValue)
+            rules = json["rules"]
+            valueSets = json["valueSets"]
+            displayRules = json["displayRules"]
         }
     }
 
