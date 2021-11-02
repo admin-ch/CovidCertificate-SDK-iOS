@@ -129,7 +129,7 @@ struct CovidCertificateImpl {
             break
         }
 
-        trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError  in
+        trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
             // Safe-guard that we have a recent trust list available at this point
             guard trustListManager.trustStorage.certificateListIsValid() else {
                 if let e = lastError?.asValidationError() {
