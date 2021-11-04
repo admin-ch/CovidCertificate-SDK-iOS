@@ -175,7 +175,7 @@ struct CovidCertificateImpl {
     func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
-            // Safe-guard that we have a recent trust list available at this point
+            // Safe-guard that we have a recent revocation list available at this point
             guard trustListManager.trustStorage.revocationListIsValid() else {
                 if let e = lastError?.asValidationError() {
                     // If available, return specific last (networking) error
@@ -203,7 +203,7 @@ struct CovidCertificateImpl {
 
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
-            // Safe-guard that we have a recent trust list available at this point
+            // Safe-guard that we have a recent national rules list available at this point
             guard trustListManager.trustStorage.nationalRulesListIsStillValid() else {
                 if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
