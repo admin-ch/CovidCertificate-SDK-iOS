@@ -269,6 +269,10 @@ public struct Test: Codable {
         return result == TestResult.Negative.rawValue
     }
 
+    public var isSeroPositive: Bool {
+        return testType == TestType.SeroPositive.rawValue
+    }
+
     public var testType: String? {
         return ProductNameManager.shared.testTypeName(key: type)
     }

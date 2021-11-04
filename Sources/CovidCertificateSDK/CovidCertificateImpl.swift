@@ -278,6 +278,10 @@ struct CovidCertificateImpl {
                     completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .EXPIRED)))
                 case "TR-CH-0007":
                     completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .EXPIRED)))
+                case "TR-CH-0008":
+                    completionHandler(.failure(.NEGATIVE_RESULT))
+                case "TR-CH-0009":
+                    completionHandler(.success(VerificationResult(isValid: false, validUntil: validity?.until, validFrom: validity?.from, dateError: .EXPIRED)))
                 case "RR-CH-0000": completionHandler(.failure(.TOO_MANY_RECOVERY_ENTRIES))
                 case "RR-CH-0001": completionHandler(.failure(.NO_VALID_DATE))
                 case "RR-CH-0002":
