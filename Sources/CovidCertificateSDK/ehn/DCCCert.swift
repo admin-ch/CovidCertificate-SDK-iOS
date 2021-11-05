@@ -269,8 +269,8 @@ public struct Test: Codable {
         return result == TestResult.Negative.rawValue
     }
 
-    public var isSeroPositive: Bool {
-        return testType == TestType.SeroPositive.rawValue
+    public var isSerologicalTest: Bool {
+        return testType == TestType.Serological.rawValue
     }
 
     public var testType: String? {
