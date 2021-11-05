@@ -368,9 +368,9 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, today))
-                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364), to: time)!))
+                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364 + 22), to: time)!))
             default:
-                XCTFail("Should be vali")
+                XCTFail("Should be valid")
             }
             successExpectation.fulfill()
         }
