@@ -44,6 +44,7 @@ public enum ValidationError: Error, Equatable {
     case NETWORK_ERROR(errorCode: String)
     case NETWORK_PARSE_ERROR
     case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
+    case TIME_INCONSISTENCY(timeShift: TimeInterval)
 
     public var message: String {
         switch self {
@@ -64,6 +65,7 @@ public enum ValidationError: Error, Equatable {
         case .NETWORK_ERROR: return "A network error occured"
         case .NETWORK_PARSE_ERROR: return "The data could not be parsed"
         case .NETWORK_NO_INTERNET_CONNECTION: return "The internet connection appears to be offline"
+        case .TIME_INCONSISTENCY: return "There seems to be a time inconsistency"
         }
     }
 
@@ -86,6 +88,7 @@ public enum ValidationError: Error, Equatable {
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
         case .NETWORK_PARSE_ERROR: return "NE|PE"
         case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
+        case .TIME_INCONSISTENCY: return "NE|TI"
         }
     }
 }

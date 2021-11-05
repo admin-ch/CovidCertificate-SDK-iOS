@@ -130,6 +130,12 @@ struct CovidCertificateImpl {
         }
 
         trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+            // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
+            if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asValidationError() {
+                completionHandler(.failure(e))
+                return
+            }
+
             // Safe-guard that we have a recent trust list available at this point
             guard trustListManager.trustStorage.certificateListIsValid() else {
                 if let e = lastError?.asValidationError() {
@@ -174,6 +180,11 @@ struct CovidCertificateImpl {
 
     func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+            // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
+            if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asValidationError() {
+                completionHandler(.failure(e))
+                return
+            }
 
             // Safe-guard that we have a recent revocation list available at this point
             guard trustListManager.trustStorage.revocationListIsValid() else {
@@ -202,6 +213,11 @@ struct CovidCertificateImpl {
         }
 
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+            // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
+            if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asNationalRulesError() {
+                completionHandler(.failure(e))
+                return
+            }
 
             // Safe-guard that we have a recent national rules list available at this point
             guard trustListManager.trustStorage.nationalRulesListIsStillValid() else {

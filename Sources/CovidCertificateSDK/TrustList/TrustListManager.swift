@@ -183,14 +183,24 @@ class TrustListUpdate {
 
     private func startForceUpdate() {
         internalQueue.sync {
-            let error = synchronousUpdate(ignoreLocalCache: true)
-            // Only reset lastError if synchronousUpdate was successful
-            if error == nil {
-                operationQueue.addOperation {
-                    self.lastError = nil
-                }
-            }
+            lastError = synchronousUpdate(ignoreLocalCache: true)
             forceUpdateOperation = nil
         }
+    }
+
+    // TODO: Read value from config request
+    private static let allowedServerTimeDiff: TimeInterval = 60 * 10 // 10 minutes
+
+    func detectTimeshift(response: HTTPURLResponse) -> NetworkError? {
+        guard let date = response.date else { return nil }
+
+        let adjustedDate = date.addingTimeInterval(response.age)
+        let timeShift = abs(Date().timeIntervalSince(adjustedDate))
+
+        if timeShift > Self.allowedServerTimeDiff {
+            return .TIME_INCONSISTENCY(timeShift: timeShift)
+        }
+
+        return nil
     }
 }
