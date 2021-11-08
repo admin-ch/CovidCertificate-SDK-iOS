@@ -183,7 +183,10 @@ class TrustListUpdate {
 
     private func startForceUpdate() {
         internalQueue.sync {
-            lastError = synchronousUpdate(ignoreLocalCache: true)
+            let error = synchronousUpdate(ignoreLocalCache: true)
+            operationQueue.addOperation {
+                self.lastError = error
+            }
             forceUpdateOperation = nil
         }
     }
