@@ -91,5 +91,6 @@ public enum CovidCertificateSDK {
 
     public static func setOptions(options: SDKOptions) {
         URLSession.evaluator.useCertificatePinning = options.certificatePinning
+        TrustListUpdate.allowedServerTimeDiff = options.allowedServerTimeDiff
     }
 }

@@ -188,8 +188,7 @@ class TrustListUpdate {
         }
     }
 
-    // TODO: Read value from config request
-    private static let allowedServerTimeDiff: TimeInterval = 60 * 10 // 10 minutes
+    static var allowedServerTimeDiff: TimeInterval = SDKOptions.defaultAllowedServerTimeDiff
 
     func detectTimeshift(response: HTTPURLResponse) -> NetworkError? {
         guard let date = response.date else { return nil }
