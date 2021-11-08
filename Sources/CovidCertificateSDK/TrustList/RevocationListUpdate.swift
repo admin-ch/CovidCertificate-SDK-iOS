@@ -38,6 +38,10 @@ class RevocationListUpdate: TrustListUpdate {
             let request = CovidCertificateSDK.currentEnvironment.revocationListService(since: nextSince).request(reloadIgnoringLocalCache: ignoreLocalCache)
             let (data, response, error) = session.synchronousDataTask(with: request)
 
+            if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
+                return timeShiftError
+            }
+
             if error != nil {
                 return error?.asNetworkError()
             }

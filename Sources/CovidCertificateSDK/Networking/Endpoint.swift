@@ -82,4 +82,22 @@ extension HTTPURLResponse {
             return nil
         }
     }
+
+    private static var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'"
+        formatter.timeZone = TimeZone(abbreviation: "GMT")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    var date: Date? {
+        guard let string = value(forHeaderField: "date") else { return nil }
+        return HTTPURLResponse.dateFormatter.date(from: string)
+    }
+
+    var age: TimeInterval {
+        guard let string = value(forHeaderField: "Age") else { return 0 }
+        return TimeInterval(string) ?? 0
+    }
 }

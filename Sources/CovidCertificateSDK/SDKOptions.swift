@@ -12,10 +12,16 @@ import Foundation
 
 /// Configure advanced options of the SDK
 public struct SDKOptions {
-    /// Option to disable certificate pinning of TLS requests for debugging
-    var certificatePinning = true
+    public static let defaultAllowedServerTimeDiff: TimeInterval = 60 * 60 * 2
 
-    public init(certificatePinning: Bool) {
+    /// Option to disable certificate pinning of TLS requests for debugging
+    public var certificatePinning: Bool
+
+    /// The server time difference that devices are allowed to have without showing a warning
+    public var allowedServerTimeDiff: TimeInterval
+
+    public init(certificatePinning: Bool = true, allowedServerTimeDiff: TimeInterval = Self.defaultAllowedServerTimeDiff) {
         self.certificatePinning = certificatePinning
+        self.allowedServerTimeDiff = allowedServerTimeDiff
     }
 }
