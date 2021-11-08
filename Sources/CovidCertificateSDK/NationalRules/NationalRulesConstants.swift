@@ -23,6 +23,7 @@ enum Disease: String, Equatable {
 enum TestType: String, Equatable, Codable {
     case Rat = "LP217198-3"
     case Pcr = "LP6464-4"
+    case Serological = "94504-8"
 }
 
 enum TestResult: String, Equatable, Codable {

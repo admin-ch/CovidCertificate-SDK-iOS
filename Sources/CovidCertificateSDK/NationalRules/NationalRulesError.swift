@@ -16,6 +16,7 @@ public enum NationalRulesError: Error, Equatable {
     case WRONG_DISEASE_TARGET
     case WRONG_TEST_TYPE
     case POSITIVE_RESULT
+    case NEGATIVE_RESULT
     case NOT_FULLY_PROTECTED
     case NO_VALID_DATE
     case NETWORK_ERROR(errorCode: String)
@@ -33,6 +34,7 @@ public enum NationalRulesError: Error, Equatable {
         case .WRONG_DISEASE_TARGET: return "N|WDT"
         case .WRONG_TEST_TYPE: return "N|WTT"
         case .POSITIVE_RESULT: return "N|PR"
+        case .NEGATIVE_RESULT: return "N|NR"
         case .NOT_FULLY_PROTECTED: return "N|NFP"
         case .NO_VALID_DATE: return "N|NVD"
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"

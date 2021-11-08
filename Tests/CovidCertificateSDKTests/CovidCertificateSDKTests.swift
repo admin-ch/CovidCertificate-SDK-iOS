@@ -368,9 +368,9 @@ final class CovidCertificateSDKTests: XCTestCase {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
                 XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, today))
-                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364), to: time)!))
+                XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 364 + 22), to: time)!))
             default:
-                XCTFail("Should be vali")
+                XCTFail("Should be valid")
             }
             successExpectation.fulfill()
         }
@@ -492,11 +492,12 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testTypeHasToBePcrOrRat() {
+    func testTypeHasToBePcrOrRatOrSerological() {
         let hcert_rat = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
         let successExpectation1 = expectation(description: "success")
         let successExpectation2 = expectation(description: "success")
+        let successExpectation3 = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
         verifier.checkNationalRules(certificate: hcert_rat, forceUpdate: false) { result in
@@ -508,6 +509,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             successExpectation1.fulfill()
         }
+
         let hcert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
         verifier.checkNationalRules(certificate: hcert_pcr, forceUpdate: false) { result in
@@ -518,6 +520,18 @@ final class CovidCertificateSDKTests: XCTestCase {
                 XCTFail("Correct test should be ok")
             }
             successExpectation2.fulfill()
+        }
+
+        let hcert_sero = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "Serological", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
+
+        verifier.checkNationalRules(certificate: hcert_sero, forceUpdate: false) { result in
+            switch result {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Correct test should be ok")
+            }
+            successExpectation3.fulfill()
         }
 
         let invalid_cert = generateTestCert(testType: "asdbas", testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
@@ -536,7 +550,7 @@ final class CovidCertificateSDKTests: XCTestCase {
     }
 
     func testPcrTestsAreAlwaysAccepted() {
-        // pcr tests are always accepte
+        // pcr tests are always accepted
         let invalid_cert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
         let expectation = self.expectation(description: "async task")
 
@@ -654,6 +668,69 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
+    func testSeroResultHasToBePositive() {
+        let hcert_sero = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
+        let failExpectation = expectation(description: "fail")
+        let successExpectation = expectation(description: "success")
+
+        verifier.checkNationalRules(certificate: hcert_sero, forceUpdate: false) { result in
+            switch result {
+            case .failure(.NEGATIVE_RESULT):
+                XCTAssertTrue(true)
+            default:
+                XCTFail("Negative Result should fail")
+            }
+            failExpectation.fulfill()
+        }
+
+        let hcert_sero2 = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
+        verifier.checkNationalRules(certificate: hcert_sero2, forceUpdate: false) { result in
+            switch result {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Positive Result should be ok")
+            }
+            successExpectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+
+    func testSeroTestIsValidFor90Days() {
+        let hcert = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(day: -89))
+
+        let correctExpectation = expectation(description: "correct")
+        verifier.checkNationalRules(certificate: hcert, forceUpdate: false) { result in
+            switch result {
+            case let .success(r):
+                /// TEST MUST BE VALID
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Something happened")
+            }
+            correctExpectation.fulfill()
+        }
+
+        let invalid_hcert = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(day: -90))
+
+        let wrongExpectation = expectation(description: "wrong")
+        verifier.checkNationalRules(certificate: invalid_hcert, forceUpdate: false) { result in
+            switch result {
+            case let .success(r):
+                /// TEST MUST BE INVALID
+                DispatchQueue.main.async {
+                    XCTAssertFalse(r.isValid)
+                }
+            default:
+                XCTFail("Something happened")
+            }
+            wrongExpectation.fulfill()
+        }
+
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+
     /// RECOVERY TESTS
     private func getCalendar() -> Calendar {
         let utc = TimeZone(identifier: "UTC")!
@@ -766,9 +843,9 @@ final class CovidCertificateSDKTests: XCTestCase {
         XCTAssertTrue(calculatedValidUntil.isBefore(dayAfterTrueValidUntil))
     }
 
-    func testCertificateIsValidFor180DaysAfterTestResult() {
-        // The certificate was issued 179 days ago, which means it is still valid today (the 180th day)
-        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -179), tg: Disease.SarsCov2.rawValue)
+    func testCertificateIsValidFor365DaysAfterTestResult() {
+        // The certificate was issued 364 days ago, which means it is still valid today (the 365th day)
+        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -364), tg: Disease.SarsCov2.rawValue)
 
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
@@ -783,8 +860,8 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             successExpectation.fulfill()
         }
-        // the certificate should not be valid anymore, since it was issued yesterday 179 days ago (hence yesterday was the 180th day)
-        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -180), tg: Disease.SarsCov2.rawValue)
+        // the certificate should not be valid anymore, since it was issued yesterday 364 days ago (hence yesterday was the 365th day)
+        let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -365), tg: Disease.SarsCov2.rawValue)
         verifier.checkNationalRules(certificate: hcert_invalid, forceUpdate: false) { result in
             switch result {
             case let .success(r):
