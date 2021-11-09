@@ -71,4 +71,12 @@ extension DCCCert {
             return []
         }
     }
+
+    public var isSwitzerlandOnly: Bool {
+        if immunisationType == .test, let t = tests?.first {
+            return t.isSerologicalTest
+        }
+
+        return false
+    }
 }
