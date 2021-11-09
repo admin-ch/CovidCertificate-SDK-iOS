@@ -28,4 +28,5 @@ class TrustCertificate: Codable {
 class ActiveTrustCertificates: Codable, JWTExtension {
     var activeKeyIds: [String] = []
     var validDuration: Int64
+    var upTo: Int64?
 }
