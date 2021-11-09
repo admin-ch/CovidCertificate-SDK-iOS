@@ -270,7 +270,7 @@ public struct Test: Codable {
     }
 
     public var isSerologicalTest: Bool {
-        return testType == TestType.Serological.rawValue
+        return type == TestType.Serological.rawValue
     }
 
     public var testType: String? {
