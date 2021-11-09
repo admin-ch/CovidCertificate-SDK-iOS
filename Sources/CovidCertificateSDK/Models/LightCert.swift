@@ -31,4 +31,8 @@ public struct LightCert: CovidCertificate, Codable {
         version = try container.decode(String.self, forKey: .version)
         dateOfBirth = try container.decode(String.self, forKey: .dateOfBirth)
     }
+
+    public var isSwitzerlandOnly: Bool {
+        return true
+    }
 }
