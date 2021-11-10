@@ -38,8 +38,7 @@ class TrustCertificatesUpdate: TrustListUpdate {
         // obtain up-to field from activeCertificatesService
         // this is needed to sychronize the both request done in this method
         guard let d = dataActive,
-              let httpResponse = response as? HTTPURLResponse,
-              let upTo = httpResponse.value(forHeaderField: "up-to") else {
+              let httpResponse = response as? HTTPURLResponse else {
             return .NETWORK_PARSE_ERROR
         }
 
@@ -55,6 +54,19 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
         guard let result = try? outcome.get() else {
             return .NETWORK_PARSE_ERROR
+        }
+
+        // Read upTo from HTTP response body
+        var upTo: String
+        if let upToBody = result.upTo {
+            upTo = String(upToBody)
+        } else {
+            // Fall back to HTTP header if not available
+            if let upToHeader = httpResponse.value(forHeaderField: "up-to") {
+                upTo = upToHeader
+            } else {
+                return .NETWORK_PARSE_ERROR
+            }
         }
 
         // update trust certificates service
