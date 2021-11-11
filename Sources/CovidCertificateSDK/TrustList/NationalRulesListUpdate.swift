@@ -20,12 +20,8 @@ class NationalRulesListUpdate: TrustListUpdate {
     // MARK: - Update
 
     override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
-        let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadIgnoringLocalCache: ignoreLocalCache)
+        let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadRevalidatingCacheData: ignoreLocalCache)
         let (data, response, error) = session.synchronousDataTask(with: request)
-
-        if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
-            return timeShiftError
-        }
 
         if error != nil {
             return error?.asNetworkError()

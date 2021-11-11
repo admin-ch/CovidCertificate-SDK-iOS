@@ -28,17 +28,32 @@ struct Endpoint {
 }
 
 extension Endpoint {
+    func request(timeoutInterval: TimeInterval = 10.0, reloadRevalidatingCacheData: Bool = false) -> URLRequest {
+        var cachePolicy: URLRequest.CachePolicy?
+
+        if reloadRevalidatingCacheData {
+            if #available(iOS 13, *) {
+                // Add "If-None-Match" header with Etag from cache
+                // This will return HTTP 304 from server if nothing changed
+                cachePolicy = .reloadRevalidatingCacheData
+            } else {
+                cachePolicy = .reloadIgnoringLocalCacheData
+            }
+        }
+
+        return request(timeoutInterval: timeoutInterval, cachePolicy: cachePolicy)
+    }
+
     func request(timeoutInterval: TimeInterval = 10.0, reloadIgnoringLocalCache: Bool = false) -> URLRequest {
+        return request(timeoutInterval: timeoutInterval, cachePolicy: reloadIgnoringLocalCache ? .reloadIgnoringLocalCacheData : nil)
+    }
+
+    func request(timeoutInterval: TimeInterval = 10.0, cachePolicy: URLRequest.CachePolicy?) -> URLRequest {
         var request = URLRequest(url: url, timeoutInterval: timeoutInterval)
         request.httpMethod = method.rawValue
 
-        if reloadIgnoringLocalCache {
-            if #available(iOS 13, *) {
-                // Add Etag from cache to "If-None-Match" header
-                request.cachePolicy = .reloadRevalidatingCacheData
-            } else {
-                request.cachePolicy = .reloadIgnoringLocalCacheData
-            }
+        if let cacheRequestPolicy = cachePolicy {
+            request.cachePolicy = cacheRequestPolicy
         }
 
         request.setValue(userAgentHeader, forHTTPHeaderField: "User-Agent")

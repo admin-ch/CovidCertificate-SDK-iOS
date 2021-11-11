@@ -24,19 +24,13 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
     override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         // update active certificates service
-        let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request(reloadIgnoringLocalCache: ignoreLocalCache)
+        let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request(reloadRevalidatingCacheData: ignoreLocalCache)
         let (dataActive, response, errorActive) = session.synchronousDataTask(with: requestActive)
-
-        if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
-            return timeShiftError
-        }
 
         if errorActive != nil {
             return errorActive?.asNetworkError()
         }
 
-        // obtain up-to field from activeCertificatesService
-        // this is needed to sychronize the both request done in this method
         guard let d = dataActive,
               let httpResponse = response as? HTTPURLResponse else {
             return .NETWORK_PARSE_ERROR
@@ -56,9 +50,11 @@ class TrustCertificatesUpdate: TrustListUpdate {
             return .NETWORK_PARSE_ERROR
         }
 
-        // Read upTo from HTTP response body
+        // obtain up-to field from activeCertificatesService
+        // this is needed to sychronize the both request done in this method
         var upTo: String
         if let upToBody = result.upTo {
+            // Read upTo from HTTP response body
             upTo = String(upToBody)
         } else {
             // Fall back to HTTP header if not available
@@ -78,12 +74,8 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
             let request = CovidCertificateSDK.currentEnvironment
                 .trustCertificatesService(since: trustStorage.certificateSince(), upTo: upTo)
-                .request(reloadIgnoringLocalCache: ignoreLocalCache)
+                .request(reloadRevalidatingCacheData: ignoreLocalCache)
             let (data, response, error) = session.synchronousDataTask(with: request)
-
-            if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
-                return timeShiftError
-            }
 
             if error != nil {
                 return error?.asNetworkError()
