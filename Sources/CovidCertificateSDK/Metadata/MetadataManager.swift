@@ -59,7 +59,7 @@ class MetadataManager {
     }
 
     func load() {
-        let request = CovidCertificateSDK.currentEnvironment.metadata().request()
+        let request = CovidCertificateSDK.currentEnvironment.metadata().request(reloadRevalidatingCacheData: true)
 
         guard Self.shouldLoad(lastLoad: Self.lastLoad)
         else {
