@@ -46,7 +46,8 @@ public enum CovidCertificateSDK {
                 // expose networking errors for verification apps
                 case .failure(.NETWORK_NO_INTERNET_CONNECTION),
                      .failure(.NETWORK_PARSE_ERROR),
-                     .failure(.NETWORK_ERROR):
+                     .failure(.NETWORK_ERROR),
+                     .failure(.TIME_INCONSISTENCY(timeShift: _)):
                     return completionHandler(result)
                 case .failure:
                     // Strip specific national rules error for verification apps
