@@ -192,8 +192,10 @@ class TrustListUpdate {
     }
 
     static var allowedServerTimeDiff: TimeInterval = SDKOptions.defaultAllowedServerTimeDiff
+    static var timeshiftDetectionEnabled: Bool = SDKOptions.defaultTimeshiftDetectionEnabled
 
     func detectTimeshift(response: HTTPURLResponse) -> NetworkError? {
+        guard Self.timeshiftDetectionEnabled else { return nil }
         guard let date = response.date else { return nil }
 
         let adjustedDate = date.addingTimeInterval(response.age)
