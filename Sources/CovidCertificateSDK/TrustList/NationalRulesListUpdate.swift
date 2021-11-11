@@ -23,7 +23,11 @@ class NationalRulesListUpdate: TrustListUpdate {
         let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadIgnoringLocalCache: ignoreLocalCache)
         let (data, response, error) = session.synchronousDataTask(with: request)
 
-        if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
+        // Only run timeshift detection if request does not come from cache
+        // as otherwise "Date" and "Age" headers might not be current
+        if ignoreLocalCache,
+           let httpResponse = response as? HTTPURLResponse,
+           let timeShiftError = detectTimeshift(response: httpResponse) {
             return timeShiftError
         }
 
