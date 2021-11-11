@@ -31,12 +31,15 @@ extension Endpoint {
 
     func request(timeoutInterval: TimeInterval = 10.0, reloadRevalidatingCacheData: Bool = false) -> URLRequest {
         var cachePolicy : URLRequest.CachePolicy?
-        if #available(iOS 13, *) {
-            // Add "If-None-Match" header with Etag from cache
-            // This will return HTTP 304 from server if nothing changed
-            cachePolicy = .reloadRevalidatingCacheData
-        } else {
-            cachePolicy = .reloadIgnoringLocalCacheData
+
+        if reloadRevalidatingCacheData {
+            if #available(iOS 13, *) {
+                // Add "If-None-Match" header with Etag from cache
+                // This will return HTTP 304 from server if nothing changed
+                cachePolicy = .reloadRevalidatingCacheData
+            } else {
+                cachePolicy = .reloadIgnoringLocalCacheData
+            }
         }
 
         return request(timeoutInterval: timeoutInterval, cachePolicy: cachePolicy)
