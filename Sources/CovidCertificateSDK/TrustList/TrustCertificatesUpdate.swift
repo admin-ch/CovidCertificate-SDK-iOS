@@ -31,7 +31,6 @@ class TrustCertificatesUpdate: TrustListUpdate {
             return errorActive?.asNetworkError()
         }
 
-
         guard let d = dataActive,
               let httpResponse = response as? HTTPURLResponse else {
             return .NETWORK_PARSE_ERROR

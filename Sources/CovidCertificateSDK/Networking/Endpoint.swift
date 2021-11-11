@@ -28,9 +28,8 @@ struct Endpoint {
 }
 
 extension Endpoint {
-
     func request(timeoutInterval: TimeInterval = 10.0, reloadRevalidatingCacheData: Bool = false) -> URLRequest {
-        var cachePolicy : URLRequest.CachePolicy?
+        var cachePolicy: URLRequest.CachePolicy?
 
         if reloadRevalidatingCacheData {
             if #available(iOS 13, *) {

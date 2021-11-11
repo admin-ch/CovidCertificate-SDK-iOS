@@ -27,7 +27,7 @@ public struct SDKOptions {
 
     public init(certificatePinning: Bool = true,
                 allowedServerTimeDiff: TimeInterval = Self.defaultAllowedServerTimeDiff,
-                timeshiftDetectionEnabled : Bool = Self.defaultTimeshiftDetectionEnabled) {
+                timeshiftDetectionEnabled: Bool = Self.defaultTimeshiftDetectionEnabled) {
         self.certificatePinning = certificatePinning
         self.allowedServerTimeDiff = allowedServerTimeDiff
         self.timeshiftDetectionEnabled = timeshiftDetectionEnabled
