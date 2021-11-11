@@ -27,10 +27,6 @@ class TrustCertificatesUpdate: TrustListUpdate {
         let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request(reloadIgnoringLocalCache: ignoreLocalCache)
         let (dataActive, response, errorActive) = session.synchronousDataTask(with: requestActive)
 
-        if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
-            return timeShiftError
-        }
-
         if errorActive != nil {
             return errorActive?.asNetworkError()
         }
@@ -80,10 +76,6 @@ class TrustCertificatesUpdate: TrustListUpdate {
                 .trustCertificatesService(since: trustStorage.certificateSince(), upTo: upTo)
                 .request(reloadIgnoringLocalCache: ignoreLocalCache)
             let (data, response, error) = session.synchronousDataTask(with: request)
-
-            if let httpResponse = response as? HTTPURLResponse, let timeShiftError = detectTimeshift(response: httpResponse) {
-                return timeShiftError
-            }
 
             if error != nil {
                 return error?.asNetworkError()
