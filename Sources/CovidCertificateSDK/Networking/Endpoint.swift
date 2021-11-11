@@ -33,7 +33,12 @@ extension Endpoint {
         request.httpMethod = method.rawValue
 
         if reloadIgnoringLocalCache {
-            request.cachePolicy = .reloadIgnoringLocalCacheData
+            if #available(iOS 13, *) {
+                // Add Etag from cache to "If-None-Match" header
+                request.cachePolicy = .reloadRevalidatingCacheData
+            } else {
+                request.cachePolicy = .reloadIgnoringLocalCacheData
+            }
         }
 
         request.setValue(userAgentHeader, forHTTPHeaderField: "User-Agent")
