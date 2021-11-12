@@ -25,7 +25,7 @@ final class CovidCertificateSDKTests: XCTestCase {
     // MARK: - Helpers
 
     func areSameVaccineDates(_ date1: Date, _ date2: Date) -> Bool {
-        return dateFormatter.string(from: date1) == dateFormatter.string(from: date2)
+        dateFormatter.string(from: date1) == dateFormatter.string(from: date2)
     }
 
     // MARK: - Tests

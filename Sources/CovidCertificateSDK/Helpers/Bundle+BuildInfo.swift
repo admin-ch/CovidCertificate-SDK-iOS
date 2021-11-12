@@ -12,11 +12,11 @@ import Foundation
 
 extension Bundle {
     static var appVersion: String {
-        return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
     }
 
     static var buildNumber: String {
-        return Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
     }
 
     static var buildDate: Date? {

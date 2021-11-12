@@ -128,7 +128,7 @@ public struct Vaccination: Codable {
     }
 
     public var isTargetDiseaseCorrect: Bool {
-        return disease == Disease.SarsCov2.rawValue
+        disease == Disease.SarsCov2.rawValue
     }
 
     /// we need a date of vaccination which needs to be in the format of yyyy-MM-dd
@@ -139,7 +139,7 @@ public struct Vaccination: Codable {
     }
 
     public var dateOfVaccination: Date? {
-        return dateFormatter.date(from: vaccinationDate)
+        dateFormatter.date(from: vaccinationDate)
     }
 
     public func getValidFromDate(singleVaccineValidityOffset: Int,
@@ -169,15 +169,15 @@ public struct Vaccination: Codable {
     }
 
     public var name: String? {
-        return ProductNameManager.shared.vaccineProductName(key: medicinialProduct)
+        ProductNameManager.shared.vaccineProductName(key: medicinialProduct)
     }
 
     public var authHolder: String? {
-        return ProductNameManager.shared.vaccineManufacturer(key: marketingAuthorizationHolder)
+        ProductNameManager.shared.vaccineManufacturer(key: marketingAuthorizationHolder)
     }
 
     public var prophylaxis: String? {
-        return ProductNameManager.shared.vaccineProphylaxisName(key: vaccine)
+        ProductNameManager.shared.vaccineProphylaxisName(key: vaccine)
     }
 }
 
@@ -224,7 +224,7 @@ public struct Test: Codable {
     }
 
     public var validFromDate: Date? {
-        return Date.fromISO8601(timestampSample)
+        Date.fromISO8601(timestampSample)
     }
 
     public var resultDate: Date? {
@@ -262,19 +262,19 @@ public struct Test: Codable {
     }
 
     public var isTargetDiseaseCorrect: Bool {
-        return disease == Disease.SarsCov2.rawValue
+        disease == Disease.SarsCov2.rawValue
     }
 
     public var isNegative: Bool {
-        return result == TestResult.Negative.rawValue
+        result == TestResult.Negative.rawValue
     }
 
     public var isSerologicalTest: Bool {
-        return type == TestType.Serological.rawValue
+        type == TestType.Serological.rawValue
     }
 
     public var testType: String? {
-        return ProductNameManager.shared.testTypeName(key: type)
+        ProductNameManager.shared.testTypeName(key: type)
     }
 
     public var manufacturerAndTestName: String? {
@@ -326,7 +326,7 @@ public struct PastInfection: Codable {
     }
 
     public var firstPositiveTestResultDate: Date? {
-        return dateFormatter.date(from: dateFirstPositiveTest)
+        dateFormatter.date(from: dateFirstPositiveTest)
     }
 
     public var validFromDate: Date? {
@@ -346,6 +346,6 @@ public struct PastInfection: Codable {
     }
 
     public var isTargetDiseaseCorrect: Bool {
-        return disease == Disease.SarsCov2.rawValue
+        disease == Disease.SarsCov2.rawValue
     }
 }

@@ -79,50 +79,50 @@ class TestTrustStorage: TrustStorageProtocol {
     // MARK: - Revocation list
 
     func revokedCertificates() -> Set<String> {
-        return []
+        []
     }
 
     func updateRevocationList(_: RevocationList) -> Bool {
         // do nothing
-        return true
+        true
     }
 
     func revocationListIsValid() -> Bool {
-        return true
+        true
     }
 
     // MARK: - Active Certificates
 
     func activeCertificatePublicKeys(useFilters _: [String]) -> [TrustListPublicKey] {
-        return publicKeys
+        publicKeys
     }
 
     func updateCertificateList(_: TrustCertificates, since _: String) -> Bool {
         // do nothing
-        return true
+        true
     }
 
     func updateActiveCertificates(_: ActiveTrustCertificates) -> Bool {
         // do nothing
-        return true
+        true
     }
 
     func certificateSince() -> String {
-        return ""
+        ""
     }
 
     func certificateListIsValid() -> Bool {
-        return true
+        true
     }
 
     // MARK: - National rules
 
     func nationalRulesListIsStillValid() -> Bool {
-        return true
+        true
     }
 
     func updateNationalRules(_: NationalRulesList) -> Bool {
-        return true
+        true
     }
 
     func nationalRules() -> NationalRulesList {

@@ -17,7 +17,7 @@ public struct LightCert: CovidCertificate, Codable {
 
     public var type: CertificateType { .lightCert }
 
-    public var immunisationType: ImmunisationType? { return nil }
+    public var immunisationType: ImmunisationType? { nil }
 
     private enum CodingKeys: String, CodingKey {
         case person = "nam"
@@ -33,6 +33,6 @@ public struct LightCert: CovidCertificate, Codable {
     }
 
     public var isSwitzerlandOnly: Bool {
-        return true
+        true
     }
 }

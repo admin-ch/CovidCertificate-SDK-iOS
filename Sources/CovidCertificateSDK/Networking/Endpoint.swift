@@ -45,7 +45,7 @@ extension Endpoint {
     }
 
     func request(timeoutInterval: TimeInterval = 10.0, reloadIgnoringLocalCache: Bool = false) -> URLRequest {
-        return request(timeoutInterval: timeoutInterval, cachePolicy: reloadIgnoringLocalCache ? .reloadIgnoringLocalCacheData : nil)
+        request(timeoutInterval: timeoutInterval, cachePolicy: reloadIgnoringLocalCache ? .reloadIgnoringLocalCacheData : nil)
     }
 
     func request(timeoutInterval: TimeInterval = 10.0, cachePolicy: URLRequest.CachePolicy?) -> URLRequest {

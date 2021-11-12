@@ -128,6 +128,6 @@ class TrustCertificatesUpdate: TrustListUpdate {
     }
 
     override func isListStillValid() -> Bool {
-        return trustStorage.certificateListIsValid()
+        trustStorage.certificateListIsValid()
     }
 }

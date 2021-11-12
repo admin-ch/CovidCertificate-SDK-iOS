@@ -21,7 +21,7 @@ class UBServerTrustManager {
 
     /// Gets the evaluator for the specified host
     func serverTrustEvaluator(forHost host: String) -> UBServerTrustEvaluator? {
-        return evaluators[host] ?? `default`
+        evaluators[host] ?? `default`
     }
 }
 
@@ -135,7 +135,7 @@ public final class UBDisabledEvaluator: UBServerTrustEvaluator {
 extension Bundle {
     /// Returns all valid `cer`, `crt`, and `der` certificates in the bundle.
     public var ub_certificates: [SecCertificate] {
-        return paths(forResourcesOfTypes: [".cer", ".CER", ".crt", ".CRT", ".der", ".DER"]).compactMap { path in
+        paths(forResourcesOfTypes: [".cer", ".CER", ".crt", ".CRT", ".der", ".DER"]).compactMap { path in
             guard
                 let certificateData = try? Data(contentsOf: URL(fileURLWithPath: path)) as CFData,
                 let certificate = SecCertificateCreateWithData(nil, certificateData) else { return nil }
@@ -149,7 +149,7 @@ extension Bundle {
     /// - Parameter types: The filename extensions locate.
     /// - Returns:         All pathnames for the given filename extensions.
     private func paths(forResourcesOfTypes types: [String]) -> [String] {
-        return Array(Set(types.flatMap { self.paths(forResourcesOfType: $0, inDirectory: nil) }))
+        Array(Set(types.flatMap { self.paths(forResourcesOfType: $0, inDirectory: nil) }))
     }
 }
 
@@ -223,14 +223,14 @@ extension SecTrust {
 
     /// The `SecCertificate`s contained i `self`.
     var certificates: [SecCertificate] {
-        return (0 ..< SecTrustGetCertificateCount(self)).compactMap { index in
+        (0 ..< SecTrustGetCertificateCount(self)).compactMap { index in
             SecTrustGetCertificateAtIndex(self, index)
         }
     }
 
     /// The `Data` values for all certificates contained in `self`.
     var certificateData: [Data] {
-        return certificates.data
+        certificates.data
     }
 
     /// Validates `self` after applying `SecPolicy.af.default`. This evaluation does not validate the hostname.
@@ -260,14 +260,14 @@ extension SecPolicy {
     /// - Parameter hostname: The hostname to validate against.
     /// - Returns:            The `SecPolicy`.
     static func hostname(_ hostname: String) -> SecPolicy {
-        return SecPolicyCreateSSL(true, hostname as CFString)
+        SecPolicyCreateSSL(true, hostname as CFString)
     }
 }
 
 extension Array where Element == SecCertificate {
     /// All `Data` values for the contained `SecCertificate`s.
     var data: [Data] {
-        return map { SecCertificateCopyData($0) as Data }
+        map { SecCertificateCopyData($0) as Data }
     }
 }
 
@@ -286,12 +286,12 @@ extension SecCertificate {
 
 extension OSStatus {
     /// Returns whether `self` is `errSecSuccess`.
-    var isSuccess: Bool { return self == errSecSuccess }
+    var isSuccess: Bool { self == errSecSuccess }
 }
 
 extension SecTrustResultType {
     /// Returns whether `self is `.unspecified` or `.proceed`.
     var isSuccess: Bool {
-        return (self == .unspecified || self == .proceed)
+        self == .unspecified || self == .proceed
     }
 }

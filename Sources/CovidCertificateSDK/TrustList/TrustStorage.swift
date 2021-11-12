@@ -46,8 +46,8 @@ class TrustStorage: TrustStorageProtocol {
     // MARK: - Revocation List
 
     func revokedCertificates() -> Set<String> {
-        return revocationQueue.sync {
-            return self.revocationStorage.revocationList.revokedCerts
+        revocationQueue.sync {
+            self.revocationStorage.revocationList.revokedCerts
         }
     }
 
@@ -62,8 +62,8 @@ class TrustStorage: TrustStorageProtocol {
     }
 
     func revocationListIsValid() -> Bool {
-        return revocationQueue.sync {
-            return isStillValid(lastDownloadTimeStamp: self.revocationStorage.lastRevocationListDownload, validDuration: self.revocationStorage.revocationList.validDuration)
+        revocationQueue.sync {
+            isStillValid(lastDownloadTimeStamp: self.revocationStorage.lastRevocationListDownload, validDuration: self.revocationStorage.revocationList.validDuration)
         }
     }
 
@@ -71,7 +71,7 @@ class TrustStorage: TrustStorageProtocol {
 
     func updateCertificateList(_ update: TrustCertificates, since: String) -> Bool {
         // add all certificates from update
-        return certificateQueue.sync {
+        certificateQueue.sync {
             self.activeCertificatesStorage.certificateSince = since
             self.activeCertificatesStorage.activeCertificates.append(contentsOf: update.certs)
             return self.activeCertificatesSecureStorage.saveSynchronously(self.activeCertificatesStorage)
@@ -80,7 +80,7 @@ class TrustStorage: TrustStorageProtocol {
 
     func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool {
         // remove all certificates that are not active
-        return certificateQueue.sync {
+        certificateQueue.sync {
             self.activeCertificatesStorage.activeCertificates.removeAll { c in
                 !activeCertificates.activeKeyIds.contains(c.keyId)
             }
@@ -93,8 +93,8 @@ class TrustStorage: TrustStorageProtocol {
     }
 
     func activeCertificatePublicKeys(useFilters: [String]) -> [TrustListPublicKey] {
-        return certificateQueue.sync {
-            return self.activeCertificatesStorage.activeCertificates.compactMap { t in
+        certificateQueue.sync {
+            self.activeCertificatesStorage.activeCertificates.compactMap { t in
                 // only return certificate if use is contained in the useFilters array
                 guard useFilters.contains(where: { t.use.contains($0) }) else {
                     return nil
@@ -111,27 +111,27 @@ class TrustStorage: TrustStorageProtocol {
     }
 
     func certificateSince() -> String {
-        return certificateQueue.sync {
-            return self.activeCertificatesStorage.certificateSince
+        certificateQueue.sync {
+            self.activeCertificatesStorage.certificateSince
         }
     }
 
     func certificateListIsValid() -> Bool {
-        return certificateQueue.sync {
-            return isStillValid(lastDownloadTimeStamp: self.activeCertificatesStorage.lastCertificateListDownload, validDuration: self.activeCertificatesStorage.certificateValidDuration)
+        certificateQueue.sync {
+            isStillValid(lastDownloadTimeStamp: self.activeCertificatesStorage.lastCertificateListDownload, validDuration: self.activeCertificatesStorage.certificateValidDuration)
         }
     }
 
     // MARK: - National rules
 
     func nationalRulesListIsStillValid() -> Bool {
-        return nationalQueue.sync {
-            return isStillValid(lastDownloadTimeStamp: self.nationalRulesStorage.lastNationalRulesListDownload, validDuration: self.nationalRulesStorage.nationalRulesList.validDuration)
+        nationalQueue.sync {
+            isStillValid(lastDownloadTimeStamp: self.nationalRulesStorage.lastNationalRulesListDownload, validDuration: self.nationalRulesStorage.nationalRulesList.validDuration)
         }
     }
 
     func updateNationalRules(_ update: NationalRulesList) -> Bool {
-        return nationalQueue.sync {
+        nationalQueue.sync {
             self.nationalRulesStorage.nationalRulesList = update
             self.nationalRulesStorage.lastNationalRulesListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
             return self.nationalRulesSecureStorage.saveSynchronously(self.nationalRulesStorage)
@@ -139,8 +139,8 @@ class TrustStorage: TrustStorageProtocol {
     }
 
     func nationalRules() -> NationalRulesList {
-        return nationalQueue.sync {
-            return self.nationalRulesStorage.nationalRulesList
+        nationalQueue.sync {
+            self.nationalRulesStorage.nationalRulesList
         }
     }
 

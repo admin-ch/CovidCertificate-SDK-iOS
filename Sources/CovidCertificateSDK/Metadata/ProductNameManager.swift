@@ -27,22 +27,22 @@ class ProductNameManager {
     // MARK: - API
 
     func vaccineManufacturer(key: String?) -> String? {
-        return vaccineManufacturers.productName(key: key)
+        vaccineManufacturers.productName(key: key)
     }
 
     func vaccineProductName(key: String?) -> String? {
-        return vaccineProducts.productName(key: key)
+        vaccineProducts.productName(key: key)
     }
 
     func vaccineProphylaxisName(key: String?) -> String? {
-        return vaccineProphylaxis.productName(key: key)
+        vaccineProphylaxis.productName(key: key)
     }
 
     func testManufacturerName(key: String?) -> String? {
-        return testManufacturers.productName(key: key)
+        testManufacturers.productName(key: key)
     }
 
     func testTypeName(key: String?) -> String? {
-        return testTypes.productName(key: key)
+        testTypes.productName(key: key)
     }
 }

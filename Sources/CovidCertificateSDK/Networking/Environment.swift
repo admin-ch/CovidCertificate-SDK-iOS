@@ -44,23 +44,23 @@ public enum SDKEnvironment {
     }
 
     var nationalRulesListService: Endpoint {
-        return trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
+        trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
     }
 
     func trustCertificatesService(since: String, upTo: String) -> Endpoint {
-        return trustBackend.endpoint("keys/updates",
-                                     queryParameters: ["certFormat": "IOS",
-                                                       "since": since,
-                                                       "upTo": upTo],
-                                     headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
-                                     overwriteVersion: "v2")
+        trustBackend.endpoint("keys/updates",
+                              queryParameters: ["certFormat": "IOS",
+                                                "since": since,
+                                                "upTo": upTo],
+                              headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
+                              overwriteVersion: "v2")
     }
 
     var activeCertificatesService: Endpoint {
-        return trustBackend.endpoint("keys/list", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
+        trustBackend.endpoint("keys/list", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
     }
 
     func metadata() -> Endpoint {
-        return trustBackend.endpoint("metadata", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
+        trustBackend.endpoint("metadata", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws])
     }
 }

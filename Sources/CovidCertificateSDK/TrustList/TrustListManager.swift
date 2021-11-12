@@ -167,11 +167,11 @@ class TrustListUpdate {
 
     func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
         // download data and update local storage
-        return nil
+        nil
     }
 
     func isListStillValid() -> Bool {
-        return true
+        true
     }
 
     private func startUpdate() {
