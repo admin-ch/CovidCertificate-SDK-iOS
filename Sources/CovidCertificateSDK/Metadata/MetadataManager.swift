@@ -55,7 +55,7 @@ class MetadataManager {
     }
 
     static func shouldLoad(lastLoad: Date?) -> Bool {
-        return lastLoad == nil || Date().timeIntervalSince(lastLoad!) > Self.foregroundValidityInterval
+        lastLoad == nil || Date().timeIntervalSince(lastLoad!) > Self.foregroundValidityInterval
     }
 
     func load() {

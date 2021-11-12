@@ -11,15 +11,15 @@ import Foundation
 
 extension Data {
     func humanReadable() -> String {
-        return map { String(format: "%02x ", $0) }.joined()
+        map { String(format: "%02x ", $0) }.joined()
     }
 
     var bytes: [UInt8] {
-        return [UInt8](self)
+        [UInt8](self)
     }
 
     func base64UrlEncodedString() -> String {
-        return base64EncodedString(options: .endLineWithLineFeed)
+        base64EncodedString(options: .endLineWithLineFeed)
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")
@@ -32,7 +32,7 @@ extension Optional where Wrapped: Collection {
     func isNilOrEmpty() -> Bool {
         // if self is nil `self?.isEmpty` is nil and hence the value after the ?? operator is used
         // otherwise self!.isEmpty checks for an empty array
-        return self?.isEmpty ?? true
+        self?.isEmpty ?? true
     }
 }
 

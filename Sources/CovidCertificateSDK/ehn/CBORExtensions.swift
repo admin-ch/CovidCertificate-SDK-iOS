@@ -42,31 +42,31 @@ extension CBOR {
     }
 
     func asUInt64() -> UInt64? {
-        return unwrap() as? UInt64
+        unwrap() as? UInt64
     }
 
     func asInt64() -> Int64? {
-        return unwrap() as? Int64
+        unwrap() as? Int64
     }
 
     func asString() -> String? {
-        return unwrap() as? String
+        unwrap() as? String
     }
 
     func asList() -> [CBOR]? {
-        return unwrap() as? [CBOR]
+        unwrap() as? [CBOR]
     }
 
     func asMap() -> [CBOR: CBOR]? {
-        return unwrap() as? [CBOR: CBOR]
+        unwrap() as? [CBOR: CBOR]
     }
 
     func asBytes() -> [UInt8]? {
-        return unwrap() as? [UInt8]
+        unwrap() as? [UInt8]
     }
 
     func asData() -> Data {
-        return Data(encode())
+        Data(encode())
     }
 
     func asCose() -> (CBOR.Tag, [CBOR])? {
@@ -93,10 +93,10 @@ extension CBOR.Tag {
 
 extension Dictionary where Key == CBOR {
     subscript<Index: RawRepresentable>(index: Index) -> Value? where Index.RawValue == String {
-        return self[CBOR(stringLiteral: index.rawValue)]
+        self[CBOR(stringLiteral: index.rawValue)]
     }
 
     subscript<Index: RawRepresentable>(index: Index) -> Value? where Index.RawValue == Int {
-        return self[CBOR(integerLiteral: index.rawValue)]
+        self[CBOR(integerLiteral: index.rawValue)]
     }
 }

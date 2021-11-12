@@ -22,7 +22,7 @@ public struct CertificateHolder {
     }
 
     public var certificate: CovidCertificate {
-        return cwt.certificate
+        cwt.certificate
     }
 
     public var issuedAt: Date? {
@@ -34,7 +34,7 @@ public struct CertificateHolder {
     }
 
     public var issuer: String? {
-        return cwt.iss
+        cwt.iss
     }
 
     var expiresAt: Date? {

@@ -90,6 +90,6 @@ class RevocationListUpdate: TrustListUpdate {
     }
 
     override func isListStillValid() -> Bool {
-        return trustStorage.revocationListIsValid()
+        trustStorage.revocationListIsValid()
     }
 }

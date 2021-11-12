@@ -58,7 +58,7 @@ class NationalRulesListUpdate: TrustListUpdate {
     }
 
     override func isListStillValid() -> Bool {
-        return trustStorage.nationalRulesListIsStillValid()
+        trustStorage.nationalRulesListIsStillValid()
     }
 }
 

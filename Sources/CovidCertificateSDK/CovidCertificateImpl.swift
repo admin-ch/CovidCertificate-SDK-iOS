@@ -337,7 +337,7 @@ struct CovidCertificateImpl {
     }
 
     func allRecoveriesAreValid(recoveries _: [PastInfection]) -> Bool {
-        return false
+        false
     }
 
     /// Strips a given scheme prefix from the encoded EHN health certificate
@@ -359,16 +359,16 @@ struct CovidCertificateImpl {
 
     /// Base45-decodes an EHN health certificate
     func decode(_ encodedData: String) -> Data? {
-        return try? encodedData.fromBase45()
+        try? encodedData.fromBase45()
     }
 
     /// Decompress the EHN health certificate using ZLib
     func decompress(_ encodedData: Data) -> Data? {
-        return try? encodedData.gunzipped()
+        try? encodedData.gunzipped()
     }
 
     /// Creates COSE structure from EHN health certificate
     func cose(from data: Data) -> Cose? {
-        return Cose(from: data)
+        Cose(from: data)
     }
 }
