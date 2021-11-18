@@ -35,6 +35,12 @@ class CertLogic {
     let calendar: Calendar
     let formatter = ISO8601DateFormatter()
 
+    private let dayDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = DATE_FORMAT
+        return formatter
+    }()
+
     init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
             return nil
@@ -82,14 +88,15 @@ class CertLogic {
         }
     }
 
-    func checkDisplayRules(hcert: DCCCert, validationClock: Date = Date()) -> Result<DisplayRulesResult, CertLogicValidationError> {
+    func checkDisplayRules(holder: CertificateHolderType, validationClock: Date = Date()) -> Result<DisplayRulesResult, CertLogicValidationError> {
         let external = externalJson(validationClock: validationClock)
 
-        guard let dccJson = try? JSONEncoder().encode(hcert) else {
+        let payload = createPayload(from: holder)
+        guard let json = try? JSONEncoder().encode(payload) else {
             return .failure(.JSON_ERROR)
         }
 
-        let context = JSON(["external": external, "payload": JSON(dccJson)])
+        let context = JSON(["external": external, "payload": JSON(json)])
 
         var startDate: Date?
         var endDate: Date?
@@ -123,6 +130,25 @@ class CertLogic {
         return .success(DisplayRulesResult(validFrom: startDate,
                                            validUntil: endDate,
                                            isSwitzerlandOnly: isSwitzerlandOnly))
+    }
+
+    private func createPayload(from holder: CertificateHolderType) -> CertLogicPayload {
+        let certificate = holder.certificate as? DCCCert
+
+        var issuedAt: String?
+        if let iat = holder.issuedAt {
+            issuedAt = dayDateFormatter.string(from: iat)
+        }
+
+        var expires: String?
+        if let exp = holder.expiresAt {
+            expires = dayDateFormatter.string(from: exp)
+        }
+
+        return CertLogicPayload(v: certificate?.vaccinations,
+                                t: certificate?.tests,
+                                r: certificate?.pastInfections,
+                                h: CertLogicPayloadHeader(iat: issuedAt, exp: expires))
     }
 
     private func externalJson(validationClock: Date) -> JSON {

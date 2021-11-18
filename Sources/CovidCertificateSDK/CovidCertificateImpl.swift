@@ -79,7 +79,7 @@ struct CovidCertificateImpl {
             }
 
             group.enter()
-            checkNationalRules(certificate: certificate, forceUpdate: forceUpdate) { result in
+            checkNationalRules(holder: holder, forceUpdate: forceUpdate) { result in
                 nationalRulesResult = result
                 group.leave()
             }
@@ -207,7 +207,11 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkNationalRules(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    func checkNationalRules(holder: CertificateHolderType, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+        guard let certificate = holder.certificate as? DCCCert else {
+            fatalError("Unsupported Certificate type")
+        }
+
         if certificate.immunisationType == nil {
             completionHandler(.failure(.NO_VALID_PRODUCT))
             return
@@ -248,7 +252,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let displayRulesResult = try? certLogic.checkDisplayRules(hcert: certificate).get()
+            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder).get()
 
             switch certLogic.checkRules(hcert: certificate) {
             case .success:
