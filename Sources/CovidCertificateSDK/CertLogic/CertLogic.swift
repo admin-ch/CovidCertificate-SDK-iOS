@@ -126,6 +126,33 @@ class CertLogic {
         return .success(Validity(from: s, until: e))
     }
 
+    func getIsSwitzerlandOnly(hcert: DCCCert) -> Result<Bool, CertLogicValidationError> {
+        guard let dccJson = try? JSONEncoder().encode(hcert) else {
+            return .failure(.JSON_ERROR)
+        }
+
+        let context = JSON(["payload": JSON(dccJson)])
+
+        var isSwitzerlandOnly: Bool?
+
+        for displayRule in displayRules {
+            // get isSwitzerlandOnly
+            if displayRule["id"] == "is-only-valid-in-ch" {
+                guard let result: Bool = try? applyRule(displayRule["logic"], to: context) else {
+                    return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: displayRule["id"].string ?? "CH_ONLY_TEST"))
+                }
+
+                isSwitzerlandOnly = result
+            }
+        }
+
+        guard let isSwitzerlandOnly = isSwitzerlandOnly else {
+            return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "CH_ONLY_TEST"))
+        }
+
+        return .success(isSwitzerlandOnly)
+    }
+
     private func externalJson(validationClock: Date) -> JSON {
         var external = JSON(
             ["validationClock": formatter.string(from: validationClock),
