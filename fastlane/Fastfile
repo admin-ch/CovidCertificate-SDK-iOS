@@ -9,6 +9,7 @@ platform :ios do
     begin
       xcodebuild(
         scheme: "CovidCertificateSDK",
+        destination: "platform=macos,arch=x86_64",
         xcargs: "-resultBundlePath ./build/testresults.xcresult test",
         buildlog_path: "./build/"
       )
