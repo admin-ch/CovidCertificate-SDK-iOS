@@ -9,11 +9,10 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-import Foundation
 import CovidCertificateSDK
+import Foundation
 
 struct TestCertificateHolder: CertificateHolderType {
-
     let certificate: CovidCertificate
 
     let issuedAt: Date?
@@ -30,11 +29,10 @@ struct TestCertificateHolder: CertificateHolderType {
     }
 
     var keyId: Data {
-        return Data()
+        Data()
     }
 
-    func hasValidSignature(for publicKey: SecKey) -> Bool {
-        return true
+    func hasValidSignature(for _: SecKey) -> Bool {
+        true
     }
-
 }

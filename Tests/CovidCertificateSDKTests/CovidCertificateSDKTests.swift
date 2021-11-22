@@ -423,7 +423,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    ///Test tourist certificate that is valid for 30 days after being issued
+    /// Test tourist certificate that is valid for 30 days after being issued
     func testTouristCertificate() {
         let touristCertIdentifiers = ["BBIBP-CorV_T", "CoronaVac_T", "Covaxin_T"]
 
