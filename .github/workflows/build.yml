@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-test:
     name: Build & Tests
-    runs-on: macOS-latest
+    runs-on: macos-11
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
