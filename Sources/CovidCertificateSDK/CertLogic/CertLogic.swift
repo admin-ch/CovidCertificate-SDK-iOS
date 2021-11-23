@@ -22,14 +22,10 @@ enum CertLogicValidationError: Error {
     case TEST_COULD_NOT_BE_PERFORMED(test: String)
 }
 
-class Validity {
-    let from: Date
-    let until: Date
-
-    init(from: Date, until: Date) {
-        self.from = from
-        self.until = until
-    }
+struct DisplayRulesResult {
+    let validFrom: Date?
+    let validUntil: Date?
+    let isSwitzerlandOnly: Bool?
 }
 
 class CertLogic {
@@ -86,7 +82,7 @@ class CertLogic {
         }
     }
 
-    func getValidity(hcert: DCCCert, validationClock: Date = Date()) -> Result<Validity, CertLogicValidationError> {
+    func checkDisplayRules(hcert: DCCCert, validationClock: Date = Date()) -> Result<DisplayRulesResult, CertLogicValidationError> {
         let external = externalJson(validationClock: validationClock)
 
         guard let dccJson = try? JSONEncoder().encode(hcert) else {
@@ -97,33 +93,36 @@ class CertLogic {
 
         var startDate: Date?
         var endDate: Date?
+        var isSwitzerlandOnly: Bool?
 
         for displayRule in displayRules {
-            // get from date
-            if displayRule["id"] == "display-from-date" {
-                guard let result: Date = try? applyRule(displayRule["logic"], to: context) else {
-                    return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: displayRule["id"].string ?? "VALIDITY_TEST"))
+            switch displayRule["id"] {
+            case "display-from-date":
+                // get from date
+                if let result: Date = try? applyRule(displayRule["logic"], to: context) {
+                    startDate = result
                 }
 
-                startDate = result
-            }
-
-            // get end date
-            if displayRule["id"] == "display-until-date" {
-                guard let result: Date = try? applyRule(displayRule["logic"], to: context) else {
-                    return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: displayRule["id"].string ?? "VALIDITY_TEST"))
+            case "display-until-date":
+                // get end date
+                if let result: Date = try? applyRule(displayRule["logic"], to: context) {
+                    endDate = result
                 }
 
-                endDate = result
+            case "is-only-valid-in-ch":
+                // get isSwitzerland
+                if let result: Bool = try? applyRule(displayRule["logic"], to: context) {
+                    isSwitzerlandOnly = result
+                }
+
+            default:
+                break
             }
         }
 
-        guard let s = startDate,
-              let e = endDate else {
-            return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "VALIDITY_TEST"))
-        }
-
-        return .success(Validity(from: s, until: e))
+        return .success(DisplayRulesResult(validFrom: startDate,
+                                           validUntil: endDate,
+                                           isSwitzerlandOnly: isSwitzerlandOnly))
     }
 
     private func externalJson(validationClock: Date) -> JSON {

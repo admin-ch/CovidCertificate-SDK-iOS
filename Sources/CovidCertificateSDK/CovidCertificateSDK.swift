@@ -42,7 +42,11 @@ public enum CovidCertificateSDK {
                 case let .success(nationalRulesResult):
                     return completionHandler(CheckResults(signature: result.signature,
                                                           revocationStatus: result.revocationStatus,
-                                                          nationalRules: .success(.init(isValid: nationalRulesResult.isValid, validUntil: nil, validFrom: nil, dateError: nil))))
+                                                          nationalRules: .success(.init(isValid: nationalRulesResult.isValid,
+                                                                                        validUntil: nil,
+                                                                                        validFrom: nil,
+                                                                                        dateError: nil,
+                                                                                        isSwitzerlandOnly: nil))))
                 // expose networking errors for verification apps
                 case .failure(.NETWORK_NO_INTERNET_CONNECTION),
                      .failure(.NETWORK_PARSE_ERROR),

@@ -15,4 +15,5 @@ public struct VerificationResult {
     public let validUntil: Date?
     public let validFrom: Date?
     public let dateError: NationalRulesDateError?
+    public let isSwitzerlandOnly: Bool?
 }

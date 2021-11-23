@@ -15,10 +15,6 @@ public protocol CovidCertificate {
     var dateOfBirth: String { get }
     var version: String { get }
     var type: CertificateType { get }
-
-    /// Whether a certificate is a case only valid in Switzerland.
-    /// At the moment, this is true for light certificates and serological tests, false otherwise.
-    var isSwitzerlandOnly: Bool { get }
 }
 
 public extension CovidCertificate {
