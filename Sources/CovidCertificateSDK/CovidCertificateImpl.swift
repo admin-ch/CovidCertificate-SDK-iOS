@@ -249,7 +249,7 @@ struct CovidCertificateImpl {
             }
 
             let displayRulesResult = try? certLogic.checkDisplayRules(hcert: certificate).get()
-            
+
             switch certLogic.checkRules(hcert: certificate) {
             case .success:
                 completionHandler(.success(VerificationResult(isValid: true,
