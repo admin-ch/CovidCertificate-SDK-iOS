@@ -35,12 +35,6 @@ class CertLogic {
     let calendar: Calendar
     let formatter = ISO8601DateFormatter()
 
-    private let dayDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = DATE_FORMAT
-        return formatter
-    }()
-
     init?() {
         guard let utc = TimeZone(identifier: "UTC") else {
             return nil
@@ -139,12 +133,12 @@ class CertLogic {
 
         var issuedAt: String?
         if let iat = holder.issuedAt {
-            issuedAt = dayDateFormatter.string(from: iat)
+            issuedAt = DateFormatter.dayDateFormatter.string(from: iat)
         }
 
         var expires: String?
         if let exp = holder.expiresAt {
-            expires = dayDateFormatter.string(from: exp)
+            expires = DateFormatter.dayDateFormatter.string(from: exp)
         }
 
         return CertLogicPayload(nam: certificate.person,
