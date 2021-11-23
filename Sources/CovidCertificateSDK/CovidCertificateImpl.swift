@@ -209,7 +209,8 @@ struct CovidCertificateImpl {
 
     func checkNationalRules(holder: CertificateHolderType, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
         guard let certificate = holder.certificate as? DCCCert else {
-            fatalError("Unsupported Certificate type")
+            completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
+            return
         }
 
         if certificate.immunisationType == nil {
@@ -345,11 +346,11 @@ struct CovidCertificateImpl {
                                                                   dateError: .EXPIRED,
                                                                   isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 default:
-                    completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                    completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
                 }
                 return
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
-                completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
                 return
             default:
                 completionHandler(.failure(.NO_VALID_DATE))

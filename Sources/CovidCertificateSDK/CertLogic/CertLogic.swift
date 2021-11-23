@@ -91,8 +91,8 @@ class CertLogic {
     func checkDisplayRules(holder: CertificateHolderType, validationClock: Date = Date()) -> Result<DisplayRulesResult, CertLogicValidationError> {
         let external = externalJson(validationClock: validationClock)
 
-        let payload = createPayload(from: holder)
-        guard let json = try? JSONEncoder().encode(payload) else {
+        guard let payload = createPayload(from: holder),
+              let json = try? JSONEncoder().encode(payload) else {
             return .failure(.JSON_ERROR)
         }
 
@@ -132,8 +132,10 @@ class CertLogic {
                                            isSwitzerlandOnly: isSwitzerlandOnly))
     }
 
-    private func createPayload(from holder: CertificateHolderType) -> CertLogicPayload {
-        let certificate = holder.certificate as? DCCCert
+    private func createPayload(from holder: CertificateHolderType) -> CertLogicPayload? {
+        guard let certificate = holder.certificate as? DCCCert else {
+            return nil
+        }
 
         var issuedAt: String?
         if let iat = holder.issuedAt {
@@ -145,9 +147,12 @@ class CertLogic {
             expires = dayDateFormatter.string(from: exp)
         }
 
-        return CertLogicPayload(v: certificate?.vaccinations,
-                                t: certificate?.tests,
-                                r: certificate?.pastInfections,
+        return CertLogicPayload(nam: certificate.person,
+                                dob: certificate.dateOfBirth,
+                                ver: certificate.version,
+                                v: certificate.vaccinations,
+                                t: certificate.tests,
+                                r: certificate.pastInfections,
                                 h: CertLogicPayloadHeader(iat: issuedAt, exp: expires))
     }
 

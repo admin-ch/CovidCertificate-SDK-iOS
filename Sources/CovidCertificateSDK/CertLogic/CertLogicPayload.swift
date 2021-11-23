@@ -11,6 +11,9 @@
 import Foundation
 
 struct CertLogicPayload: Codable {
+    let nam: Person
+    let dob: String
+    let ver: String
     let v: [Vaccination]?
     let t: [Test]?
     let r: [PastInfection]?
