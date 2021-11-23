@@ -248,29 +248,17 @@ struct CovidCertificateImpl {
                 return
             }
 
+            let displayRulesResult = try? certLogic.checkDisplayRules(hcert: certificate).get()
+            
             switch certLogic.checkRules(hcert: certificate) {
             case .success:
-                switch certLogic.checkDisplayRules(hcert: certificate) {
-                case let .success(result):
-                    completionHandler(.success(VerificationResult(isValid: true,
-                                                                  validUntil: result.validUntil,
-                                                                  validFrom: result.validFrom,
-                                                                  dateError: nil,
-                                                                  isSwitzerlandOnly: result.isSwitzerlandOnly)))
-                case .failure:
-                    completionHandler(.success(VerificationResult(isValid: true,
-                                                                  validUntil: nil,
-                                                                  validFrom: nil,
-                                                                  dateError: nil,
-                                                                  isSwitzerlandOnly: nil)))
-                }
+                completionHandler(.success(VerificationResult(isValid: true,
+                                                              validUntil: displayRulesResult?.validUntil,
+                                                              validFrom: displayRulesResult?.validFrom,
+                                                              dateError: nil,
+                                                              isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 return
             case let .failure(.TESTS_FAILED(tests)):
-                var displayRulesResult: DisplayRulesResult?
-                if case let .success(result) = certLogic.checkDisplayRules(hcert: certificate) {
-                    displayRulesResult = result
-                }
-
                 switch tests.keys.first {
                 case "GR-CH-0001": completionHandler(.failure(.WRONG_DISEASE_TARGET))
                 case "VR-CH-0000": completionHandler(.failure(.TOO_MANY_VACCINE_ENTRIES))
