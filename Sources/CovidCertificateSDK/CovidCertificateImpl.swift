@@ -250,27 +250,25 @@ struct CovidCertificateImpl {
 
             switch certLogic.checkRules(hcert: certificate) {
             case .success:
-                guard case let .success(validity) = certLogic.getValidity(hcert: certificate),
-                      case let .success(isSwitzerlandOnly) = certLogic.getIsSwitzerlandOnly(hcert: certificate) else {
-                    completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
-                    return
+                switch certLogic.checkDisplayRules(hcert: certificate) {
+                case let .success(result):
+                    completionHandler(.success(VerificationResult(isValid: true,
+                                                                  validUntil: result.validUntil,
+                                                                  validFrom: result.validFrom,
+                                                                  dateError: nil,
+                                                                  isSwitzerlandOnly: result.isSwitzerlandOnly)))
+                case .failure:
+                    completionHandler(.success(VerificationResult(isValid: true,
+                                                                  validUntil: nil,
+                                                                  validFrom: nil,
+                                                                  dateError: nil,
+                                                                  isSwitzerlandOnly: nil)))
                 }
-
-                completionHandler(.success(VerificationResult(isValid: true,
-                                                              validUntil: validity.until,
-                                                              validFrom: validity.from,
-                                                              dateError: nil,
-                                                              isSwitzerlandOnly: isSwitzerlandOnly)))
                 return
             case let .failure(.TESTS_FAILED(tests)):
-                var validity: Validity?
-                if case let .success(sucessValidity) = certLogic.getValidity(hcert: certificate) {
-                    validity = sucessValidity
-                }
-
-                var isSwitzerlandOnly: Bool?
-                if case let .success(chOnly) = certLogic.getIsSwitzerlandOnly(hcert: certificate) {
-                    isSwitzerlandOnly = chOnly
+                var displayRulesResult: DisplayRulesResult?
+                if case let .success(result) = certLogic.checkDisplayRules(hcert: certificate) {
+                    displayRulesResult = result
                 }
 
                 switch tests.keys.first {
@@ -281,34 +279,34 @@ struct CovidCertificateImpl {
                 case "VR-CH-0003": completionHandler(.failure(.NO_VALID_DATE))
                 case "VR-CH-0004":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .NOT_YET_VALID,
-                                                                 isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "VR-CH-0005":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "VR-CH-0006":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "VR-CH-0007":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "VR-CH-0008":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "TR-CH-0000": completionHandler(.failure(.TOO_MANY_TEST_ENTRIES))
                 case "TR-CH-0001": completionHandler(.failure(.POSITIVE_RESULT))
                 case "TR-CH-0002": completionHandler(.failure(.WRONG_TEST_TYPE))
@@ -316,44 +314,44 @@ struct CovidCertificateImpl {
                 case "TR-CH-0004": completionHandler(.failure(.NO_VALID_DATE))
                 case "TR-CH-0005":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "TR-CH-0006":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "TR-CH-0007":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "TR-CH-0008":
                     completionHandler(.failure(.NEGATIVE_RESULT))
                 case "TR-CH-0009":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "RR-CH-0000": completionHandler(.failure(.TOO_MANY_RECOVERY_ENTRIES))
                 case "RR-CH-0001": completionHandler(.failure(.NO_VALID_DATE))
                 case "RR-CH-0002":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 case "RR-CH-0003":
                     completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: validity?.until,
-                                                                  validFrom: validity?.from,
+                                                                  validUntil: displayRulesResult?.validUntil,
+                                                                  validFrom: displayRulesResult?.validFrom,
                                                                   dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: isSwitzerlandOnly)))
+                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 default:
                     completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
                 }
