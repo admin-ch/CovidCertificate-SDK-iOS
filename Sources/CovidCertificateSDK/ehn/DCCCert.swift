@@ -131,15 +131,8 @@ public struct Vaccination: Codable {
         disease == Disease.SarsCov2.rawValue
     }
 
-    /// we need a date of vaccination which needs to be in the format of yyyy-MM-dd
-    var dateFormatter: DateFormatter {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = DATE_FORMAT
-        return dateFormatter
-    }
-
     public var dateOfVaccination: Date? {
-        dateFormatter.date(from: vaccinationDate)
+        DateFormatter.dayDateFormatter.date(from: vaccinationDate)
     }
 
     public func getValidFromDate(singleVaccineValidityOffset: Int,
@@ -319,14 +312,8 @@ public struct PastInfection: Codable {
         certificateIdentifier = try container.decode(String.self, forKey: .certificateIdentifier).trimmed
     }
 
-    var dateFormatter: DateFormatter {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = DATE_FORMAT
-        return dateFormatter
-    }
-
     public var firstPositiveTestResultDate: Date? {
-        dateFormatter.date(from: dateFirstPositiveTest)
+        DateFormatter.dayDateFormatter.date(from: dateFirstPositiveTest)
     }
 
     public var validFromDate: Date? {

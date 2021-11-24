@@ -79,7 +79,7 @@ struct CovidCertificateImpl {
             }
 
             group.enter()
-            checkNationalRules(certificate: certificate, forceUpdate: forceUpdate) { result in
+            checkNationalRules(holder: holder, forceUpdate: forceUpdate) { result in
                 nationalRulesResult = result
                 group.leave()
             }
@@ -207,7 +207,12 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkNationalRules(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+    func checkNationalRules(holder: CertificateHolderType, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
+        guard let certificate = holder.certificate as? DCCCert else {
+            completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
+            return
+        }
+
         if certificate.immunisationType == nil {
             completionHandler(.failure(.NO_VALID_PRODUCT))
             return
@@ -248,7 +253,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let displayRulesResult = try? certLogic.checkDisplayRules(hcert: certificate).get()
+            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder).get()
 
             switch certLogic.checkRules(hcert: certificate) {
             case .success:
@@ -341,11 +346,11 @@ struct CovidCertificateImpl {
                                                                   dateError: .EXPIRED,
                                                                   isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
                 default:
-                    completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                    completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
                 }
                 return
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
-                completionHandler(.failure(.UNKNOWN_TEST_FAILURE))
+                completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
                 return
             default:
                 completionHandler(.failure(.NO_VALID_DATE))

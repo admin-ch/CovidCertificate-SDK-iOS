@@ -10,7 +10,7 @@
 
 import Foundation
 
-public struct CertificateHolder {
+public struct CertificateHolder: CertificateHolderType {
     let cose: Cose
     let cwt: CWT
     public let keyId: Data
@@ -37,7 +37,7 @@ public struct CertificateHolder {
         cwt.iss
     }
 
-    var expiresAt: Date? {
+    public var expiresAt: Date? {
         if let i = cwt.exp?.asNumericDate() {
             return Date(timeIntervalSince1970: i)
         }

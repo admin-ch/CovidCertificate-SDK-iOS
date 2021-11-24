@@ -57,7 +57,7 @@ public enum CovidCertificateSDK {
                     // Strip specific national rules error for verification apps
                     return completionHandler(.init(signature: result.signature,
                                                    revocationStatus: result.revocationStatus,
-                                                   nationalRules: .failure(.UNKNOWN_TEST_FAILURE)))
+                                                   nationalRules: .failure(.UNKNOWN_CERTLOGIC_FAILURE)))
                 }
             }
         }
