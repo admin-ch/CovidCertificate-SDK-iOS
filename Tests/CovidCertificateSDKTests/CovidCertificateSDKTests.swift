@@ -424,7 +424,7 @@ final class CovidCertificateSDKTests: XCTestCase {
     }
 
     /// Test tourist certificate that is valid for 30 days after being issued
-    func testTouristCertificate() {
+    func testTouristCertificateIsValidFor30Days() {
         let touristCertIdentifiers = ["BBIBP-CorV_T", "CoronaVac_T", "Covaxin_T"]
 
         for id in touristCertIdentifiers {
@@ -432,15 +432,72 @@ final class CovidCertificateSDKTests: XCTestCase {
 
             let today = Calendar.current.startOfDay(for: Date())
             let issued = Calendar.current.date(byAdding: DateComponents(day: -29), to: today)!
+            let expires = Calendar.current.date(byAdding: DateComponents(day: 30), to: issued)!
 
             let successExpcetation = expectation(description: "success")
 
-            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: issued), forceUpdate: false) { result in
+            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: issued, expiresAt: expires), forceUpdate: false) { result in
                 switch result {
                 case let .success(r):
                     XCTAssertTrue(r.isValid)
                     XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, issued))
-                    XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 29), to: issued)!))
+                    XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, expires))
+                default:
+                    XCTFail("Should be fine")
+                }
+                successExpcetation.fulfill()
+            }
+
+            waitForExpectations(timeout: 60, handler: nil)
+        }
+    }
+
+    /// Test tourist certificate that is valid for less than 30 days after being issued, due to an early vaccination date
+    func testTouristCertificateIsOnlyValidUntilVaccinationExpiration() {
+        let touristCertIdentifiers = ["BBIBP-CorV_T", "CoronaVac_T", "Covaxin_T"]
+
+        for id in touristCertIdentifiers {
+            let validCert = generateVacineCert(dn: 2, sd: 2, ma: "", mp: id, tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -355))
+
+            let today = Calendar.current.startOfDay(for: Date())
+            let issued = Calendar.current.date(byAdding: DateComponents(day: -1), to: today)!
+            let expires = Calendar.current.date(byAdding: DateComponents(day: 30), to: issued)!
+
+            let successExpcetation = expectation(description: "success")
+
+            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: issued, expiresAt: expires), forceUpdate: false) { result in
+                switch result {
+                case let .success(r):
+                    XCTAssertTrue(r.isValid)
+                    XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, issued))
+                    XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 10), to: issued)!))
+                default:
+                    XCTFail("Should be fine")
+                }
+                successExpcetation.fulfill()
+            }
+
+            waitForExpectations(timeout: 60, handler: nil)
+        }
+    }
+
+    /// Test tourist certificate that has no issued at and expiry set (old clients)
+    func testTouristCertificateOnOlderClients() {
+        let touristCertIdentifiers = ["BBIBP-CorV_T", "CoronaVac_T", "Covaxin_T"]
+
+        for id in touristCertIdentifiers {
+            let validCert = generateVacineCert(dn: 2, sd: 2, ma: "", mp: id, tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -250))
+
+            let today = Calendar.current.startOfDay(for: Date())
+
+            let successExpcetation = expectation(description: "success")
+
+            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: nil, expiresAt: nil), forceUpdate: false) { result in
+                switch result {
+                case let .success(r):
+                    XCTAssertTrue(r.isValid)
+                    XCTAssertTrue(self.areSameVaccineDates(r.validFrom!, today))
+                    XCTAssertTrue(self.areSameVaccineDates(r.validUntil!, Calendar.current.date(byAdding: DateComponents(day: 1), to: today)!))
                 default:
                     XCTFail("Should be fine")
                 }
