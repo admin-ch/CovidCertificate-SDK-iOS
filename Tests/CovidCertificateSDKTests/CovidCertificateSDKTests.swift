@@ -480,7 +480,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             waitForExpectations(timeout: 60, handler: nil)
         }
     }
-    
+
     /// Test tourist certificate that has no issued at and expiry set (old clients)
     func testTouristCertificateOnOlderClients() {
         let touristCertIdentifiers = ["BBIBP-CorV_T", "CoronaVac_T", "Covaxin_T"]
