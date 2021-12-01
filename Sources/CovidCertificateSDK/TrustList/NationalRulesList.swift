@@ -17,13 +17,17 @@ class NationalRulesList: Codable, JWTExtension {
     var requestData: Data? {
         didSet {
             if let newValue = requestData {
-                rules = JSON(newValue)["rules"]
-                valueSets = JSON(newValue)["valueSets"]
-                displayRules = JSON(newValue)["displayRules"]
+                let json = JSON(newValue)
+                rules = json["rules"]
+                valueSets = json["valueSets"]
+                displayRules = json["displayRules"]
+                modeRules.activeModes = json["modeRules"].dictionary?["activeModes"]?.array?.compactMap { $0.string } ?? []
+                modeRules.logic = json["modeRules"].dictionary?["logic"]
             } else {
                 rules = nil
                 valueSets = nil
                 displayRules = nil
+                modeRules = .init()
             }
         }
     }
@@ -31,6 +35,7 @@ class NationalRulesList: Codable, JWTExtension {
     var rules: JSON? = nil
     var valueSets: JSON? = nil
     var displayRules: JSON? = nil
+    var modeRules: NationalRulesModes = .init()
 
     enum CodingKeys: String, CodingKey {
         case validDuration
@@ -50,6 +55,8 @@ class NationalRulesList: Codable, JWTExtension {
             rules = json["rules"]
             valueSets = json["valueSets"]
             displayRules = json["displayRules"]
+            modeRules.activeModes = json["modeRules"].dictionary?["activeModes"]?.array?.compactMap { $0.string } ?? []
+            modeRules.logic = json["modeRules"].dictionary?["logic"]
         }
     }
 
@@ -58,4 +65,13 @@ class NationalRulesList: Codable, JWTExtension {
         try container.encode(validDuration, forKey: .validDuration)
         try container.encode(requestData, forKey: .requestData)
     }
+
+    func getList(for mode: CheckMode) -> JSON? {
+        return nil
+    }
+}
+
+class NationalRulesModes {
+    var activeModes: [String] = []
+    var logic: JSON? = nil
 }
