@@ -10,4 +10,7 @@
 
 import Foundation
 
-public typealias CheckMode = String
+public struct CheckMode : Equatable, Hashable {
+    public let id: String
+    public let displayName: String
+}

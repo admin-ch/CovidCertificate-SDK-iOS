@@ -133,7 +133,7 @@ class CertLogic {
         let external = externalJson(validationClock: validationClock)
         for mode in modes {
             guard let modeRule = modeRule,
-                  let payload = createPayload(from: holder, mode: mode),
+                  let payload = createPayload(from: holder, mode: mode.id),
                   let json = try? JSONEncoder().encode(payload) else {
                 return .failure(.JSON_ERROR)
             }

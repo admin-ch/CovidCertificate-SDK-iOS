@@ -21,7 +21,14 @@ class NationalRulesList: Codable, JWTExtension {
                 rules = json["rules"]
                 valueSets = json["valueSets"]
                 displayRules = json["displayRules"]
-                modeRules.activeModes = json["modeRules"].dictionary?["activeModes"]?.array?.compactMap { $0.string } ?? []
+                modeRules.activeModes = (json["modeRules"].dictionary?["activeModes"]?.array?.compactMap {
+                    if let id = $0["id"].string, let dn = $0["displayName"].string {
+                        return CheckMode(id: id, displayName: dn)
+                    } else {
+                        return nil
+                    }
+                }) ?? []
+
                 modeRules.logic = json["modeRules"].dictionary?["logic"]
             } else {
                 rules = nil
@@ -55,7 +62,13 @@ class NationalRulesList: Codable, JWTExtension {
             rules = json["rules"]
             valueSets = json["valueSets"]
             displayRules = json["displayRules"]
-            modeRules.activeModes = json["modeRules"].dictionary?["activeModes"]?.array?.compactMap { $0.string } ?? []
+            modeRules.activeModes = (json["modeRules"].dictionary?["activeModes"]?.array?.compactMap {
+                if let id = $0["id"].string, let dn = $0["displayName"].string {
+                    return CheckMode(id: id, displayName: dn)
+                } else {
+                    return nil
+                }
+            }) ?? []
             modeRules.logic = json["modeRules"].dictionary?["logic"]
         }
     }
@@ -72,6 +85,6 @@ class NationalRulesList: Codable, JWTExtension {
 }
 
 class NationalRulesModes {
-    var activeModes: [String] = []
+    var activeModes: [CheckMode] = []
     var logic: JSON? = nil
 }
