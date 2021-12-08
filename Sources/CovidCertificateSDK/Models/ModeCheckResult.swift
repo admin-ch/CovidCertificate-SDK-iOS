@@ -10,7 +10,7 @@
 
 import Foundation
 
-public struct ModeCheckResult {
+public struct ModeCheckResult : Equatable {
     public let isValid: Bool
     public let code: String
 

@@ -17,7 +17,7 @@ public struct CheckResults {
     public let modeResults: Result<ModeResults, NationalRulesError>
 }
 
-public struct ModeResults {
+public struct ModeResults : Equatable {
     public let results: [CheckMode: ModeCheckResult]
 
     public func getResult(for mode: CheckMode) -> ModeCheckResult? {
