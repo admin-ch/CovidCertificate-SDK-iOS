@@ -21,14 +21,20 @@ class NationalRulesListUpdate: TrustListUpdate {
 
     override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         let request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadRevalidatingCacheData: ignoreLocalCache)
-        let (data, _, error) = session.synchronousDataTask(with: request)
+        let (data, response, error) = session.synchronousDataTask(with: request)
 
         if error != nil {
             return error?.asNetworkError()
         }
 
-        guard let d = data else {
+        guard let d = data,
+              let httpResponse = response as? HTTPURLResponse else {
             return .NETWORK_PARSE_ERROR
+        }
+        
+        // Make sure HTTP response code is 2xx
+        guard httpResponse.statusCode / 100 == 2 else {
+            return .NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)
         }
 
         let semaphore = DispatchSemaphore(value: 0)

@@ -54,6 +54,11 @@ class RevocationListUpdate: TrustListUpdate {
                   let httpResponse = response as? HTTPURLResponse else {
                 return .NETWORK_PARSE_ERROR
             }
+            
+            // Make sure HTTP response code is 2xx
+            guard httpResponse.statusCode / 100 == 2 else {
+                return .NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)
+            }
 
             // get the `x-next-since` from HTTP headers, save it and pass to the next request
             guard let nextSinceHeader = httpResponse.value(forHeaderField: "x-next-since") else {

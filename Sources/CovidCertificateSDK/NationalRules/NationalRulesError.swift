@@ -21,6 +21,7 @@ public enum NationalRulesError: Error, Equatable {
     case NO_VALID_DATE
     case NETWORK_ERROR(errorCode: String)
     case NETWORK_PARSE_ERROR
+    case NETWORK_SERVER_ERROR(statusCode: Int)
     case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
     case TIME_INCONSISTENCY(timeShift: TimeInterval)
     case UNKNOWN_CERTLOGIC_FAILURE
@@ -39,6 +40,7 @@ public enum NationalRulesError: Error, Equatable {
         case .NO_VALID_DATE: return "N|NVD"
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
         case .NETWORK_PARSE_ERROR: return "NE|PE"
+        case let .NETWORK_SERVER_ERROR(statusCode): return "NE|SE-\(statusCode)"
         case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         case .TIME_INCONSISTENCY: return "NE|TI"
         case .UNKNOWN_CERTLOGIC_FAILURE: return "N|UKN"

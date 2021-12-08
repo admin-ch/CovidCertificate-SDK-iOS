@@ -35,6 +35,11 @@ class TrustCertificatesUpdate: TrustListUpdate {
               let httpResponse = response as? HTTPURLResponse else {
             return .NETWORK_PARSE_ERROR
         }
+        
+        // Make sure HTTP response code is 2xx
+        guard httpResponse.statusCode / 100 == 2 else {
+            return .NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)
+        }
 
         let semaphore = DispatchSemaphore(value: 0)
         var outcome: Result<ActiveTrustCertificates, JWSError> = .failure(.SIGNATURE_INVALID)

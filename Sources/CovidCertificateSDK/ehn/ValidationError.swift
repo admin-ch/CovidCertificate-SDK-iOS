@@ -43,6 +43,7 @@ public enum ValidationError: Error, Equatable {
     case SIGNATURE_TYPE_INVALID(SignatureTypeInvalidError)
     case NETWORK_ERROR(errorCode: String)
     case NETWORK_PARSE_ERROR
+    case NETWORK_SERVER_ERROR(statusCode: Int)
     case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
     case TIME_INCONSISTENCY(timeShift: TimeInterval)
 
@@ -64,6 +65,7 @@ public enum ValidationError: Error, Equatable {
         case .SIGNATURE_TYPE_INVALID: return "The certificate is not valid according to specification"
         case .NETWORK_ERROR: return "A network error occured"
         case .NETWORK_PARSE_ERROR: return "The data could not be parsed"
+        case .NETWORK_SERVER_ERROR: return "The server returned an unexpected HTTP status code"
         case .NETWORK_NO_INTERNET_CONNECTION: return "The internet connection appears to be offline"
         case .TIME_INCONSISTENCY: return "There seems to be a time inconsistency"
         }
@@ -87,6 +89,7 @@ public enum ValidationError: Error, Equatable {
         case let .SIGNATURE_TYPE_INVALID(wrapped): return "S|TIV|" + wrapped.errorCode
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
         case .NETWORK_PARSE_ERROR: return "NE|PE"
+        case let .NETWORK_SERVER_ERROR(statusCode): return "NE|SE-\(statusCode)"
         case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         case .TIME_INCONSISTENCY: return "NE|TI"
         }
