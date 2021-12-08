@@ -11,6 +11,14 @@
 import Foundation
 
 public struct ModeCheckResult {
-    let isValid: Bool
-    let code: String
+    public let isValid: Bool
+    public let code: String
+
+    public func isModeUnknown() -> Bool {
+        return code == "UNKNOWN_MODE"
+    }
+
+    public func isLightUnsupported() -> Bool {
+        return code == "IS_LIGHT"
+    }
 }
