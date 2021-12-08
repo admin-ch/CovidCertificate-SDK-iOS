@@ -131,12 +131,14 @@ struct CovidCertificateImpl {
         }
 
         trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
-            // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
-            if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asValidationError() {
+
+            if case .NETWORK_SERVER_ERROR = lastError {
+                // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+            } else if let e = lastError?.asValidationError() {
                 completionHandler(.failure(e))
                 return
             }
-
+            
             // Safe-guard that we have a recent trust list available at this point
             guard trustListManager.trustStorage.certificateListIsValid() else {
                 if let e = lastError?.asValidationError() {
@@ -181,8 +183,10 @@ struct CovidCertificateImpl {
 
     func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
-            // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
-            if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asValidationError() {
+            
+            if case .NETWORK_SERVER_ERROR = lastError {
+                // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+            } else if let e = lastError?.asValidationError() {
                 completionHandler(.failure(e))
                 return
             }
@@ -219,8 +223,10 @@ struct CovidCertificateImpl {
         }
 
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
-            // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
-            if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asNationalRulesError() {
+            
+            if case .NETWORK_SERVER_ERROR = lastError {
+                // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+            } else if let e = lastError?.asNationalRulesError() {
                 completionHandler(.failure(e))
                 return
             }
