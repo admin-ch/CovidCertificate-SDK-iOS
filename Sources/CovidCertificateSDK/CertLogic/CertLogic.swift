@@ -128,24 +128,25 @@ class CertLogic {
                                            isSwitzerlandOnly: isSwitzerlandOnly))
     }
 
-    func checkModeRules(holder: CertificateHolderType, modes: [CheckMode], validationClock: Date = Date()) -> Result<ModeResults, CertLogicValidationError> {
-        var results: [CheckMode: ModeCheckResult] = [:]
+    func checkModeRules(holder: CertificateHolderType, modes: [CheckMode], validationClock: Date = Date()) -> [CheckMode: Result<ModeCheckResult, CertLogicValidationError>] {
+        var results: [CheckMode: Result<ModeCheckResult, CertLogicValidationError>] = [:]
         let external = externalJson(validationClock: validationClock)
         for mode in modes {
             guard let modeRule = modeRule,
                   let payload = createPayload(from: holder, mode: mode.id),
                   let json = try? JSONEncoder().encode(payload) else {
-                return .failure(.JSON_ERROR)
+                results[mode] = .failure(.JSON_ERROR)
+                continue
             }
 
             let context = JSON(["external": external, "payload": JSON(json)])
             if let validationCode: String = try? applyRule(modeRule, to: context) {
-                results[mode] = .init(isValid: validationCode == "SUCCESS", code: validationCode)
+                results[mode] = .success(.init(isValid: validationCode == "SUCCESS", code: validationCode))
             } else {
-                return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK"))
+                results[mode] = .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK"))
             }
         }
-        return .success(ModeResults(results: results))
+        return results
     }
 
     private func createPayload(from holder: CertificateHolderType, mode: String? = nil) -> CertLogicPayload? {
