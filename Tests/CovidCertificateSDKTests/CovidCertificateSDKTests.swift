@@ -5,8 +5,8 @@ import jsonlogic
 import XCTest
 
 private extension CheckMode {
-    static let threeG = "THREE_G"
-    static let twoG = "TWO_G"
+    static let threeG = CheckMode(id: "THREE_G", displayName: "3G")
+    static let twoG = CheckMode(id: "TWO_G", displayName: "2G")
 }
 
 private extension Array where Element == CheckMode {
