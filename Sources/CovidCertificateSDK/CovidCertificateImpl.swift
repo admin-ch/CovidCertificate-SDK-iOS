@@ -194,7 +194,7 @@ struct CovidCertificateImpl {
 
     internal struct CheckRulesResult {
         var nationalRules: Result<VerificationResult, NationalRulesError> = .failure(.NETWORK_PARSE_ERROR)
-        var modeResults: Result<ModeResults, NationalRulesError> = .failure(.NETWORK_PARSE_ERROR)
+        var modeResults: ModeResults = .init(results: [:])
     }
 
     func checkNationalRules(holder: CertificateHolderType,
@@ -202,13 +202,17 @@ struct CovidCertificateImpl {
                             modes: [CheckMode],
                             _ completionHandler: @escaping (CheckRulesResult) -> Void) {
         var result = CheckRulesResult()
+        var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             // If there is a time inconsistency between server and device, this error takes priority even if there's a valid list
             if case .TIME_INCONSISTENCY = lastError, let e = lastError?.asNationalRulesError() {
                 result.nationalRules = .failure(e)
-                result.modeResults = .failure(e)
+                for mode in modes {
+                    modeResults[mode] = .failure(e)
+                }
+                result.modeResults = .init(results: modeResults)
                 completionHandler(result)
                 return
             }
@@ -218,12 +222,18 @@ struct CovidCertificateImpl {
                 if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
                     result.nationalRules = .failure(e)
-                    result.modeResults = .failure(e)
+                    for mode in modes {
+                        modeResults[mode] = .failure(e)
+                    }
+                    result.modeResults = .init(results: modeResults)
                     completionHandler(result)
                 } else {
                     // Otherwise generic offline error
                     result.nationalRules = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
-                    result.modeResults = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
+                    for mode in modes {
+                        modeResults[mode] = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
+                    }
+                    result.modeResults = .init(results: modeResults)
                     completionHandler(result)
                 }
                 return
@@ -238,7 +248,10 @@ struct CovidCertificateImpl {
                   let modeRule = list.modeRules.logic
             else {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
-                result.modeResults = .failure(.NETWORK_PARSE_ERROR)
+                for mode in modes {
+                    modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
+                }
+                result.modeResults = .init(results: modeResults)
                 completionHandler(result)
                 return
             }
@@ -248,18 +261,26 @@ struct CovidCertificateImpl {
                                                     displayRules: displayRules,
                                                     modeRule: modeRule) {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
+                for mode in modes {
+                    modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
+                }
+                result.modeResults = .init(results: modeResults)
                 completionHandler(result)
                 return
             }
 
-            switch certLogic.checkModeRules(holder: holder, modes: modes) {
-            case let .success(modeResult):
-                result.modeResults = .success(modeResult)
-            case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
-                result.modeResults = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
-            case .failure:
-                result.modeResults = .failure(.NETWORK_PARSE_ERROR)
+            for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes) {
+                switch modeResult{
+                case let .success(modeResult):
+                    modeResults[mode] = .success(modeResult)
+                case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
+                    modeResults[mode] = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                case .failure:
+                    modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
+                }
             }
+            result.modeResults = .init(results: modeResults)
+
 
             guard let certificate = holder.certificate as? DCCCert else {
                 // a light certificate is not valid if the CWT has expired
@@ -283,7 +304,6 @@ struct CovidCertificateImpl {
 
             if certificate.immunisationType == nil {
                 result.nationalRules = .failure(.NO_VALID_PRODUCT)
-                result.modeResults = .failure(.NO_VALID_PRODUCT)
                 completionHandler(result)
                 return
             }

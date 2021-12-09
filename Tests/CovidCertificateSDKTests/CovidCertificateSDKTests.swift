@@ -1009,10 +1009,10 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let expectation = expectation(description: "fail")
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
-            switch result.modeResults {
+            switch result.modeResults.getResult(for: .twoG) {
             case let .success(r):
                 /// TEST IS NOT VALID IN 2G MODE
-                XCTAssertFalse(r.getResult(for: .twoG)!.isValid)
+                XCTAssertFalse(r.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1030,10 +1030,10 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let expectation = expectation(description: "fail")
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
-            switch result.modeResults {
+            switch result.modeResults.getResult(for: .threeG) {
             case let .success(r):
                 /// TEST IS VALID IN 2G MODE
-                XCTAssertTrue(r.getResult(for: .threeG)!.isValid)
+                XCTAssertTrue(r.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1047,9 +1047,9 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let twoGExpecation = expectation(description: "success")
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
-            switch result.modeResults {
+            switch result.modeResults.getResult(for: .twoG) {
             case let .success(r):
-                XCTAssertTrue(r.getResult(for: .twoG)!.isValid)
+                XCTAssertTrue(r.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1058,9 +1058,9 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let threeGExpecation = expectation(description: "success")
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
-            switch result.modeResults {
+            switch result.modeResults.getResult(for: .threeG) {
             case let .success(r):
-                XCTAssertTrue(r.getResult(for: .threeG)!.isValid)
+                XCTAssertTrue(r.isValid)
             default:
                 XCTFail("Something happened")
             }
