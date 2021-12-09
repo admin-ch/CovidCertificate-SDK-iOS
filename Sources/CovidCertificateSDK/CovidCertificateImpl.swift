@@ -270,7 +270,7 @@ struct CovidCertificateImpl {
             }
 
             for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes) {
-                switch modeResult{
+                switch modeResult {
                 case let .success(modeResult):
                     modeResults[mode] = .success(modeResult)
                 case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
@@ -280,7 +280,6 @@ struct CovidCertificateImpl {
                 }
             }
             result.modeResults = .init(results: modeResults)
-
 
             guard let certificate = holder.certificate as? DCCCert else {
                 // a light certificate is not valid if the CWT has expired
