@@ -11,9 +11,9 @@
 import Foundation
 
 struct CertLogicPayload: Codable {
-    let nam: Person
-    let dob: String
-    let ver: String
+    let nam: Person?
+    let dob: String?
+    let ver: String?
     let v: [Vaccination]?
     let t: [Test]?
     let r: [PastInfection]?
@@ -23,4 +23,6 @@ struct CertLogicPayload: Codable {
 struct CertLogicPayloadHeader: Codable {
     let iat: String?
     let exp: String?
+    let isLight: Bool
+    let mode: String?
 }

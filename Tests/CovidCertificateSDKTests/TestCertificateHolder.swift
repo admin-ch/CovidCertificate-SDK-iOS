@@ -9,10 +9,15 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-import CovidCertificateSDK
+@testable import CovidCertificateSDK
 import Foundation
 
 struct TestCertificateHolder: CertificateHolderType {
+    var cwt: CWT {
+        // not supported for testcases
+        fatalError()
+    }
+
     let certificate: CovidCertificate
 
     let issuedAt: Date?

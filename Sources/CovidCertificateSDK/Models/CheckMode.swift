@@ -10,12 +10,12 @@
 
 import Foundation
 
-internal protocol CertificateHolderType {
-    var cwt: CWT { get }
-    var keyId: Data { get }
-    var certificate: CovidCertificate { get }
-    var issuer: String? { get }
-    var issuedAt: Date? { get }
-    var expiresAt: Date? { get }
-    func hasValidSignature(for publicKey: SecKey) -> Bool
+public struct CheckMode: Equatable, Hashable {
+    public init(id: String, displayName: String) {
+        self.id = id
+        self.displayName = displayName
+    }
+
+    public let id: String
+    public let displayName: String
 }

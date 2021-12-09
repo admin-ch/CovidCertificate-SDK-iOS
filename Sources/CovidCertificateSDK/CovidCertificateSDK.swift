@@ -34,31 +34,10 @@ public enum CovidCertificateSDK {
             }
         }
 
-        public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+        public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, mode: CheckMode?, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            instance.check(holder: holder.value, forceUpdate: forceUpdate) { result in
-                switch result.nationalRules {
-                // don't expose the validity range for verification apps
-                case let .success(nationalRulesResult):
-                    return completionHandler(CheckResults(signature: result.signature,
-                                                          revocationStatus: result.revocationStatus,
-                                                          nationalRules: .success(.init(isValid: nationalRulesResult.isValid,
-                                                                                        validUntil: nil,
-                                                                                        validFrom: nil,
-                                                                                        dateError: nil,
-                                                                                        isSwitzerlandOnly: nil))))
-                // expose networking errors for verification apps
-                case .failure(.NETWORK_NO_INTERNET_CONNECTION),
-                     .failure(.NETWORK_PARSE_ERROR),
-                     .failure(.NETWORK_ERROR),
-                     .failure(.TIME_INCONSISTENCY(timeShift: _)):
-                    return completionHandler(result)
-                case .failure:
-                    // Strip specific national rules error for verification apps
-                    return completionHandler(.init(signature: result.signature,
-                                                   revocationStatus: result.revocationStatus,
-                                                   nationalRules: .failure(.UNKNOWN_CERTLOGIC_FAILURE)))
-                }
+            instance.check(holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : []) { result in
+                completionHandler(result.anonymized)
             }
         }
     }
@@ -69,9 +48,9 @@ public enum CovidCertificateSDK {
             return instance.decode(encodedData: encodedData)
         }
 
-        public static func check(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+        public static func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(holder: holder, forceUpdate: forceUpdate, completionHandler)
+            return instance.check(holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
         }
     }
 
@@ -82,6 +61,11 @@ public enum CovidCertificateSDK {
 
     private static func instancePrecondition() {
         precondition(instance != nil, "CovidCertificateSDK not initialized, call `initialize()`")
+    }
+
+    public static var supportedModes: [CheckMode] {
+        instancePrecondition()
+        return instance.getSupportedModes()
     }
 
     public static var currentEnvironment: SDKEnvironment {

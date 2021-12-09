@@ -32,6 +32,7 @@ class CertLogic {
     var rules: [JSON] = []
     var valueSets: JSON = []
     var displayRules: [JSON] = []
+    var modeRule: JSON?
     let calendar: Calendar
     let formatter = ISO8601DateFormatter()
 
@@ -44,7 +45,7 @@ class CertLogic {
         calendar = tmpCalendar
     }
 
-    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON) -> Result<Void, CertLogicCommonError> {
+    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON, modeRule: JSON) -> Result<Void, CertLogicCommonError> {
         guard let rulesArray = rules.array,
               let displayRulesArray = displayRules.array else {
             return .failure(.RULE_PARSING_FAILED)
@@ -52,6 +53,7 @@ class CertLogic {
         self.rules = rulesArray
         self.valueSets = valueSets
         self.displayRules = displayRulesArray
+        self.modeRule = modeRule
         return .success(())
     }
 
@@ -126,11 +128,27 @@ class CertLogic {
                                            isSwitzerlandOnly: isSwitzerlandOnly))
     }
 
-    private func createPayload(from holder: CertificateHolderType) -> CertLogicPayload? {
-        guard let certificate = holder.certificate as? DCCCert else {
-            return nil
-        }
+    func checkModeRules(holder: CertificateHolderType, modes: [CheckMode], validationClock: Date = Date()) -> Result<ModeResults, CertLogicValidationError> {
+        var results: [CheckMode: ModeCheckResult] = [:]
+        let external = externalJson(validationClock: validationClock)
+        for mode in modes {
+            guard let modeRule = modeRule,
+                  let payload = createPayload(from: holder, mode: mode.id),
+                  let json = try? JSONEncoder().encode(payload) else {
+                return .failure(.JSON_ERROR)
+            }
 
+            let context = JSON(["external": external, "payload": JSON(json)])
+            if let validationCode: String = try? applyRule(modeRule, to: context) {
+                results[mode] = .init(isValid: validationCode == "SUCCESS", code: validationCode)
+            } else {
+                return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK"))
+            }
+        }
+        return .success(ModeResults(results: results))
+    }
+
+    private func createPayload(from holder: CertificateHolderType, mode: String? = nil) -> CertLogicPayload? {
         var issuedAt: String?
         if let iat = holder.issuedAt {
             issuedAt = DateFormatter.dayDateFormatter.string(from: iat)
@@ -141,13 +159,27 @@ class CertLogic {
             expires = DateFormatter.dayDateFormatter.string(from: exp)
         }
 
-        return CertLogicPayload(nam: certificate.person,
-                                dob: certificate.dateOfBirth,
-                                ver: certificate.version,
-                                v: certificate.vaccinations,
-                                t: certificate.tests,
-                                r: certificate.pastInfections,
-                                h: CertLogicPayloadHeader(iat: issuedAt, exp: expires))
+        switch holder.certificate {
+        case let certificate as DCCCert:
+            return CertLogicPayload(nam: certificate.person,
+                                    dob: certificate.dateOfBirth,
+                                    ver: certificate.version,
+                                    v: certificate.vaccinations,
+                                    t: certificate.tests,
+                                    r: certificate.pastInfections,
+                                    h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: false, mode: mode))
+        case is LightCert:
+            return CertLogicPayload(nam: nil,
+                                    dob: nil,
+                                    ver: nil,
+                                    v: nil,
+                                    t: nil,
+                                    r: nil,
+                                    h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: true, mode: mode))
+        default:
+            assertionFailure("Unexpected Certificate type")
+            return nil
+        }
     }
 
     private func externalJson(validationClock: Date) -> JSON {
