@@ -12,29 +12,29 @@ import Foundation
 
 extension CheckResults {
     var anonymized: CheckResults {
-        switch self.nationalRules {
-            // don't expose the validity range for verification apps
+        switch nationalRules {
+        // don't expose the validity range for verification apps
         case let .success(nationalRulesResult):
-            return CheckResults(signature: self.signature,
-                                revocationStatus: self.revocationStatus,
+            return CheckResults(signature: signature,
+                                revocationStatus: revocationStatus,
                                 nationalRules: .success(.init(isValid: nationalRulesResult.isValid,
                                                               validUntil: nil,
                                                               validFrom: nil,
                                                               dateError: nil,
                                                               isSwitzerlandOnly: nil)),
-                                modeResults: self.modeResults)
-            // expose networking errors for verification apps
+                                modeResults: modeResults)
+        // expose networking errors for verification apps
         case .failure(.NETWORK_NO_INTERNET_CONNECTION),
-                .failure(.NETWORK_PARSE_ERROR),
-                .failure(.NETWORK_ERROR),
-                .failure(.TIME_INCONSISTENCY(timeShift: _)):
+             .failure(.NETWORK_PARSE_ERROR),
+             .failure(.NETWORK_ERROR),
+             .failure(.TIME_INCONSISTENCY(timeShift: _)):
             return self
         case .failure:
             // Strip specific national rules error for verification apps
-            return .init(signature: self.signature,
-                         revocationStatus: self.revocationStatus,
+            return .init(signature: signature,
+                         revocationStatus: revocationStatus,
                          nationalRules: .failure(.UNKNOWN_CERTLOGIC_FAILURE),
-                         modeResults: self.modeResults)
+                         modeResults: modeResults)
         }
     }
 }

@@ -4,16 +4,15 @@ import JSON
 import jsonlogic
 import XCTest
 
-fileprivate extension CheckMode {
+private extension CheckMode {
     static let threeG = "THREE_G"
     static let twoG = "TWO_G"
 }
 
-fileprivate extension Array where Element == CheckMode {
+private extension Array where Element == CheckMode {
     static let threeG = [CheckMode.threeG]
     static let twoG = [CheckMode.twoG]
 }
-
 
 final class CovidCertificateSDKTests: XCTestCase {
     var verifier: CovidCertificateImpl {
@@ -1001,7 +1000,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testRatTestInvalidInTwoGMode(){
+    func testRatTestInvalidInTwoGMode() {
         let hcert = generateTestCert(testType: TestType.Rat.rawValue,
                                      testResultType: TestResult.Negative,
                                      name: "1232",
@@ -1013,7 +1012,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result.modeResults {
             case let .success(r):
                 /// TEST IS NOT VALID IN 2G MODE
-                XCTAssertFalse(r.getResult(for:  .twoG)!.isValid)
+                XCTAssertFalse(r.getResult(for: .twoG)!.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1022,7 +1021,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testRatTestValidInThreeGMode(){
+    func testRatTestValidInThreeGMode() {
         let hcert = generateTestCert(testType: TestType.Rat.rawValue,
                                      testResultType: TestResult.Negative,
                                      name: "1232",
@@ -1034,7 +1033,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             switch result.modeResults {
             case let .success(r):
                 /// TEST IS VALID IN 2G MODE
-                XCTAssertTrue(r.getResult(for:  .threeG)!.isValid)
+                XCTAssertTrue(r.getResult(for: .threeG)!.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1043,14 +1042,14 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 
-    func testVaccinationValidInTwoAndThreeGMode(){
+    func testVaccinationValidInTwoAndThreeGMode() {
         let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
 
         let twoGExpecation = expectation(description: "success")
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.modeResults {
             case let .success(r):
-                XCTAssertTrue(r.getResult(for:  .twoG)!.isValid)
+                XCTAssertTrue(r.getResult(for: .twoG)!.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1061,7 +1060,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.modeResults {
             case let .success(r):
-                XCTAssertTrue(r.getResult(for:  .threeG)!.isValid)
+                XCTAssertTrue(r.getResult(for: .threeG)!.isValid)
             default:
                 XCTFail("Something happened")
             }
@@ -1070,4 +1069,3 @@ final class CovidCertificateSDKTests: XCTestCase {
         waitForExpectations(timeout: 60, handler: nil)
     }
 }
-

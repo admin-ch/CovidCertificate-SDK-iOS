@@ -10,15 +10,15 @@
 
 import Foundation
 
-public struct ModeCheckResult : Equatable {
+public struct ModeCheckResult: Equatable {
     public let isValid: Bool
     public let code: String
 
     public func isModeUnknown() -> Bool {
-        return code == "UNKNOWN_MODE"
+        code == "UNKNOWN_MODE"
     }
 
     public func isLightUnsupported() -> Bool {
-        return code == "IS_LIGHT"
+        code == "IS_LIGHT"
     }
 }

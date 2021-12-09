@@ -79,12 +79,12 @@ class NationalRulesList: Codable, JWTExtension {
         try container.encode(requestData, forKey: .requestData)
     }
 
-    func getList(for mode: CheckMode) -> JSON? {
-        return nil
+    func getList(for _: CheckMode) -> JSON? {
+        nil
     }
 }
 
 class NationalRulesModes {
     var activeModes: [CheckMode] = []
-    var logic: JSON? = nil
+    var logic: JSON?
 }

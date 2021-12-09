@@ -137,7 +137,7 @@ class CertLogic {
                   let json = try? JSONEncoder().encode(payload) else {
                 return .failure(.JSON_ERROR)
             }
-            
+
             let context = JSON(["external": external, "payload": JSON(json)])
             if let validationCode: String = try? applyRule(modeRule, to: context) {
                 results[mode] = .init(isValid: validationCode == "SUCCESS", code: validationCode)
@@ -149,7 +149,6 @@ class CertLogic {
     }
 
     private func createPayload(from holder: CertificateHolderType, mode: String? = nil) -> CertLogicPayload? {
-
         var issuedAt: String?
         if let iat = holder.issuedAt {
             issuedAt = DateFormatter.dayDateFormatter.string(from: iat)
@@ -181,7 +180,6 @@ class CertLogic {
             assertionFailure("Unexpected Certificate type")
             return nil
         }
-
     }
 
     private func externalJson(validationClock: Date) -> JSON {
