@@ -244,8 +244,7 @@ struct CovidCertificateImpl {
             guard let certLogic = CertLogic(),
                   let valueSets = list.valueSets,
                   let rules = list.rules,
-                  let displayRules = list.displayRules,
-                  let modeRule = list.modeRules.logic
+                  let displayRules = list.displayRules
             else {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
                 for mode in modes {
@@ -255,6 +254,8 @@ struct CovidCertificateImpl {
                 completionHandler(result)
                 return
             }
+
+            let modeRule = list.modeRules.logic
 
             if case .failure = certLogic.updateData(rules: rules,
                                                     valueSets: valueSets,

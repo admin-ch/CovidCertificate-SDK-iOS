@@ -45,7 +45,7 @@ class CertLogic {
         calendar = tmpCalendar
     }
 
-    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON, modeRule: JSON) -> Result<Void, CertLogicCommonError> {
+    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON, modeRule: JSON?) -> Result<Void, CertLogicCommonError> {
         guard let rulesArray = rules.array,
               let displayRulesArray = displayRules.array else {
             return .failure(.RULE_PARSING_FAILED)
@@ -131,9 +131,14 @@ class CertLogic {
     func checkModeRules(holder: CertificateHolderType, modes: [CheckMode], validationClock: Date = Date()) -> [CheckMode: Result<ModeCheckResult, CertLogicValidationError>] {
         var results: [CheckMode: Result<ModeCheckResult, CertLogicValidationError>] = [:]
         let external = externalJson(validationClock: validationClock)
+
         for mode in modes {
-            guard let modeRule = modeRule,
-                  let payload = createPayload(from: holder, mode: mode.id),
+            guard let modeRule = modeRule else {
+                results[mode] = .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK_\(mode.id)"))
+                continue
+            }
+
+            guard let payload = createPayload(from: holder, mode: mode.id),
                   let json = try? JSONEncoder().encode(payload) else {
                 results[mode] = .failure(.JSON_ERROR)
                 continue
@@ -143,7 +148,7 @@ class CertLogic {
             if let validationCode: String = try? applyRule(modeRule, to: context) {
                 results[mode] = .success(.init(isValid: validationCode == "SUCCESS", code: validationCode))
             } else {
-                results[mode] = .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK"))
+                results[mode] = .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK_\(mode.id)"))
             }
         }
         return results
