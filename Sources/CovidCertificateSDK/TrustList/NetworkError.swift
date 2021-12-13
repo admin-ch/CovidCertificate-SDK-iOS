@@ -14,6 +14,7 @@ import Foundation
 public enum NetworkError: Error, Equatable {
     case NETWORK_ERROR(errorCode: String)
     case NETWORK_PARSE_ERROR
+    case NETWORK_SERVER_ERROR(statusCode: Int)
     case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
     case TIME_INCONSISTENCY(timeShift: TimeInterval)
 
@@ -23,6 +24,8 @@ public enum NetworkError: Error, Equatable {
             return "A network error occured"
         case .NETWORK_PARSE_ERROR:
             return "The data could not be parsed"
+        case .NETWORK_SERVER_ERROR:
+            return "The server returned an unexpected HTTP status code"
         case .NETWORK_NO_INTERNET_CONNECTION:
             return "The internet connection appears to be offline"
         case .TIME_INCONSISTENCY:
@@ -34,6 +37,7 @@ public enum NetworkError: Error, Equatable {
         switch self {
         case let .NETWORK_ERROR(code): return code.count > 0 ? "NE|\(code)" : "NE"
         case .NETWORK_PARSE_ERROR: return "NE|PE"
+        case let .NETWORK_SERVER_ERROR(statusCode): return "NE|SE-\(statusCode)"
         case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         case .TIME_INCONSISTENCY: return "NE|TI"
         }
@@ -67,6 +71,8 @@ extension NetworkError {
             return .NETWORK_ERROR(errorCode: errorCode)
         case .NETWORK_PARSE_ERROR:
             return .NETWORK_PARSE_ERROR
+        case let .NETWORK_SERVER_ERROR(statusCode):
+            return .NETWORK_SERVER_ERROR(statusCode: statusCode)
         case let .NETWORK_NO_INTERNET_CONNECTION(errorCode):
             return .NETWORK_NO_INTERNET_CONNECTION(errorCode: errorCode)
         case let .TIME_INCONSISTENCY(timeShift):
@@ -82,6 +88,8 @@ extension NetworkError {
             return .NETWORK_ERROR(errorCode: errorCode)
         case .NETWORK_PARSE_ERROR:
             return .NETWORK_PARSE_ERROR
+        case let .NETWORK_SERVER_ERROR(statusCode):
+            return .NETWORK_SERVER_ERROR(statusCode: statusCode)
         case let .NETWORK_NO_INTERNET_CONNECTION(errorCode):
             return .NETWORK_NO_INTERNET_CONNECTION(errorCode: errorCode)
         case let .TIME_INCONSISTENCY(timeShift):
