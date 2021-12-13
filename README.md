@@ -2,7 +2,7 @@
 
 [![Swift Package Manager compatible](https://img.shields.io/badge/SPM-%E2%9C%93-brightgreen.svg?style=flat)](https://github.com/apple/swift-package-manager)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://github.com/admin-ch/CovidCertificate-SDK-iOS/blob/main/LICENSE)
- 
+
  ## Introduction
 
 This is the implementation of the [Electronic Health Certificates (EHN) specification](https://github.com/ehn-digital-green-development/hcert-spec)
@@ -23,7 +23,7 @@ We welcome all pull requests that improve the quality of the source code.
 * Android App: [CovidCertificate-App-Android](https://github.com/admin-ch/CovidCertificate-App-Android)
 * Android SDK: [CovidCertificate-SDK-Android](https://github.com/admin-ch/CovidCertificate-SDK-Android)
 * For all others, see the [Github organisation](https://github.com/admin-ch/)
- 
+
 ## Installation
 
 ### Swift Package Manager
@@ -57,7 +57,7 @@ CovidCertificateSDK is available through [Cocoapods](https://cocoapods.org/)
 This version points to the HEAD of the `main` branch and will always fetch the latest development status. Releases will be made available using semantic versioning to ensure stability for depending projects.
 
 
-## How It Works
+## Summary: How the SDK works
 
 The SDK provides the functionality of decoding a QR code into an electronic health certificate and verifying the validity of the decoded certificate.
 It also takes care of loading and storing the latest trust list information that is required for verification. 
@@ -79,7 +79,7 @@ The verification process consists of three parts that need to be successful in o
 2. The UVCI (unique vaccination certificate identifier) is compared to a list of revoked certificates to ensure the certificate has not been revoked
 3. The certificate details are checked based on the Swiss national rules for certificate validity. (Is the number of vaccination doses sufficient, is the test recent enough, how long ago was the recovery?)
 
-## Usage
+## Usage: How to use the SDK
 
 The SDK needs to be initialized with an environment and a API token. 
 This allows for different verification rules per environment or other environment-specific settings.
@@ -105,12 +105,30 @@ let result: Result<VerifierCertificateHolder, CovidCertError> = CovidCertificate
 
 ### Verification
 ```swift
-CovidCertificateSDK.Verifier.check(holder: certificateHolder) { result: CheckResults in
+CovidCertificateSDK.Verifier.check(holder: certificateHolder, mode: checkMode) { result: CheckResults in
         result.signatureResult
         result.revocationStatus
         result.nationalRules
+        result.modeResults                                                                        
 }
 ```
+
+#### Verification Modes
+
+ A verification mode collects together a set of verification rules.
+ Examples of verification modes are "2G", "3G".
+
+ Unlike you might expect, the SDK does NOT hardcode the different verification modes into an enum.
+ Instead, they are provided dynamically by the backend.
+ This in order to integrate with the CertLogic rules that drive the verification process (which are also provided dynamically).
+
+ DO NOT hardcode the verification modes! If the backend changes the available modes, your app may crash!
+
+ To obtain a list of currently available verification modes:
+
+ ```swift
+ var activeModes: [CheckMode] = CovidCertificateSDK.supportedModes
+ ```
 
 ## License
 
