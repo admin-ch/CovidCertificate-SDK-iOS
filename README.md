@@ -57,7 +57,7 @@ CovidCertificateSDK is available through [Cocoapods](https://cocoapods.org/)
 This version points to the HEAD of the `main` branch and will always fetch the latest development status. Releases will be made available using semantic versioning to ensure stability for depending projects.
 
 
-## How It Works
+## Summary: How the SDK works
 
 The SDK provides the functionality of decoding a QR code into an electronic health certificate and verifying the validity of the decoded certificate.
 It also takes care of loading and storing the latest trust list information that is required for verification. 
@@ -79,7 +79,7 @@ The verification process consists of three parts that need to be successful in o
 2. The UVCI (unique vaccination certificate identifier) is compared to a list of revoked certificates to ensure the certificate has not been revoked
 3. The certificate details are checked based on the Swiss national rules for certificate validity. (Is the number of vaccination doses sufficient, is the test recent enough, how long ago was the recovery?)
 
-## Usage
+## Usage: How to use the SDK
 
 The SDK needs to be initialized with an environment and a API token. 
 This allows for different verification rules per environment or other environment-specific settings.
@@ -105,12 +105,30 @@ let result: Result<VerifierCertificateHolder, CovidCertError> = CovidCertificate
 
 ### Verification
 ```swift
-CovidCertificateSDK.Verifier.check(holder: certificateHolder) { result: CheckResults in
+CovidCertificateSDK.Verifier.check(holder: certificateHolder, mode: checkMode) { result: CheckResults in
         result.signatureResult
         result.revocationStatus
         result.nationalRules
+        result.modeResults                                                                        
 }
 ```
+
+#### Verification Modes
+
+ A verification mode collects together a set of verification rules.
+ Examples of verification modes are "2G", "3G".
+
+ Unlike you might expect, the SDK does NOT hardcode the different verification modes into an enum.
+ Instead, they are provided dynamically by the backend.
+ This in order to integrate with the CertLogic rules that drive the verification process (which are also provided dynamically).
+
+ DO NOT hardcode the verification modes! If the backend changes the available modes, your app may crash!
+
+ To obtain a list of currently available verification modes:
+
+ ```kotlin
+ var activeModes: [CheckMode] = CovidCertificateSDK.supportedModes
+ ```
 
 ## License
 
