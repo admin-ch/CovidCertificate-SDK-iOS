@@ -14,4 +14,13 @@ public struct CheckResults {
     public let signature: Result<ValidationResult, ValidationError>
     public let revocationStatus: Result<ValidationResult, ValidationError>?
     public let nationalRules: Result<VerificationResult, NationalRulesError>
+    public let modeResults: ModeResults
+}
+
+public struct ModeResults: Equatable {
+    public let results: [CheckMode: Result<ModeCheckResult, NationalRulesError>]
+
+    public func getResult(for mode: CheckMode) -> Result<ModeCheckResult, NationalRulesError>? {
+        results.keys.contains(mode) ? results[mode] : nil
+    }
 }

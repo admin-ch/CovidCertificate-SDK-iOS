@@ -57,16 +57,22 @@ struct CovidCertificateImpl {
         return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
         var revocationStatusResult: Result<ValidationResult, ValidationError>?
-        var nationalRulesResult: Result<VerificationResult, NationalRulesError>?
+        var nationalRulesResult: CheckRulesResult?
 
         group.enter()
         checkSignature(holder: holder, forceUpdate: forceUpdate) { result in
             signatureResult = result
+            group.leave()
+        }
+
+        group.enter()
+        checkNationalRules(holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
+            nationalRulesResult = result
             group.leave()
         }
 
@@ -77,31 +83,9 @@ struct CovidCertificateImpl {
                 revocationStatusResult = result
                 group.leave()
             }
-
-            group.enter()
-            checkNationalRules(holder: holder, forceUpdate: forceUpdate) { result in
-                nationalRulesResult = result
-                group.leave()
-            }
         case is LightCert:
             // Skip revocation check for light certificates
             revocationStatusResult = nil
-
-            // a light certificate is not valid if the CWT has expired
-            // all other CWT invalid cases are already handled in the signature check
-            var isValid = true
-            switch holder.cwt.isValid() {
-            case .success(.expired):
-                isValid = false
-            default:
-                break
-            }
-
-            nationalRulesResult = .success(.init(isValid: isValid,
-                                                 validUntil: holder.expiresAt,
-                                                 validFrom: holder.issuedAt,
-                                                 dateError: nil,
-                                                 isSwitzerlandOnly: true))
         default:
             fatalError("Unsupported Certificate type")
         }
@@ -115,7 +99,8 @@ struct CovidCertificateImpl {
 
             completionHandler(.init(signature: signatureResult,
                                     revocationStatus: revocationStatusResult,
-                                    nationalRules: nationalRulesResult))
+                                    nationalRules: nationalRulesResult.nationalRules,
+                                    modeResults: nationalRulesResult.modeResults))
         }
     }
 
@@ -211,23 +196,29 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkNationalRules(holder: CertificateHolderType, forceUpdate: Bool, _ completionHandler: @escaping (Result<VerificationResult, NationalRulesError>) -> Void) {
-        guard let certificate = holder.certificate as? DCCCert else {
-            completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
-            return
-        }
+    internal struct CheckRulesResult {
+        var nationalRules: Result<VerificationResult, NationalRulesError> = .failure(.NETWORK_PARSE_ERROR)
+        var modeResults: ModeResults = .init(results: [:])
+    }
 
-        if certificate.immunisationType == nil {
-            completionHandler(.failure(.NO_VALID_PRODUCT))
-            return
-        }
+    func checkNationalRules(holder: CertificateHolderType,
+                            forceUpdate: Bool,
+                            modes: [CheckMode],
+                            _ completionHandler: @escaping (CheckRulesResult) -> Void) {
+        var result = CheckRulesResult()
+        var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if case .NETWORK_SERVER_ERROR = lastError {
                 // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
             } else if let e = lastError?.asNationalRulesError() {
-                completionHandler(.failure(e))
+                result.nationalRules = .failure(e)
+                for mode in modes {
+                    modeResults[mode] = .failure(e)
+                }
+                result.modeResults = .init(results: modeResults)
+                completionHandler(result)
                 return
             }
 
@@ -235,10 +226,20 @@ struct CovidCertificateImpl {
             guard trustListManager.trustStorage.nationalRulesListIsStillValid() else {
                 if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
-                    completionHandler(.failure(e))
+                    result.nationalRules = .failure(e)
+                    for mode in modes {
+                        modeResults[mode] = .failure(e)
+                    }
+                    result.modeResults = .init(results: modeResults)
+                    completionHandler(result)
                 } else {
                     // Otherwise generic offline error
-                    completionHandler(.failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: "")))
+                    result.nationalRules = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
+                    for mode in modes {
+                        modeResults[mode] = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
+                    }
+                    result.modeResults = .init(results: modeResults)
+                    completionHandler(result)
                 }
                 return
             }
@@ -250,12 +251,65 @@ struct CovidCertificateImpl {
                   let rules = list.rules,
                   let displayRules = list.displayRules
             else {
-                completionHandler(.failure(.NETWORK_PARSE_ERROR))
+                result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
+                for mode in modes {
+                    modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
+                }
+                result.modeResults = .init(results: modeResults)
+                completionHandler(result)
                 return
             }
 
-            if case .failure = certLogic.updateData(rules: rules, valueSets: valueSets, displayRules: displayRules) {
-                completionHandler(.failure(.NETWORK_PARSE_ERROR))
+            let modeRule = list.modeRules.logic
+
+            if case .failure = certLogic.updateData(rules: rules,
+                                                    valueSets: valueSets,
+                                                    displayRules: displayRules,
+                                                    modeRule: modeRule) {
+                result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
+                for mode in modes {
+                    modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
+                }
+                result.modeResults = .init(results: modeResults)
+                completionHandler(result)
+                return
+            }
+
+            for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes) {
+                switch modeResult {
+                case let .success(modeResult):
+                    modeResults[mode] = .success(modeResult)
+                case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
+                    modeResults[mode] = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                case .failure:
+                    modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
+                }
+            }
+            result.modeResults = .init(results: modeResults)
+
+            guard let certificate = holder.certificate as? DCCCert else {
+                // a light certificate is not valid if the CWT has expired
+                // all other CWT invalid cases are already handled in the signature check
+                var isValid = true
+                switch holder.cwt.isValid() {
+                case .success(.expired):
+                    isValid = false
+                default:
+                    break
+                }
+
+                result.nationalRules = .success(.init(isValid: isValid,
+                                                      validUntil: holder.expiresAt,
+                                                      validFrom: holder.issuedAt,
+                                                      dateError: nil,
+                                                      isSwitzerlandOnly: true))
+                completionHandler(result)
+                return
+            }
+
+            if certificate.immunisationType == nil {
+                result.nationalRules = .failure(.NO_VALID_PRODUCT)
+                completionHandler(result)
                 return
             }
 
@@ -263,106 +317,149 @@ struct CovidCertificateImpl {
 
             switch certLogic.checkRules(hcert: certificate) {
             case .success:
-                completionHandler(.success(VerificationResult(isValid: true,
-                                                              validUntil: displayRulesResult?.validUntil,
-                                                              validFrom: displayRulesResult?.validFrom,
-                                                              dateError: nil,
-                                                              isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                result.nationalRules = .success(VerificationResult(isValid: true,
+                                                                   validUntil: displayRulesResult?.validUntil,
+                                                                   validFrom: displayRulesResult?.validFrom,
+                                                                   dateError: nil,
+                                                                   isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                completionHandler(result)
                 return
             case let .failure(.TESTS_FAILED(tests)):
                 switch tests.keys.first {
-                case "GR-CH-0001": completionHandler(.failure(.WRONG_DISEASE_TARGET))
-                case "VR-CH-0000": completionHandler(.failure(.TOO_MANY_VACCINE_ENTRIES))
-                case "VR-CH-0001": completionHandler(.failure(.NOT_FULLY_PROTECTED))
-                case "VR-CH-0002": completionHandler(.failure(.NO_VALID_PRODUCT))
-                case "VR-CH-0003": completionHandler(.failure(.NO_VALID_DATE))
+                case "GR-CH-0001":
+                    result.nationalRules = .failure(.WRONG_DISEASE_TARGET)
+                    completionHandler(result)
+                case "VR-CH-0000":
+                    result.nationalRules = .failure(.TOO_MANY_VACCINE_ENTRIES)
+                    completionHandler(result)
+                case "VR-CH-0001":
+                    result.nationalRules = .failure(.NOT_FULLY_PROTECTED)
+                    completionHandler(result)
+                case "VR-CH-0002":
+                    result.nationalRules = .failure(.NO_VALID_PRODUCT)
+                    completionHandler(result)
+                case "VR-CH-0003":
+                    result.nationalRules = .failure(.NO_VALID_DATE)
+                    completionHandler(result)
                 case "VR-CH-0004":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .NOT_YET_VALID,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "VR-CH-0005":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .NOT_YET_VALID,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "VR-CH-0006":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "VR-CH-0007":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "VR-CH-0008":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
-                case "TR-CH-0000": completionHandler(.failure(.TOO_MANY_TEST_ENTRIES))
-                case "TR-CH-0001": completionHandler(.failure(.POSITIVE_RESULT))
-                case "TR-CH-0002": completionHandler(.failure(.WRONG_TEST_TYPE))
-                case "TR-CH-0003": completionHandler(.failure(.NO_VALID_PRODUCT))
-                case "TR-CH-0004": completionHandler(.failure(.NO_VALID_DATE))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
+                case "TR-CH-0000":
+                    result.nationalRules = .failure(.TOO_MANY_TEST_ENTRIES)
+                    completionHandler(result)
+                case "TR-CH-0001":
+                    result.nationalRules = .failure(.POSITIVE_RESULT)
+                    completionHandler(result)
+                case "TR-CH-0002":
+                    result.nationalRules = .failure(.WRONG_TEST_TYPE)
+                    completionHandler(result)
+                case "TR-CH-0003":
+                    result.nationalRules = .failure(.NO_VALID_PRODUCT)
+                    completionHandler(result)
+                case "TR-CH-0004":
+                    result.nationalRules = .failure(.NO_VALID_DATE)
+                    completionHandler(result)
                 case "TR-CH-0005":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .NOT_YET_VALID,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "TR-CH-0006":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "TR-CH-0007":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "TR-CH-0008":
-                    completionHandler(.failure(.NEGATIVE_RESULT))
+                    result.nationalRules = .failure(.NEGATIVE_RESULT)
+                    completionHandler(result)
                 case "TR-CH-0009":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
-                case "RR-CH-0000": completionHandler(.failure(.TOO_MANY_RECOVERY_ENTRIES))
-                case "RR-CH-0001": completionHandler(.failure(.NO_VALID_DATE))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
+                case "RR-CH-0000":
+                    result.nationalRules = .failure(.TOO_MANY_RECOVERY_ENTRIES)
+                    completionHandler(result)
+                case "RR-CH-0001":
+                    result.nationalRules = .failure(.NO_VALID_DATE)
+                    completionHandler(result)
                 case "RR-CH-0002":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .NOT_YET_VALID,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .NOT_YET_VALID,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "RR-CH-0003":
-                    completionHandler(.success(VerificationResult(isValid: false,
-                                                                  validUntil: displayRulesResult?.validUntil,
-                                                                  validFrom: displayRulesResult?.validFrom,
-                                                                  dateError: .EXPIRED,
-                                                                  isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly)))
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 default:
-                    completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
+                    result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                    completionHandler(result)
                 }
                 return
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
-                completionHandler(.failure(.UNKNOWN_CERTLOGIC_FAILURE))
+                result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
                 return
             default:
-                completionHandler(.failure(.NO_VALID_DATE))
+                result.nationalRules = .failure(.NO_VALID_DATE)
                 return
             }
         })
+    }
+
+    func getSupportedModes() -> [CheckMode] {
+        let list = trustListManager.trustStorage.nationalRules()
+        return list.modeRules.activeModes
     }
 
     func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
