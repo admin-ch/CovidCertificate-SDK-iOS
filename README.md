@@ -2,7 +2,7 @@
 
 [![Swift Package Manager compatible](https://img.shields.io/badge/SPM-%E2%9C%93-brightgreen.svg?style=flat)](https://github.com/apple/swift-package-manager)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://github.com/admin-ch/CovidCertificate-SDK-iOS/blob/main/LICENSE)
- 
+
  ## Introduction
 
 This is the implementation of the [Electronic Health Certificates (EHN) specification](https://github.com/ehn-digital-green-development/hcert-spec)
@@ -23,7 +23,7 @@ We welcome all pull requests that improve the quality of the source code.
 * Android App: [CovidCertificate-App-Android](https://github.com/admin-ch/CovidCertificate-App-Android)
 * Android SDK: [CovidCertificate-SDK-Android](https://github.com/admin-ch/CovidCertificate-SDK-Android)
 * For all others, see the [Github organisation](https://github.com/admin-ch/)
- 
+
 ## Installation
 
 ### Swift Package Manager
@@ -126,7 +126,7 @@ CovidCertificateSDK.Verifier.check(holder: certificateHolder, mode: checkMode) {
 
  To obtain a list of currently available verification modes:
 
- ```kotlin
+ ```swift
  var activeModes: [CheckMode] = CovidCertificateSDK.supportedModes
  ```
 
