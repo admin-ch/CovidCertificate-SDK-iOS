@@ -457,9 +457,14 @@ struct CovidCertificateImpl {
         })
     }
 
-    func getSupportedModes() -> [CheckMode] {
+    func getActiveModesForWallet() -> [CheckMode] {
         let list = trustListManager.trustStorage.nationalRules()
         return list.modeRules.activeModes
+    }
+
+    func getActiveModesForVerifier() -> [CheckMode] {
+        let list = trustListManager.trustStorage.nationalRules()
+        return list.modeRules.verifierActiveModes
     }
 
     func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {

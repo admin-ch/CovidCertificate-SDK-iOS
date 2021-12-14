@@ -127,7 +127,7 @@ CovidCertificateSDK.Verifier.check(holder: certificateHolder, mode: checkMode) {
  To obtain a list of currently available verification modes:
 
  ```swift
- var activeModes: [CheckMode] = CovidCertificateSDK.supportedModes
+ var activeModes: [CheckMode] = CovidCertificateSDK.Verifier.activeModes
  ```
 
 ## License

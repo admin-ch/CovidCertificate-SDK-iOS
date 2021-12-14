@@ -7,11 +7,13 @@ import XCTest
 private extension CheckMode {
     static let threeG = CheckMode(id: "THREE_G", displayName: "3G")
     static let twoG = CheckMode(id: "TWO_G", displayName: "2G")
+    static let twoGPlus = CheckMode(id: "TWO_G_PLUS", displayName: "2G+")
 }
 
 private extension Array where Element == CheckMode {
     static let threeG = [CheckMode.threeG]
     static let twoG = [CheckMode.twoG]
+    static let twoGPlus = [CheckMode.twoGPlus]
 }
 
 final class CovidCertificateSDKTests: XCTestCase {
@@ -1066,6 +1068,48 @@ final class CovidCertificateSDKTests: XCTestCase {
             }
             threeGExpecation.fulfill()
         }
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+
+    func testVaccinationValidIn2GPlusMode() {
+        let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
+
+        let twoGPlusExpecation = expectation(description: "success")
+        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
+            switch result.modeResults.getResult(for: .twoGPlus) {
+            case let .success(r):
+                /// VACCINATION IS VALID IN 2G+ MODE AND RETURNS SUCCESS_2G
+                XCTAssertTrue(r.isValid)
+                XCTAssertTrue(r.code.rawValue == "SUCCESS_2G")
+            default:
+                XCTFail("Something happened")
+            }
+            twoGPlusExpecation.fulfill()
+        }
+
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+
+    func testRatTestValidInTwoGPlusMode() {
+        let hcert = generateTestCert(testType: TestType.Rat.rawValue,
+                                     testResultType: TestResult.Negative,
+                                     name: "1232",
+                                     disease: Disease.SarsCov2.rawValue,
+                                     sampleCollectionWasAgo: DateComponents(hour: -5))
+
+        let expectation = expectation(description: "success")
+        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
+            switch result.modeResults.getResult(for: .twoGPlus) {
+            case let .success(r):
+                /// TEST IS VALID IN 2G+ MODE AND RETURNS SUCCESS_2G_PLUS
+                XCTAssertTrue(r.isValid)
+                XCTAssertTrue(r.code.rawValue == "SUCCESS_2G_PLUS")
+            default:
+                XCTFail("Something happened")
+            }
+            expectation.fulfill()
+        }
+
         waitForExpectations(timeout: 60, handler: nil)
     }
 }
