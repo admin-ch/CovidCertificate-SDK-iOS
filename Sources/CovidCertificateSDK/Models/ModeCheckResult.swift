@@ -10,7 +10,7 @@
 
 import Foundation
 
-public enum ModeCheckValidationCode : String {
+public enum ModeCheckValidationCode: String {
     case success = "SUCCESS"
     case success2g = "SUCCESS_2G"
     case success2gPlus = "SUCCESS_2G_PLUS"
@@ -18,16 +18,8 @@ public enum ModeCheckValidationCode : String {
     case unknownMode = "UNKNOWN_MODE"
     case unknown = "UNKNOWN"
 
-    public var isValid : Bool {
-        return self == .success || self == .success2g || self == .success2gPlus
-    }
-
-    public var is2GSuccess : Bool {
-        return self == .success2g || self == .success2gPlus
-    }
-
-    public var is2GTestSuccess : Bool {
-        return self == .success2gPlus
+    public var isValid: Bool {
+        self == .success || self == .success2g || self == .success2gPlus
     }
 }
 
@@ -43,18 +35,18 @@ public struct ModeCheckResult: Equatable {
     // MARK: - API
 
     public var isValid: Bool {
-        return code.isValid
+        code.isValid
     }
 
     public func isModeUnknown() -> Bool {
-        return code == .unknownMode
+        code == .unknownMode
     }
 
     public func isLightUnsupported() -> Bool {
-        return code == .isLight
+        code == .isLight
     }
 
     public func isUnknown() -> Bool {
-        return code == .unknown
+        code == .unknown
     }
 }

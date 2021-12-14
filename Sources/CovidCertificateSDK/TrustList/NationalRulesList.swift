@@ -86,8 +86,8 @@ class NationalRulesList: Codable, JWTExtension {
         nil
     }
 
-    private func getCheckModes(json : JSON?) -> [CheckMode] {
-        return (json?.array?.compactMap {
+    private func getCheckModes(json: JSON?) -> [CheckMode] {
+        (json?.array?.compactMap {
             if let id = $0["id"].string, let dn = $0["displayName"].string {
                 return CheckMode(id: id, displayName: dn)
             } else {

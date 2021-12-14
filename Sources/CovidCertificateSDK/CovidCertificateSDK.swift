@@ -62,7 +62,6 @@ public enum CovidCertificateSDK {
             instancePrecondition()
             return instance.getActiveModesForWallet()
         }
-
     }
 
     public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
