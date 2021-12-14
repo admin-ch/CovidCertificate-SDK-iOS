@@ -84,8 +84,10 @@ public enum CovidCertificateSDK {
     }
 
     public static func setOptions(options: SDKOptions) {
+        instancePrecondition()
         URLSession.evaluator.useCertificatePinning = options.certificatePinning
         TrustListUpdate.allowedServerTimeDiff = options.allowedServerTimeDiff
         TrustListUpdate.timeshiftDetectionEnabled = options.timeshiftDetectionEnabled
+        instance.options = options
     }
 }

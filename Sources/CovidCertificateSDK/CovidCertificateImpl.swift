@@ -20,6 +20,8 @@ struct CovidCertificateImpl {
 
     private let metadataManager = MetadataManager()
 
+    var options: SDKOptions?
+
     let environment: SDKEnvironment
 
     let apiKey: String
@@ -118,7 +120,10 @@ struct CovidCertificateImpl {
         trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if case .NETWORK_SERVER_ERROR = lastError {
-                // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                // Continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+            } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
+                        (options?.timeshiftDetectionEnabled ?? true) == false {
+                // Continue with the cached trust list if there is no internet connection and timeshift detection is disabled
             } else if let e = lastError?.asValidationError() {
                 completionHandler(.failure(e))
                 return
@@ -170,7 +175,10 @@ struct CovidCertificateImpl {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if case .NETWORK_SERVER_ERROR = lastError {
-                // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+            } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
+                      (options?.timeshiftDetectionEnabled ?? true) == false {
+                // Continue with the cached revocation list if there is no internet connection and timeshift detection is disabled
             } else if let e = lastError?.asValidationError() {
                 completionHandler(.failure(e))
                 return
@@ -211,7 +219,10 @@ struct CovidCertificateImpl {
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if case .NETWORK_SERVER_ERROR = lastError {
-                // Only continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                // Only continue with cached national rules for NETWORK_SERVER_ERRORS (HTTP status != 200)
+            } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
+                      (options?.timeshiftDetectionEnabled ?? true) == false {
+                // Continue with the cached national rules if there is no internet connection and timeshift detection is disabled
             } else if let e = lastError?.asNationalRulesError() {
                 result.nationalRules = .failure(e)
                 for mode in modes {
