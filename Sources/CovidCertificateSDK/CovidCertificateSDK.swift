@@ -40,6 +40,11 @@ public enum CovidCertificateSDK {
                 completionHandler(result.anonymized)
             }
         }
+
+        public static var activeModes: [CheckMode] {
+            instancePrecondition()
+            return instance.getActiveModesForVerifier()
+        }
     }
 
     public enum Wallet {
@@ -52,6 +57,12 @@ public enum CovidCertificateSDK {
             instancePrecondition()
             return instance.check(holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
         }
+
+        public static var activeModes: [CheckMode] {
+            instancePrecondition()
+            return instance.getActiveModesForWallet()
+        }
+
     }
 
     public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
@@ -61,11 +72,6 @@ public enum CovidCertificateSDK {
 
     private static func instancePrecondition() {
         precondition(instance != nil, "CovidCertificateSDK not initialized, call `initialize()`")
-    }
-
-    public static var supportedModes: [CheckMode] {
-        instancePrecondition()
-        return instance.getSupportedModes()
     }
 
     public static var currentEnvironment: SDKEnvironment {
