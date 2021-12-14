@@ -146,7 +146,7 @@ class CertLogic {
 
             let context = JSON(["external": external, "payload": JSON(json)])
             if let validationCode: String = try? applyRule(modeRule, to: context) {
-                results[mode] = .success(.init(isValid: validationCode.starts(with: "SUCCESS"), code: validationCode))
+                results[mode] = .success(ModeCheckResult(validationCode: validationCode))
             } else {
                 results[mode] = .failure(.TEST_COULD_NOT_BE_PERFORMED(test: "MODE_CHECK_\(mode.id)"))
             }
