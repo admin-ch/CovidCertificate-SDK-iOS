@@ -119,14 +119,13 @@ struct CovidCertificateImpl {
 
         trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
-            if case .NETWORK_SERVER_ERROR = lastError {
-                // Continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
-            } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
-                      (options?.timeshiftDetectionEnabled ?? false) == false {
-                // Continue with the cached trust list if there is no internet connection and timeshift detection is disabled
-            } else if let e = lastError?.asValidationError() {
-                completionHandler(.failure(e))
-                return
+            if options?.timeshiftDetectionEnabled ?? false {
+                if case .NETWORK_SERVER_ERROR = lastError {
+                    // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                } else if let e = lastError?.asValidationError() {
+                    completionHandler(.failure(e))
+                    return
+                }
             }
 
             // Safe-guard that we have a recent trust list available at this point
@@ -174,14 +173,13 @@ struct CovidCertificateImpl {
     func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
-            if case .NETWORK_SERVER_ERROR = lastError {
-                // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
-            } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
-                      (options?.timeshiftDetectionEnabled ?? false) == false {
-                // Continue with the cached revocation list if there is no internet connection and timeshift detection is disabled
-            } else if let e = lastError?.asValidationError() {
-                completionHandler(.failure(e))
-                return
+            if options?.timeshiftDetectionEnabled ?? false {
+                if case .NETWORK_SERVER_ERROR = lastError {
+                    // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                } else if let e = lastError?.asValidationError() {
+                    completionHandler(.failure(e))
+                    return
+                }
             }
 
             // Safe-guard that we have a recent revocation list available at this point
@@ -218,19 +216,18 @@ struct CovidCertificateImpl {
 
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
-            if case .NETWORK_SERVER_ERROR = lastError {
-                // Only continue with cached national rules for NETWORK_SERVER_ERRORS (HTTP status != 200)
-            } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
-                      (options?.timeshiftDetectionEnabled ?? false) == false {
-                // Continue with the cached national rules if there is no internet connection and timeshift detection is disabled
-            } else if let e = lastError?.asNationalRulesError() {
-                result.nationalRules = .failure(e)
-                for mode in modes {
-                    modeResults[mode] = .failure(e)
+            if options?.timeshiftDetectionEnabled ?? false {
+                if case .NETWORK_SERVER_ERROR = lastError {
+                    // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                } else if let e = lastError?.asNationalRulesError() {
+                    result.nationalRules = .failure(e)
+                    for mode in modes {
+                        modeResults[mode] = .failure(e)
+                    }
+                    result.modeResults = .init(results: modeResults)
+                    completionHandler(result)
+                    return
                 }
-                result.modeResults = .init(results: modeResults)
-                completionHandler(result)
-                return
             }
 
             // Safe-guard that we have a recent national rules list available at this point
