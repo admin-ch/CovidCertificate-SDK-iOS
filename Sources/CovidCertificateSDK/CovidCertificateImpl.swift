@@ -122,7 +122,7 @@ struct CovidCertificateImpl {
             if case .NETWORK_SERVER_ERROR = lastError {
                 // Continue with cached trust list for NETWORK_SERVER_ERRORS (HTTP status != 200)
             } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
-                      (options?.timeshiftDetectionEnabled ?? true) == false {
+                      (options?.timeshiftDetectionEnabled ?? false) == false {
                 // Continue with the cached trust list if there is no internet connection and timeshift detection is disabled
             } else if let e = lastError?.asValidationError() {
                 completionHandler(.failure(e))
@@ -177,7 +177,7 @@ struct CovidCertificateImpl {
             if case .NETWORK_SERVER_ERROR = lastError {
                 // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
             } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
-                      (options?.timeshiftDetectionEnabled ?? true) == false {
+                      (options?.timeshiftDetectionEnabled ?? false) == false {
                 // Continue with the cached revocation list if there is no internet connection and timeshift detection is disabled
             } else if let e = lastError?.asValidationError() {
                 completionHandler(.failure(e))
@@ -221,7 +221,7 @@ struct CovidCertificateImpl {
             if case .NETWORK_SERVER_ERROR = lastError {
                 // Only continue with cached national rules for NETWORK_SERVER_ERRORS (HTTP status != 200)
             } else if case .NETWORK_NO_INTERNET_CONNECTION = lastError,
-                      (options?.timeshiftDetectionEnabled ?? true) == false {
+                      (options?.timeshiftDetectionEnabled ?? false) == false {
                 // Continue with the cached national rules if there is no internet connection and timeshift detection is disabled
             } else if let e = lastError?.asNationalRulesError() {
                 result.nationalRules = .failure(e)
