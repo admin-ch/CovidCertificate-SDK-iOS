@@ -17,6 +17,7 @@ public enum ModeCheckValidationCode: String {
     case isLight = "IS_LIGHT"
     case unknownMode = "UNKNOWN_MODE"
     case unknown = "UNKNOWN"
+    case invalid = "INVALID"
 
     public var isValid: Bool {
         self == .success || self == .success2g || self == .success2gPlus
