@@ -518,4 +518,8 @@ struct CovidCertificateImpl {
     func cose(from data: Data) -> Cose? {
         Cose(from: data)
     }
+
+    var _testRevocedCertificates: Set<String> {
+        return trustListManager.trustStorage.revokedCertificates()
+    }
 }
