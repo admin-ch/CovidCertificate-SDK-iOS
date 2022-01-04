@@ -24,7 +24,7 @@ enum TestType: String, Equatable, Codable {
     case Rat = "LP217198-3"
     case Pcr = "LP6464-4"
     case Serological = "94504-8"
-    case SwitzerlandException = "CH_AUSNAHME"
+    case SwitzerlandException = "medical-exemption"
 }
 
 enum TestResult: String, Equatable, Codable {
