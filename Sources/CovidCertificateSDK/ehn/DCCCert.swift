@@ -265,7 +265,7 @@ public struct Test: Codable {
     public var isSerologicalTest: Bool {
         type == TestType.Serological.rawValue
     }
-    
+
     public var isSwitzerlandException: Bool {
         type == TestType.SwitzerlandException.rawValue
     }
