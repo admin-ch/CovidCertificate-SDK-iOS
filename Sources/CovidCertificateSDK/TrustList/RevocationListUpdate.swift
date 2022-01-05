@@ -16,8 +16,6 @@ class RevocationListUpdate: TrustListUpdate {
 
     let session = URLSession.certificatePinned
 
-    @UBUserDefault(key: "covidcertififcate.revocations.nextSince", defaultValue: nil)
-    var nextSince: String?
 
     private static let falseConstant = "false"
 
@@ -35,7 +33,7 @@ class RevocationListUpdate: TrustListUpdate {
             requestsCount = requestsCount + 1
 
             // download data and update local storage
-            let request = CovidCertificateSDK.currentEnvironment.revocationListService(since: nextSince).request(reloadIgnoringLocalCache: ignoreLocalCache)
+            let request = CovidCertificateSDK.currentEnvironment.revocationListService(since: trustStorage.revocationListNextSince).request(reloadIgnoringLocalCache: ignoreLocalCache)
             let (data, response, error) = session.synchronousDataTask(with: request)
 
             // Only run timeshift detection if request does not come from cache
@@ -84,9 +82,8 @@ class RevocationListUpdate: TrustListUpdate {
                 return .NETWORK_PARSE_ERROR
             }
 
-            _ = trustStorage.updateRevocationList(result)
-
-            nextSince = nextSinceHeader
+            let success = trustStorage.updateRevocationList(result, nextSince: nextSinceHeader)
+            assert(success)
 
             // start another request, as long as revocations are coming in
             listNeedsUpdate = upToDate == Self.falseConstant

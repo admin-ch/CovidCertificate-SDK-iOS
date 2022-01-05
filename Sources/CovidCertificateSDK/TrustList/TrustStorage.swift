@@ -13,7 +13,8 @@ import Foundation
 
 protocol TrustStorageProtocol {
     func revokedCertificates() -> Set<String>
-    func updateRevocationList(_ list: RevocationList) -> Bool
+    func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool
+    var revocationListNextSince: String? { get }
     func revocationListIsValid() -> Bool
 
     func activeCertificatePublicKeys(useFilters: [String]) -> [TrustListPublicKey]
@@ -51,11 +52,11 @@ class TrustStorage: TrustStorageProtocol {
         }
     }
 
-    func updateRevocationList(_ list: RevocationList) -> Bool {
+    func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         revocationQueue.sync {
             list.revokedCerts.forEach { self.revocationStorage.revocationList.revokedCerts.insert($0) }
             self.revocationStorage.revocationList.validDuration = list.validDuration
-
+            self.revocationStorage.nextSince = nextSince
             self.revocationStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
             return self.revocationSecureStorage.saveSynchronously(self.revocationStorage)
         }
@@ -64,6 +65,12 @@ class TrustStorage: TrustStorageProtocol {
     func revocationListIsValid() -> Bool {
         revocationQueue.sync {
             isStillValid(lastDownloadTimeStamp: self.revocationStorage.lastRevocationListDownload, validDuration: self.revocationStorage.revocationList.validDuration)
+        }
+    }
+
+    var revocationListNextSince: String? {
+        revocationQueue.sync {
+            self.revocationStorage.nextSince
         }
     }
 
@@ -156,6 +163,7 @@ class TrustStorage: TrustStorageProtocol {
 class RevocationStorage: Codable {
     var revocationList = RevocationList()
     var lastRevocationListDownload: Int64 = 0
+    var nextSince: String?
 }
 
 class ActiveCertificatesStorage: Codable {
