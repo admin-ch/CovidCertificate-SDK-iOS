@@ -14,14 +14,21 @@ import Foundation
 class RevocationListUpdate: TrustListUpdate {
     // MARK: - Session
 
-    let session = URLSession.certificatePinned
+    private let session: URLSession
 
+    private let decoder: RevocationListDecoder
 
     private static let falseConstant = "false"
 
     private static let trueConstant = "true"
 
     private static let maximumNumberOfRequests = 20
+
+    init(trustStorage: TrustStorageProtocol, decoder: RevocationListDecoder = RevocationListJWSDecoder(), session: URLSession = .certificatePinned) {
+        self.decoder = decoder
+        self.session = session
+        super.init(trustStorage: trustStorage)
+    }
 
     // MARK: - Update
 
@@ -68,17 +75,7 @@ class RevocationListUpdate: TrustListUpdate {
                 return .NETWORK_PARSE_ERROR
             }
 
-            let semaphore = DispatchSemaphore(value: 0)
-            var outcome: Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)
-
-            TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Result<RevocationList, JWSError>) in
-                outcome = result
-                semaphore.signal()
-            }
-
-            semaphore.wait()
-
-            guard let result = try? outcome.get() else {
+            guard let result = decoder.decode(d) else {
                 return .NETWORK_PARSE_ERROR
             }
 
@@ -93,5 +90,25 @@ class RevocationListUpdate: TrustListUpdate {
 
     override func isListStillValid() -> Bool {
         trustStorage.revocationListIsValid()
+    }
+}
+
+protocol RevocationListDecoder {
+    func decode(_ data: Data) -> RevocationList?
+}
+
+class RevocationListJWSDecoder: RevocationListDecoder {
+    func decode(_ data: Data) -> RevocationList? {
+        let semaphore = DispatchSemaphore(value: 0)
+        var outcome: Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)
+
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: data) { (result: Result<RevocationList, JWSError>) in
+            outcome = result
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        return try? outcome.get()
     }
 }
