@@ -21,23 +21,7 @@ class NationalRulesList: Codable, JWTExtension {
                 rules = json["rules"]
                 valueSets = json["valueSets"]
                 displayRules = json["displayRules"]
-                modeRules.activeModes = (json["modeRules"].dictionary?["activeModes"]?.array?.compactMap {
-                    if let id = $0["id"].string, let dn = $0["displayName"].string {
-                        return CheckMode(id: id, displayName: dn)
-                    } else {
-                        return nil
-                    }
-                }) ?? []
-
-                modeRules.verifierActiveModes = (json["modeRules"].dictionary?["verifierActiveModes"]?.array?.compactMap {
-                    if let id = $0["id"].string, let dn = $0["displayName"].string {
-                        return CheckMode(id: id, displayName: dn)
-                    } else {
-                        return nil
-                    }
-                }) ?? []
-
-                modeRules.logic = json["modeRules"].dictionary?["logic"]
+                fillModeRules(json: json)
             } else {
                 rules = nil
                 valueSets = nil
@@ -70,9 +54,7 @@ class NationalRulesList: Codable, JWTExtension {
             rules = json["rules"]
             valueSets = json["valueSets"]
             displayRules = json["displayRules"]
-            modeRules.activeModes = getCheckModes(json: json["modeRules"].dictionary?["activeModes"])
-            modeRules.verifierActiveModes = getCheckModes(json: json["modeRules"].dictionary?["verifierActiveModes"])
-            modeRules.logic = json["modeRules"].dictionary?["logic"]
+            fillModeRules(json: json)
         }
     }
 
@@ -86,19 +68,30 @@ class NationalRulesList: Codable, JWTExtension {
         nil
     }
 
-    private func getCheckModes(json: JSON?) -> [CheckMode] {
+    // MARK: - Mode rules
+
+    private func fillModeRules(json: JSON) {
+        modeRules.activeModes = getCheckModes(json: json["modeRules"].dictionary?["activeModes"]) ?? []
+        modeRules.verifierActiveModes = getCheckModes(json: json["modeRules"].dictionary?["verifierActiveModes"]) ?? []
+        modeRules.walletActiveModes = getCheckModes(json: json["modeRules"].dictionary?["walletActiveModes"])
+
+        modeRules.logic = json["modeRules"].dictionary?["logic"]
+    }
+
+    private func getCheckModes(json: JSON?) -> [CheckMode]? {
         (json?.array?.compactMap {
             if let id = $0["id"].string, let dn = $0["displayName"].string {
                 return CheckMode(id: id, displayName: dn)
             } else {
                 return nil
             }
-        }) ?? []
+        })
     }
 }
 
 class NationalRulesModes {
     var activeModes: [CheckMode] = []
     var verifierActiveModes: [CheckMode] = []
+    var walletActiveModes: [CheckMode]? = []
     var logic: JSON?
 }
