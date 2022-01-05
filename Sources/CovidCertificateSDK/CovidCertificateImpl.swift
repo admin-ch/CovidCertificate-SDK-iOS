@@ -467,7 +467,7 @@ struct CovidCertificateImpl {
 
     func getActiveModesForWallet() -> [CheckMode] {
         let list = trustListManager.trustStorage.nationalRules()
-        return list.modeRules.activeModes
+        return list.modeRules.walletActiveModes ?? list.modeRules.activeModes
     }
 
     func getActiveModesForVerifier() -> [CheckMode] {
