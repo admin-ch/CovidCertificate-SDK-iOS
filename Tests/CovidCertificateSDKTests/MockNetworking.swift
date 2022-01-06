@@ -53,12 +53,12 @@ class MockUrlCache: URLCache {
     }
 
     override func cachedResponse(for _: URLRequest) -> CachedURLResponse? {
-        return response
+        response
     }
 }
 
 class MockSession: URLSession {
-    let handler: ((URLRequest) -> (Data?, URLResponse?, Error?))
+    let handler: (URLRequest) -> (Data?, URLResponse?, Error?)
     var requests: [URLRequest] = []
 
     init(handler: @escaping ((URLRequest) -> (Data?, URLResponse?, Error?))) {
