@@ -37,14 +37,25 @@ class TrustStorage: TrustStorageProtocol {
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
 
-    private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage()
-    private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocation")
+    private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage.bundledStorage
+    private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocations")
 
     let revocationQueue = DispatchQueue(label: "storage.sync.revocation")
     let certificateQueue = DispatchQueue(label: "storage.sync.certificate")
     let nationalQueue = DispatchQueue(label: "storage.sync.national")
 
     // MARK: - Revocation List
+
+    init() {
+        // The name of the revocations secure storage was changes from "revocation" to "revocations"
+        // This was done in order to ensure a complete revocation list
+        // If the file of revocations before pre bundeling exists make sure to delete it
+        // This makes sure we don't need twice the disk space for revocations in the worst case
+        if let path = SecureStorage<RevocationStorage>(name: "revocation").path,
+           FileManager.default.fileExists(atPath: path.path) {
+            try? FileManager.default.removeItem(atPath: path.path)
+        }
+    }
 
     func revokedCertificates() -> Set<String> {
         revocationQueue.sync {
@@ -176,4 +187,19 @@ class ActiveCertificatesStorage: Codable {
 class NationalRulesStorage: Codable {
     var nationalRulesList = NationalRulesList()
     var lastNationalRulesListDownload: Int64 = 0
+}
+
+extension RevocationStorage {
+    static var bundledStorage: RevocationStorage {
+        // only the prod revocations are pre-packaged
+        guard CovidCertificateSDK.currentEnvironment == .prod,
+              let resource = Bundle.module.path(forResource: "revocations", ofType: "json"),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: resource), options: .mappedIfSafe),
+              let bundled = try? JSONDecoder().decode(RevocationStorage.self, from: data)
+        else {
+            // if unabled to read use a empty storage
+            return RevocationStorage()
+        }
+        return bundled
+    }
 }
