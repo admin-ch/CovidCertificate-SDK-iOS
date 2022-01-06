@@ -37,7 +37,7 @@ class TrustStorage: TrustStorageProtocol {
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
 
-    private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage.bundledStorage
+    private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage.getBundledStorage()
     private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocations")
 
     let revocationQueue = DispatchQueue(label: "storage.sync.revocation")
@@ -190,9 +190,9 @@ class NationalRulesStorage: Codable {
 }
 
 extension RevocationStorage {
-    static var bundledStorage: RevocationStorage {
+    static func getBundledStorage(environment: SDKEnvironment = CovidCertificateSDK.currentEnvironment) -> RevocationStorage {
         // only the prod revocations are pre-packaged
-        guard CovidCertificateSDK.currentEnvironment == .prod,
+        guard environment == .prod,
               let resource = Bundle.module.path(forResource: "revocations", ofType: "json"),
               let data = try? Data(contentsOf: URL(fileURLWithPath: resource), options: .mappedIfSafe),
               let bundled = try? JSONDecoder().decode(RevocationStorage.self, from: data)

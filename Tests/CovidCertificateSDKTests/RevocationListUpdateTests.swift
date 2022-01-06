@@ -49,6 +49,14 @@ final class RevocationListUpdateTests: XCTestCase {
         XCTAssertEqual(storage.revokedCertificates(), Set<String>(revs + ["a", "b", "c"]))
         XCTAssertEqual(session.requests.count, 20)
     }
+
+    func testPrePackagedDecoding() {
+        let storage = RevocationStorage.getBundledStorage(environment: .prod)
+        XCTAssertEqual(storage.nextSince, "11743455")
+        XCTAssertEqual(storage.lastRevocationListDownload, 1641452551535)
+        XCTAssertEqual(storage.revocationList.validDuration, 172800000)
+        XCTAssertEqual(storage.revocationList.revokedCerts.count, 353501)
+    }
 }
 
 class RevocationListJSONDecoder: RevocationListDecoder {
