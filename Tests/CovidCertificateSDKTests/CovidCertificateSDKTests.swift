@@ -31,7 +31,9 @@ final class CovidCertificateSDKTests: XCTestCase {
     // MARK: - Setup
 
     override class func setUp() {
-        CovidCertificateSDK.initialize(environment: SDKEnvironment.dev, apiKey: "")
+        if !CovidCertificateSDK.isInitialized {
+            CovidCertificateSDK.initialize(environment: .dev, apiKey: "")
+        }
     }
 
     // MARK: - Helpers

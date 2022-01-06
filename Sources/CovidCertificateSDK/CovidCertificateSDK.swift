@@ -23,6 +23,10 @@ public enum CovidCertificateSDK {
         instance.updateMetadata()
     }
 
+    public static var isInitialized: Bool {
+        instance != nil
+    }
+
     public enum Verifier {
         public static func decode(encodedData: String) -> Result<VerifierCertificateHolder, CovidCertError> {
             instancePrecondition()

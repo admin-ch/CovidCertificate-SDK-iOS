@@ -13,7 +13,8 @@ import Foundation
 
 protocol TrustStorageProtocol {
     func revokedCertificates() -> Set<String>
-    func updateRevocationList(_ list: RevocationList) -> Bool
+    func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool
+    var revocationListNextSince: String? { get }
     func revocationListIsValid() -> Bool
 
     func activeCertificatePublicKeys(useFilters: [String]) -> [TrustListPublicKey]
@@ -36,8 +37,8 @@ class TrustStorage: TrustStorageProtocol {
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
 
-    private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage()
-    private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocation")
+    private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage.getBundledStorage()
+    private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocations")
 
     let revocationQueue = DispatchQueue(label: "storage.sync.revocation")
     let certificateQueue = DispatchQueue(label: "storage.sync.certificate")
@@ -45,17 +46,28 @@ class TrustStorage: TrustStorageProtocol {
 
     // MARK: - Revocation List
 
+    init() {
+        // The name of the revocations secure storage was changes from "revocation" to "revocations"
+        // This was done in order to ensure a complete revocation list
+        // If the file of revocations before pre bundeling exists make sure to delete it
+        // This makes sure we don't need twice the disk space for revocations in the worst case
+        if let path = SecureStorage<RevocationStorage>(name: "revocation").path,
+           FileManager.default.fileExists(atPath: path.path) {
+            try? FileManager.default.removeItem(atPath: path.path)
+        }
+    }
+
     func revokedCertificates() -> Set<String> {
         revocationQueue.sync {
             self.revocationStorage.revocationList.revokedCerts
         }
     }
 
-    func updateRevocationList(_ list: RevocationList) -> Bool {
+    func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         revocationQueue.sync {
             list.revokedCerts.forEach { self.revocationStorage.revocationList.revokedCerts.insert($0) }
             self.revocationStorage.revocationList.validDuration = list.validDuration
-
+            self.revocationStorage.nextSince = nextSince
             self.revocationStorage.lastRevocationListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
             return self.revocationSecureStorage.saveSynchronously(self.revocationStorage)
         }
@@ -64,6 +76,12 @@ class TrustStorage: TrustStorageProtocol {
     func revocationListIsValid() -> Bool {
         revocationQueue.sync {
             isStillValid(lastDownloadTimeStamp: self.revocationStorage.lastRevocationListDownload, validDuration: self.revocationStorage.revocationList.validDuration)
+        }
+    }
+
+    var revocationListNextSince: String? {
+        revocationQueue.sync {
+            self.revocationStorage.nextSince
         }
     }
 
@@ -156,6 +174,7 @@ class TrustStorage: TrustStorageProtocol {
 class RevocationStorage: Codable {
     var revocationList = RevocationList()
     var lastRevocationListDownload: Int64 = 0
+    var nextSince: String?
 }
 
 class ActiveCertificatesStorage: Codable {
@@ -168,4 +187,19 @@ class ActiveCertificatesStorage: Codable {
 class NationalRulesStorage: Codable {
     var nationalRulesList = NationalRulesList()
     var lastNationalRulesListDownload: Int64 = 0
+}
+
+extension RevocationStorage {
+    static func getBundledStorage(environment: SDKEnvironment = CovidCertificateSDK.currentEnvironment) -> RevocationStorage {
+        // only the prod revocations are pre-packaged
+        guard environment == .prod,
+              let resource = Bundle.module.path(forResource: "revocations", ofType: "json"),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: resource), options: .mappedIfSafe),
+              let bundled = try? JSONDecoder().decode(RevocationStorage.self, from: data)
+        else {
+            // if unabled to read use a empty storage
+            return RevocationStorage()
+        }
+        return bundled
+    }
 }

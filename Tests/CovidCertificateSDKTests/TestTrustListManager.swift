@@ -71,6 +71,8 @@ class TestTrustListUpdate: TrustListUpdate {
 
 class TestTrustStorage: TrustStorageProtocol {
     private let publicKeys: [TrustListPublicKey]
+    public var revokedCerts: Set<String> = []
+    public var nextSince: String?
 
     init(publicKeys: [TrustListPublicKey]) {
         self.publicKeys = publicKeys
@@ -79,16 +81,21 @@ class TestTrustStorage: TrustStorageProtocol {
     // MARK: - Revocation list
 
     func revokedCertificates() -> Set<String> {
-        []
+        revokedCerts
     }
 
-    func updateRevocationList(_: RevocationList) -> Bool {
-        // do nothing
-        true
+    func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
+        list.revokedCerts.forEach { revokedCerts.insert($0) }
+        self.nextSince = nextSince
+        return true
     }
 
     func revocationListIsValid() -> Bool {
         true
+    }
+
+    var revocationListNextSince: String? {
+        nextSince
     }
 
     // MARK: - Active Certificates
