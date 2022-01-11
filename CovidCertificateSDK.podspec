@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = "CovidCertificateSDK"
-  spec.version      = if ENV['LIB_VERSION'] then ENV['LIB_VERSION'][1..-1] else 'v1.0.1'[1..-1] end
+  spec.version      = if ENV['LIB_VERSION'] then ENV['LIB_VERSION'][1..-1] else 'v3.2.0'[1..-1] end
   spec.summary      = "Implementation of the Electronic Health Certificates (EHN) specification used to verify the validity of COVID Certificates in Switzerland."
   spec.homepage     = "https://github.com/admin-ch/CovidCertificate-SDK-iOS"
   spec.license      = { :type => "MPL", :file => "LICENSE" }
