@@ -26,6 +26,7 @@ struct DisplayRulesResult {
     let validFrom: Date?
     let validUntil: Date?
     let isSwitzerlandOnly: Bool?
+    let eolBannerIdentifier: String?
 }
 
 class CertLogic {
@@ -97,6 +98,7 @@ class CertLogic {
         var startDate: Date?
         var endDate: Date?
         var isSwitzerlandOnly: Bool?
+        var eolIdentifier: String?
 
         for displayRule in displayRules {
             switch displayRule["id"] {
@@ -117,6 +119,10 @@ class CertLogic {
                 if let result: Bool = try? applyRule(displayRule["logic"], to: context) {
                     isSwitzerlandOnly = result
                 }
+            case "eol-identifier":
+                if let result: String = try? applyRule(displayRule["logic"], to: context) {
+                    eolIdentifier = result
+                }
 
             default:
                 break
@@ -125,7 +131,8 @@ class CertLogic {
 
         return .success(DisplayRulesResult(validFrom: startDate,
                                            validUntil: endDate,
-                                           isSwitzerlandOnly: isSwitzerlandOnly))
+                                           isSwitzerlandOnly: isSwitzerlandOnly,
+                                           eolBannerIdentifier: eolIdentifier))
     }
 
     func checkModeRules(holder: CertificateHolderType, modes: [CheckMode], validationClock: Date = Date()) -> [CheckMode: Result<ModeCheckResult, CertLogicValidationError>] {
