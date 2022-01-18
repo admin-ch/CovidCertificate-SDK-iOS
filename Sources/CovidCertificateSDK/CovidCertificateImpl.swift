@@ -437,6 +437,20 @@ struct CovidCertificateImpl {
                                                                        dateError: .EXPIRED,
                                                                        isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
                     completionHandler(result)
+                case "TR-CH-0011":
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .NOT_YET_VALID,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
+                case "TR-CH-0012":
+                    result.nationalRules = .success(VerificationResult(isValid: false,
+                                                                       validUntil: displayRulesResult?.validUntil,
+                                                                       validFrom: displayRulesResult?.validFrom,
+                                                                       dateError: .EXPIRED,
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                    completionHandler(result)
                 case "RR-CH-0000":
                     result.nationalRules = .failure(.TOO_MANY_RECOVERY_ENTRIES)
                     completionHandler(result)
