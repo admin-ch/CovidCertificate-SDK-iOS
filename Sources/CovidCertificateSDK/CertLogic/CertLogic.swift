@@ -119,7 +119,7 @@ class CertLogic {
                 if let result: Bool = try? applyRule(displayRule["logic"], to: context) {
                     isSwitzerlandOnly = result
                 }
-            case "eol-identifier":
+            case "eol-banner":
                 if let result: String = try? applyRule(displayRule["logic"], to: context) {
                     eolIdentifier = result
                 }
