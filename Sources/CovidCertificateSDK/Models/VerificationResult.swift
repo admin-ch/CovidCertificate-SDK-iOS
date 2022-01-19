@@ -16,4 +16,5 @@ public struct VerificationResult {
     public let validFrom: Date?
     public let dateError: NationalRulesDateError?
     public let isSwitzerlandOnly: Bool?
+    public let eolBannerIdentifier: String?
 }

@@ -21,7 +21,8 @@ extension CheckResults {
                                                               validUntil: nil,
                                                               validFrom: nil,
                                                               dateError: nil,
-                                                              isSwitzerlandOnly: nil)),
+                                                              isSwitzerlandOnly: nil,
+                                                              eolBannerIdentifier: nil)),
                                 modeResults: modeResults)
         // expose networking errors for verification apps
         case .failure(.NETWORK_NO_INTERNET_CONNECTION),
