@@ -23,7 +23,6 @@ public enum SDKEnvironment {
         case .abn:
             return Backend("https://www.cc-a.bit.admin.ch/trust", version: "v1")
         case .prod:
-
             return Backend("https://www.cc.bit.admin.ch/trust", version: "v1")
         }
     }

@@ -179,7 +179,7 @@ public struct Test: Codable {
     public let type: String
     public let naaTestName: String?
     public let ratTestNameAndManufacturer: String?
-    public let timestampSample: String
+    public var timestampSample: String
     public let timestampResult: String?
     public let result: String
     public let testCenter: String?
@@ -217,6 +217,10 @@ public struct Test: Codable {
     }
 
     public var validFromDate: Date? {
+        Date.fromISO8601(timestampSample)
+    }
+
+    public var sampleDate: Date? {
         Date.fromISO8601(timestampSample)
     }
 

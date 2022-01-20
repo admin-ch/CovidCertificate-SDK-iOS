@@ -11,6 +11,11 @@
 import Foundation
 
 extension Date {
+    func toISO8601() -> String {
+        let formatter = ISO8601DateFormatter()
+        return formatter.string(from: self)
+    }
+
     static func fromISO8601(_ dateString: String) -> Date? {
         // `ISO8601DateFormatter` does not support fractional zeros if not
         // configured (`.withFractionalSeconds`) and if configured, does not
