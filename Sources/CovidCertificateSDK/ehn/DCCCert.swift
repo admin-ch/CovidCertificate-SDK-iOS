@@ -270,6 +270,10 @@ public struct Test: Codable {
         type == TestType.SwitzerlandException.rawValue
     }
 
+    public var isPositiveAntigenTest: Bool {
+        type == TestType.Rat.rawValue && result == TestResult.Positive.rawValue
+    }
+
     public var testType: String? {
         ProductNameManager.shared.testTypeName(key: type)
     }
