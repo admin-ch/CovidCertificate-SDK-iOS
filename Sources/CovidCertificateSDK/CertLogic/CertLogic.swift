@@ -174,11 +174,22 @@ class CertLogic {
 
         switch holder.certificate {
         case let certificate as DCCCert:
+            let tests = certificate.tests?.map { test -> Test in
+                var t = test
+                if t.isPositiveAntigenTest,
+                   let validDate = t.sampleDate {
+                    let d = Calendar.current.startOfDay(for: validDate)
+                    t.timestampSample = d.toISO8601()
+                }
+
+                return t
+            }
+
             return CertLogicPayload(nam: certificate.person,
                                     dob: certificate.dateOfBirth,
                                     ver: certificate.version,
                                     v: certificate.vaccinations,
-                                    t: certificate.tests,
+                                    t: tests,
                                     r: certificate.pastInfections,
                                     h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: false, mode: mode))
         case is LightCert:
