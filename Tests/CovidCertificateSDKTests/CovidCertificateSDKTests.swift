@@ -746,8 +746,8 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_rat), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
-            case .failure(.POSITIVE_RESULT):
-                XCTAssertTrue(true)
+            case let .success(state):
+                XCTAssertFalse(state.isValid)
             default:
                 XCTFail("Negative Result should be ok")
             }
@@ -1080,9 +1080,9 @@ final class CovidCertificateSDKTests: XCTestCase {
         verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
             switch result.modeResults.getResult(for: .twoGPlus) {
             case let .success(r):
-                /// VACCINATION IS VALID IN 2G+ MODE AND RETURNS SUCCESS_2G
+                /// VACCINATION IS VALID IN 2G+ MODE AND RETURNS SUCCESS
                 XCTAssertTrue(r.isValid)
-                XCTAssertTrue(r.code.rawValue == "SUCCESS_2G")
+                XCTAssertEqual(r.code.rawValue, "SUCCESS")
             default:
                 XCTFail("Something happened")
             }

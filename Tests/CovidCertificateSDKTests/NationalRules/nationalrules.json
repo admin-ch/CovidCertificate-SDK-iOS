@@ -380,7 +380,6 @@
                     "var": "payload.t.0.tt"
                   },
                   [
-                    "LP217198-3",
                     "LP6464-4"
                   ]
                 ]
@@ -434,7 +433,8 @@
               [
                 "LP217198-3",
                 "LP6464-4",
-                "94504-8"
+                "94504-8",
+                "medical-exemption"
               ]
             ]
           },
@@ -559,11 +559,23 @@
       "logic": {
         "if": [
           {
-            "===": [
+            "and": [
               {
-                "var": "payload.t.0.tt"
+                "===": [
+                  {
+                    "var": "payload.t.0.tt"
+                  },
+                  "LP217198-3"
+                ]
               },
-              "LP217198-3"
+              {
+                "===": [
+                  {
+                    "var": "payload.t.0.tr"
+                  },
+                  "260415000"
+                ]
+              }
             ]
           },
           {
@@ -592,12 +604,13 @@
         ]
       },
       "affectedFields": [
+        "t.0.tr",
         "t.0.tt",
         "t.0.sc"
       ],
       "description": [
         {
-          "desc": "If the test type is \\\"RAT\\\" then the validation date must be before the date of sample collection plus 24 hours",
+          "desc": "If the test is a negative \\\"RAT\\\" then the validation date must be before the date of sample collection plus 24 hoursFor positive, see TR-CH-0011 and 0012",
           "lang": "en"
         }
       ]
@@ -683,7 +696,8 @@
                     "var": "payload.t.0.tt"
                   },
                   [
-                    "94504-8"
+                    "94504-8",
+                    "medical-exemption"
                   ]
                 ]
               }
@@ -707,7 +721,7 @@
       ],
       "description": [
         {
-          "desc": "For serum antibody tests, the result must be positive.",
+          "desc": "For serum antibody tests and exemption certificates, the result must be positive.",
           "lang": "en"
         }
       ]
@@ -765,6 +779,203 @@
       "description": [
         {
           "desc": "If the test is a serum antibody test, then the validation date must be before the date of sample collection plus 90 days",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "country": "CH",
+      "engine": "CertLogic",
+      "engineVersion": "0.7.5",
+      "schemaVersion": "1.0.0",
+      "type": "Acceptance",
+      "validTo": "2031-01-01T00:00:00Z",
+      "identifier": "TR-CH-0010",
+      "version": "1.0.7",
+      "validFrom": "2021-12-17T00:00:00Z",
+      "certificateType": "Test",
+      "logic": {
+        "if": [
+          {
+            "===": [
+              {
+                "var": "payload.t.0.tt"
+              },
+              "medical-exemption"
+            ]
+          },
+          {
+            "before": [
+              {
+                "plusTime": [
+                  {
+                    "var": "external.validationClock"
+                  },
+                  0,
+                  "day"
+                ]
+              },
+              {
+                "plusTime": [
+                  {
+                    "var": "payload.t.0.sc"
+                  },
+                  365,
+                  "day"
+                ]
+              }
+            ]
+          },
+          true
+        ]
+      },
+      "affectedFields": [
+        "t.0.tt",
+        "t.0.sc"
+      ],
+      "description": [
+        {
+          "desc": "Exemption certificates are valid for 365 days",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "country": "CH",
+      "engine": "CertLogic",
+      "engineVersion": "0.7.5",
+      "schemaVersion": "1.0.0",
+      "type": "Acceptance",
+      "validTo": "2031-01-01T00:00:00Z",
+      "identifier": "TR-CH-0011",
+      "version": "1.0.7",
+      "validFrom": "2021-12-17T00:00:00Z",
+      "certificateType": "Test",
+      "logic": {
+        "if": [
+          {
+            "and": [
+              {
+                "===": [
+                  {
+                    "var": "payload.t.0.tt"
+                  },
+                  "LP217198-3"
+                ]
+              },
+              {
+                "===": [
+                  {
+                    "var": "payload.t.0.tr"
+                  },
+                  "260373001"
+                ]
+              }
+            ]
+          },
+          {
+            "after": [
+              {
+                "plusTime": [
+                  {
+                    "var": "external.validationClock"
+                  },
+                  0,
+                  "day"
+                ]
+              },
+              {
+                "plusTime": [
+                  {
+                    "var": "payload.t.0.sc"
+                  },
+                  10,
+                  "day"
+                ]
+              }
+            ]
+          },
+          true
+        ]
+      },
+      "affectedFields": [
+        "t.0.tr",
+        "t.0.tt",
+        "t.0.sc"
+      ],
+      "description": [
+        {
+          "desc": "  Positive RAT == recovery  => valid after 10 days",
+          "lang": "en"
+        }
+      ]
+    },
+    {
+      "country": "CH",
+      "engine": "CertLogic",
+      "engineVersion": "0.7.5",
+      "schemaVersion": "1.0.0",
+      "type": "Acceptance",
+      "validTo": "2031-01-01T00:00:00Z",
+      "identifier": "TR-CH-0012",
+      "version": "1.0.7",
+      "validFrom": "2021-12-17T00:00:00Z",
+      "certificateType": "Test",
+      "logic": {
+        "if": [
+          {
+            "and": [
+              {
+                "===": [
+                  {
+                    "var": "payload.t.0.tt"
+                  },
+                  "LP217198-3"
+                ]
+              },
+              {
+                "===": [
+                  {
+                    "var": "payload.t.0.tr"
+                  },
+                  "260373001"
+                ]
+              }
+            ]
+          },
+          {
+            "before": [
+              {
+                "plusTime": [
+                  {
+                    "var": "external.validationClock"
+                  },
+                  0,
+                  "day"
+                ]
+              },
+              {
+                "plusTime": [
+                  {
+                    "var": "payload.t.0.sc"
+                  },
+                  365,
+                  "day"
+                ]
+              }
+            ]
+          },
+          true
+        ]
+      },
+      "affectedFields": [
+        "t.0.tr",
+        "t.0.tt",
+        "t.0.sc"
+      ],
+      "description": [
+        {
+          "desc": "  Positive RAT == recovery  => valid for 270 days",
           "lang": "en"
         }
       ]
@@ -899,15 +1110,18 @@
                 "EU/1/20/1507",
                 "EU/1/21/1529",
                 "EU/1/20/1525",
+                "EU/1/21/1618",
                 "CoronaVac",
                 "BBIBP-CorV",
                 "Covishield",
                 "Covaxin",
                 "R-COVI",
                 "Covid-19-recombinant",
+                "COVOVAX",
                 "BBIBP-CorV_T",
                 "CoronaVac_T",
-                "Covaxin_T"
+                "Covaxin_T",
+                "NVX-CoV2373"
               ]
             ]
           },
@@ -1001,7 +1215,10 @@
                     "CoronaVac_T",
                     "Covaxin_T",
                     "R-COVI",
-                    "Covid-19-recombinant"
+                    "Covid-19-recombinant",
+                    "COVOVAX",
+                    "EU/1/21/1618",
+                    "NVX-CoV2373"
                   ]
                 ]
               }
@@ -1160,7 +1377,10 @@
                     "CoronaVac_T",
                     "Covaxin_T",
                     "R-COVI",
-                    "Covid-19-recombinant"
+                    "Covid-19-recombinant",
+                    "EU/1/21/1618",
+                    "COVOVAX",
+                    "NVX-CoV2373"
                   ]
                 ]
               }
@@ -1392,6 +1612,471 @@
       ]
     }
   ],
+  "modeRules": {
+    "activeModes": [
+      {
+        "id": "THREE_G",
+        "displayName": "3G"
+      },
+      {
+        "id": "TWO_G",
+        "displayName": "2G"
+      }
+    ],
+    "walletActiveModes": [
+      {
+        "id": "THREE_G",
+        "displayName": "3G"
+      },
+      {
+        "id": "TWO_G",
+        "displayName": "2G"
+      },
+      {
+        "id": "TWO_G_PLUS",
+        "displayName": "2G+"
+      }
+    ],
+    "verifierActiveModes": [
+      {
+        "id": "THREE_G",
+        "displayName": "3G"
+      },
+      {
+        "id": "TWO_G",
+        "displayName": "2G"
+      },
+      {
+        "id": "TWO_G_PLUS",
+        "displayName": "2G+"
+      },
+      {
+        "id": "TEST_CERT",
+        "displayName": "Testzertifikat"
+      }
+    ],
+    "logic": {
+      "if": [
+        {
+          "and": [
+            {
+              "===": [
+                {
+                  "var": "payload.h.mode"
+                },
+                "THREE_G"
+              ]
+            },
+            {
+              "var": "payload.t.0"
+            },
+            {
+              "in": [
+                {
+                  "var": "payload.t.0.tt"
+                },
+                [
+                  "medical-exemption"
+                ]
+              ]
+            }
+          ]
+        },
+        "SUCCESS",
+        {
+          "if": [
+            {
+              "===": [
+                {
+                  "var": "payload.h.mode"
+                },
+                "THREE_G"
+              ]
+            },
+            "SUCCESS",
+            {
+              "if": [
+                {
+                  "and": [
+                    {
+                      "===": [
+                        {
+                          "var": "payload.h.mode"
+                        },
+                        "TWO_G"
+                      ]
+                    },
+                    {
+                      "var": "payload.t.0"
+                    },
+                    {
+                      "in": [
+                        {
+                          "var": "payload.t.0.tt"
+                        },
+                        [
+                          "medical-exemption"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                "SUCCESS",
+                {
+                  "if": [
+                    {
+                      "===": [
+                        {
+                          "var": "payload.h.mode"
+                        },
+                        "TWO_G"
+                      ]
+                    },
+                    {
+                      "if": [
+                        {
+                          "var": "payload.h.isLight"
+                        },
+                        "IS_LIGHT",
+                        {
+                          "if": [
+                            {
+                              "var": "payload.t.0"
+                            },
+                            {
+                              "if": [
+                                {
+                                  "in": [
+                                    {
+                                      "var": "payload.t.0.tt"
+                                    },
+                                    [
+                                      "LP6464-4",
+                                      "LP217198-3"
+                                    ]
+                                  ]
+                                },
+                                "INVALID",
+                                "SUCCESS"
+                              ]
+                            },
+                            "SUCCESS"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "if": [
+                        {
+                          "and": [
+                            {
+                              "===": [
+                                {
+                                  "var": "payload.h.mode"
+                                },
+                                "TWO_G_PLUS"
+                              ]
+                            },
+                            {
+                              "var": "payload.t.0"
+                            },
+                            {
+                              "in": [
+                                {
+                                  "var": "payload.t.0.tt"
+                                },
+                                [
+                                  "medical-exemption"
+                                ]
+                              ]
+                            }
+                          ]
+                        },
+                        "SUCCESS",
+                        {
+                          "if": [
+                            {
+                              "and": [
+                                {
+                                  "===": [
+                                    {
+                                      "var": "payload.h.mode"
+                                    },
+                                    "TWO_G_PLUS"
+                                  ]
+                                },
+                                {
+                                  "var": "payload.h.isLight"
+                                }
+                              ]
+                            },
+                            "IS_LIGHT",
+                            {
+                              "if": [
+                                {
+                                  "and": [
+                                    {
+                                      "===": [
+                                        {
+                                          "var": "payload.h.mode"
+                                        },
+                                        "TWO_G_PLUS"
+                                      ]
+                                    },
+                                    {
+                                      "var": "payload.v.0"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "if": [
+                                    {
+                                      "before": [
+                                        {
+                                          "plusTime": [
+                                            {
+                                              "var": "external.validationClock"
+                                            },
+                                            0,
+                                            "day"
+                                          ]
+                                        },
+                                        {
+                                          "plusTime": [
+                                            {
+                                              "var": "payload.v.0.dt"
+                                            },
+                                            121,
+                                            "day"
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    "SUCCESS",
+                                    "SUCCESS_2G"
+                                  ]
+                                },
+                                {
+                                  "if": [
+                                    {
+                                      "and": [
+                                        {
+                                          "===": [
+                                            {
+                                              "var": "payload.h.mode"
+                                            },
+                                            "TWO_G_PLUS"
+                                          ]
+                                        },
+                                        {
+                                          "var": "payload.r.0"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "if": [
+                                        {
+                                          "before": [
+                                            {
+                                              "plusTime": [
+                                                {
+                                                  "var": "external.validationClock"
+                                                },
+                                                0,
+                                                "day"
+                                              ]
+                                            },
+                                            {
+                                              "plusTime": [
+                                                {
+                                                  "var": "payload.r.0.fr"
+                                                },
+                                                131,
+                                                "day"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "SUCCESS",
+                                        "SUCCESS_2G"
+                                      ]
+                                    },
+                                    {
+                                      "if": [
+                                        {
+                                          "and": [
+                                            {
+                                              "===": [
+                                                {
+                                                  "var": "payload.h.mode"
+                                                },
+                                                "TWO_G_PLUS"
+                                              ]
+                                            },
+                                            {
+                                              "var": "payload.t.0"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "if": [
+                                            {
+                                              "in": [
+                                                {
+                                                  "var": "payload.t.0.tt"
+                                                },
+                                                [
+                                                  "LP6464-4",
+                                                  "LP217198-3"
+                                                ]
+                                              ]
+                                            },
+                                            "SUCCESS_2G_PLUS",
+                                            {
+                                              "if": [
+                                                {
+                                                  "in": [
+                                                    {
+                                                      "var": "payload.t.0.tt"
+                                                    },
+                                                    [
+                                                      "94504-8"
+                                                    ]
+                                                  ]
+                                                },
+                                                "SUCCESS_2G",
+                                                "INVALID"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "if": [
+                                            {
+                                              "===": [
+                                                {
+                                                  "var": "payload.h.mode"
+                                                },
+                                                "TWO_G_PLUS"
+                                              ]
+                                            },
+                                            "INVALID",
+                                            {
+                                              "if": [
+                                                {
+                                                  "and": [
+                                                    {
+                                                      "===": [
+                                                        {
+                                                          "var": "payload.h.mode"
+                                                        },
+                                                        "TEST_CERT"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "var": "payload.t.0"
+                                                    },
+                                                    {
+                                                      "in": [
+                                                        {
+                                                          "var": "payload.t.0.tt"
+                                                        },
+                                                        [
+                                                          "medical-exemption"
+                                                        ]
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                "SUCCESS",
+                                                {
+                                                  "if": [
+                                                    {
+                                                      "and": [
+                                                        {
+                                                          "===": [
+                                                            {
+                                                              "var": "payload.h.mode"
+                                                            },
+                                                            "TEST_CERT"
+                                                          ]
+                                                        },
+                                                        {
+                                                          "var": "payload.h.isLight"
+                                                        }
+                                                      ]
+                                                    },
+                                                    "IS_LIGHT",
+                                                    {
+                                                      "if": [
+                                                        {
+                                                          "and": [
+                                                            {
+                                                              "===": [
+                                                                {
+                                                                  "var": "payload.h.mode"
+                                                                },
+                                                                "TEST_CERT"
+                                                              ]
+                                                            },
+                                                            {
+                                                              "var": "payload.t.0"
+                                                            },
+                                                            {
+                                                              "in": [
+                                                                {
+                                                                  "var": "payload.t.0.tt"
+                                                                },
+                                                                [
+                                                                  "LP6464-4",
+                                                                  "LP217198-3"
+                                                                ]
+                                                              ]
+                                                            }
+                                                          ]
+                                                        },
+                                                        "SUCCESS",
+                                                        {
+                                                          "if": [
+                                                            {
+                                                              "===": [
+                                                                {
+                                                                  "var": "payload.h.mode"
+                                                                },
+                                                                "TEST_CERT"
+                                                              ]
+                                                            },
+                                                            "INVALID",
+                                                            "UNKNOWN_MODE"
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
   "displayRules": [
     {
       "id": "display-from-date",
@@ -1491,12 +2176,45 @@
                 "var": "payload.t.0"
               },
               {
-                "plusTime": [
+                "if": [
                   {
-                    "var": "payload.t.0.sc"
+                    "and": [
+                      {
+                        "===": [
+                          {
+                            "var": "payload.t.0.tt"
+                          },
+                          "LP217198-3"
+                        ]
+                      },
+                      {
+                        "===": [
+                          {
+                            "var": "payload.t.0.tr"
+                          },
+                          "260373001"
+                        ]
+                      }
+                    ]
                   },
-                  0,
-                  "day"
+                  {
+                    "plusTime": [
+                      {
+                        "var": "payload.t.0.sc"
+                      },
+                      10,
+                      "day"
+                    ]
+                  },
+                  {
+                    "plusTime": [
+                      {
+                        "var": "payload.t.0.sc"
+                      },
+                      0,
+                      "day"
+                    ]
+                  }
                 ]
               },
               {
@@ -1719,6 +2437,9 @@
                                     "Covishield",
                                     "Covaxin",
                                     "R-COVI",
+                                    "EU/1/21/1618",
+                                    "COVOVAX",
+                                    "NVX-CoV2373",
                                     "Covid-19-recombinant"
                                   ]
                                 ]
@@ -1790,12 +2511,33 @@
                         ]
                       },
                       {
-                        "plusTime": [
+                        "if": [
                           {
-                            "var": "payload.t.0.sc"
+                            "===": [
+                              {
+                                "var": "payload.t.0.tr"
+                              },
+                              "260373001"
+                            ]
                           },
-                          24,
-                          "hour"
+                          {
+                            "plusTime": [
+                              {
+                                "var": "payload.t.0.sc"
+                              },
+                              270,
+                              "day"
+                            ]
+                          },
+                          {
+                            "plusTime": [
+                              {
+                                "var": "payload.t.0.sc"
+                              },
+                              24,
+                              "hour"
+                            ]
+                          }
                         ]
                       },
                       {
@@ -1818,7 +2560,28 @@
                             ]
                           },
                           {
-                            "var": "undefined"
+                            "if": [
+                              {
+                                "===": [
+                                  {
+                                    "var": "payload.t.0.tt"
+                                  },
+                                  "medical-exemption"
+                                ]
+                              },
+                              {
+                                "plusTime": [
+                                  {
+                                    "var": "payload.t.0.sc"
+                                  },
+                                  365,
+                                  "day"
+                                ]
+                              },
+                              {
+                                "var": "undefined"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -1851,11 +2614,374 @@
       }
     },
     {
+      "id": "eol-banner",
+      "logic": {
+        "if": [
+          {
+            "var": "payload.v.0"
+          },
+          {
+            "if": [
+              {
+                "and": [
+                  {
+                    "===": [
+                      {
+                        "var": "payload.v.0.mp"
+                      },
+                      "EU/1/20/1525"
+                    ]
+                  },
+                  {
+                    "===": [
+                      {
+                        "var": "payload.v.0.dn"
+                      },
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "if": [
+                  {
+                    "not-after": [
+                      {
+                        "plusTime": [
+                          {
+                            "var": "payload.v.0.dt"
+                          },
+                          291,
+                          "day"
+                        ]
+                      },
+                      {
+                        "plusTime": [
+                          "2022-02-01",
+                          0,
+                          "day"
+                        ]
+                      }
+                    ]
+                  },
+                  "invalidFromFirstFebruary",
+                  {
+                    "if": [
+                      {
+                        "not-after": [
+                          {
+                            "plusTime": [
+                              {
+                                "var": "payload.v.0.dt"
+                              },
+                              291,
+                              "day"
+                            ]
+                          },
+                          {
+                            "plusTime": [
+                              {
+                                "var": "external.validationClock"
+                              },
+                              21,
+                              "day"
+                            ]
+                          }
+                        ]
+                      },
+                      "invalidInThreeWeeks",
+                      {
+                        "var": "undefined"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "if": [
+                  {
+                    "not-after": [
+                      {
+                        "plusTime": [
+                          {
+                            "var": "payload.v.0.dt"
+                          },
+                          270,
+                          "day"
+                        ]
+                      },
+                      {
+                        "plusTime": [
+                          "2022-02-01",
+                          0,
+                          "day"
+                        ]
+                      }
+                    ]
+                  },
+                  "invalidFromFirstFebruary",
+                  {
+                    "if": [
+                      {
+                        "not-after": [
+                          {
+                            "plusTime": [
+                              {
+                                "var": "payload.v.0.dt"
+                              },
+                              270,
+                              "day"
+                            ]
+                          },
+                          {
+                            "plusTime": [
+                              {
+                                "var": "external.validationClock"
+                              },
+                              21,
+                              "day"
+                            ]
+                          }
+                        ]
+                      },
+                      "invalidInThreeWeeks",
+                      {
+                        "var": "undefined"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "if": [
+              {
+                "var": "payload.r.0"
+              },
+              {
+                "if": [
+                  {
+                    "not-after": [
+                      {
+                        "plusTime": [
+                          {
+                            "var": "payload.r.0.fr"
+                          },
+                          270,
+                          "day"
+                        ]
+                      },
+                      {
+                        "plusTime": [
+                          "2022-02-01",
+                          0,
+                          "day"
+                        ]
+                      }
+                    ]
+                  },
+                  "invalidFromFirstFebruary",
+                  {
+                    "if": [
+                      {
+                        "not-after": [
+                          {
+                            "plusTime": [
+                              {
+                                "var": "payload.r.0.fr"
+                              },
+                              270,
+                              "day"
+                            ]
+                          },
+                          {
+                            "plusTime": [
+                              {
+                                "var": "external.validationClock"
+                              },
+                              21,
+                              "day"
+                            ]
+                          }
+                        ]
+                      },
+                      "invalidInThreeWeeks",
+                      {
+                        "var": "undefined"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "if": [
+                  {
+                    "var": "payload.t.0"
+                  },
+                  {
+                    "if": [
+                      {
+                        "and": [
+                          {
+                            "in": [
+                              {
+                                "var": "payload.t.0.tt"
+                              },
+                              [
+                                "LP217198-3"
+                              ]
+                            ]
+                          },
+                          {
+                            "===": [
+                              {
+                                "var": "payload.t.0.tr"
+                              },
+                              "260373001"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "if": [
+                          {
+                            "not-after": [
+                              {
+                                "plusTime": [
+                                  {
+                                    "var": "payload.t.0.sc"
+                                  },
+                                  270,
+                                  "day"
+                                ]
+                              },
+                              {
+                                "plusTime": [
+                                  "2022-02-01",
+                                  0,
+                                  "day"
+                                ]
+                              }
+                            ]
+                          },
+                          "invalidFromFirstFebruary",
+                          {
+                            "if": [
+                              {
+                                "not-after": [
+                                  {
+                                    "plusTime": [
+                                      {
+                                        "var": "payload.t.0.sc"
+                                      },
+                                      270,
+                                      "day"
+                                    ]
+                                  },
+                                  {
+                                    "plusTime": [
+                                      {
+                                        "var": "external.validationClock"
+                                      },
+                                      21,
+                                      "day"
+                                    ]
+                                  }
+                                ]
+                              },
+                              "invalidInThreeWeeks",
+                              {
+                                "var": "undefined"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "var": "undefined"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "is-only-valid-in-ch",
       "logic": {
         "!": [
           {
             "and": [
+              {
+                "!": [
+                  {
+                    "if": [
+                      {
+                        "var": "payload.t.0"
+                      },
+                      {
+                        "in": [
+                          {
+                            "var": "payload.t.0.tt"
+                          },
+                          [
+                            "medical-exemption"
+                          ]
+                        ]
+                      },
+                      false
+                    ]
+                  }
+                ]
+              },
+              {
+                "!": [
+                  {
+                    "if": [
+                      {
+                        "var": "payload.t.0"
+                      },
+                      {
+                        "and": [
+                          {
+                            "in": [
+                              {
+                                "var": "payload.t.0.tt"
+                              },
+                              [
+                                "LP217198-3"
+                              ]
+                            ]
+                          },
+                          {
+                            "===": [
+                              {
+                                "var": "payload.t.0.tr"
+                              },
+                              "260373001"
+                            ]
+                          },
+                          {
+                            "in": [
+                              {
+                                "var": "payload.t.0.co"
+                              },
+                              [
+                                "CH"
+                              ]
+                            ]
+                          }
+                        ]
+                      },
+                      false
+                    ]
+                  }
+                ]
+              },
               {
                 "!": [
                   {
@@ -2182,7 +3308,8 @@
       "Chumakov-Federal-Scientific-Center",
       "ORG-100023050",
       "CIGB",
-      "Sinopharm-WIBP"
+      "Sinopharm-WIBP",
+      "ORG-100033914"
     ],
     "disease-agent-targeted": [
       "840539006"
@@ -2202,6 +3329,7 @@
       "EU/1/21/1529",
       "EU/1/20/1525",
       "CVnCoV",
+      "NVX-CoV2373",
       "Sputnik-V",
       "Convidecia",
       "EpiVacCorona",
@@ -2216,7 +3344,9 @@
       "Sputnik-Light",
       "Hayat-Vax",
       "Abdala",
-      "WIBP-CorV"
+      "WIBP-CorV",
+      "MVC-COV1901",
+      "EU/1/21/1618"
     ],
     "covid-19-lab-test-type": [
       "LP6464-4",
@@ -2401,215 +3531,18 @@
       "1228",
       "1347",
       "2256",
-      "2684"
+      "2684",
+      "1778",
+      "2696",
+      "2746",
+      "2695",
+      "2629",
+      "1353",
+      "2741",
+      "2754",
+      "2097",
+      "2584",
+      "2100"
     ]
-  },
-  "modeRules": {
-    "activeModes": [
-      {
-        "id": "THREE_G",
-        "displayName": "3G"
-      },
-      {
-        "id": "TWO_G",
-        "displayName": "2G"
-      }
-    ],
-    "verifierActiveModes": [
-      {
-        "id": "THREE_G",
-        "displayName": "3G"
-      },
-      {
-        "id": "TWO_G",
-        "displayName": "2G"
-      },
-      {
-        "id": "TWO_G_PLUS",
-        "displayName": "2G+"
-      }
-    ],
-    "logic": {
-      "if": [
-        {
-          "===": [
-            {
-              "var": "payload.h.mode"
-            },
-            "THREE_G"
-          ]
-        },
-        "SUCCESS",
-        {
-          "if": [
-            {
-              "===": [
-                {
-                  "var": "payload.h.mode"
-                },
-                "TWO_G"
-              ]
-            },
-            {
-              "if": [
-                {
-                  "var": "payload.h.isLight"
-                },
-                "IS_LIGHT",
-                {
-                  "if": [
-                    {
-                      "var": "payload.t.0"
-                    },
-                    {
-                      "if": [
-                        {
-                          "in": [
-                            {
-                              "var": "payload.t.0.tt"
-                            },
-                            [
-                              "LP6464-4",
-                              "LP217198-3"
-                            ]
-                          ]
-                        },
-                        "INVALID",
-                        "SUCCESS"
-                      ]
-                    },
-                    "SUCCESS"
-                  ]
-                }
-              ]
-            },
-            {
-              "if": [
-                {
-                  "and": [
-                    {
-                      "===": [
-                        {
-                          "var": "payload.h.mode"
-                        },
-                        "TWO_G_PLUS"
-                      ]
-                    },
-                    {
-                      "var": "payload.h.isLight"
-                    }
-                  ]
-                },
-                "IS_LIGHT",
-                {
-                  "if": [
-                    {
-                      "and": [
-                        {
-                          "===": [
-                            {
-                              "var": "payload.h.mode"
-                            },
-                            "TWO_G_PLUS"
-                          ]
-                        },
-                        {
-                          "!": [
-                            {
-                              "and": [
-                                {
-                                  "!": [
-                                    {
-                                      "var": "payload.v.0"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "!": [
-                                    {
-                                      "var": "payload.r.0"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    "SUCCESS_2G",
-                    {
-                      "if": [
-                        {
-                          "and": [
-                            {
-                              "===": [
-                                {
-                                  "var": "payload.h.mode"
-                                },
-                                "TWO_G_PLUS"
-                              ]
-                            },
-                            {
-                              "var": "payload.t.0"
-                            }
-                          ]
-                        },
-                        {
-                          "if": [
-                            {
-                              "in": [
-                                {
-                                  "var": "payload.t.0.tt"
-                                },
-                                [
-                                  "LP6464-4",
-                                  "LP217198-3"
-                                ]
-                              ]
-                            },
-                            "SUCCESS_2G_PLUS",
-                            {
-                              "if": [
-                                {
-                                  "in": [
-                                    {
-                                      "var": "payload.t.0.tt"
-                                    },
-                                    [
-                                      "94504-8"
-                                    ]
-                                  ]
-                                },
-                                "SUCCESS_2G",
-                                "INVALID"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "if": [
-                            {
-                              "===": [
-                                {
-                                  "var": "payload.h.mode"
-                                },
-                                "TWO_G_PLUS"
-                              ]
-                            },
-                            "INVALID",
-                            "UNKNOWN_MODE"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
   }
 }
