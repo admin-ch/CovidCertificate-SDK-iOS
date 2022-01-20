@@ -310,7 +310,8 @@ struct CovidCertificateImpl {
                                                       validUntil: holder.expiresAt,
                                                       validFrom: holder.issuedAt,
                                                       dateError: nil,
-                                                      isSwitzerlandOnly: true))
+                                                      isSwitzerlandOnly: true,
+                                                      eolBannerIdentifier: nil))
                 completionHandler(result)
                 return
             }
@@ -329,7 +330,8 @@ struct CovidCertificateImpl {
                                                                    validUntil: displayRulesResult?.validUntil,
                                                                    validFrom: displayRulesResult?.validFrom,
                                                                    dateError: nil,
-                                                                   isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                   isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                   eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                 completionHandler(result)
                 return
             case let .failure(.TESTS_FAILED(tests)):
@@ -354,35 +356,40 @@ struct CovidCertificateImpl {
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .NOT_YET_VALID,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "VR-CH-0005":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .NOT_YET_VALID,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "VR-CH-0006":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "VR-CH-0007":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "VR-CH-0008":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "TR-CH-0000":
                     result.nationalRules = .failure(.TOO_MANY_TEST_ENTRIES)
@@ -404,21 +411,24 @@ struct CovidCertificateImpl {
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .NOT_YET_VALID,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "TR-CH-0006":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "TR-CH-0007":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "TR-CH-0008":
                     result.nationalRules = .failure(.NEGATIVE_RESULT)
@@ -428,14 +438,16 @@ struct CovidCertificateImpl {
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "TR-CH-0010":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "TR-CH-0011":
                     result.nationalRules = .success(VerificationResult(isValid: false,
@@ -462,14 +474,16 @@ struct CovidCertificateImpl {
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .NOT_YET_VALID,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 case "RR-CH-0003":
                     result.nationalRules = .success(VerificationResult(isValid: false,
                                                                        validUntil: displayRulesResult?.validUntil,
                                                                        validFrom: displayRulesResult?.validFrom,
                                                                        dateError: .EXPIRED,
-                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly))
+                                                                       isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly,
+                                                                       eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 default:
                     result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
