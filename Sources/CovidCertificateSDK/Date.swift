@@ -11,7 +11,7 @@
 import Foundation
 
 extension Date {
-    static let formatter = ISO8601DateFormatter()
+    fileprivate static let formatter = ISO8601DateFormatter()
 
     func toISO8601() -> String {
         return Date.formatter.string(from: self)
