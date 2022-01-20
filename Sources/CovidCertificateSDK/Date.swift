@@ -14,7 +14,7 @@ extension Date {
     fileprivate static let formatter = ISO8601DateFormatter()
 
     func toISO8601() -> String {
-        return Date.formatter.string(from: self)
+        Date.formatter.string(from: self)
     }
 
     static func fromISO8601(_ dateString: String) -> Date? {
