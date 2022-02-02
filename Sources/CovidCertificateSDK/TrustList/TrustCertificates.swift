@@ -43,16 +43,22 @@ class TrustCertificate: Codable {
         case x
         case y
     }
+    
+    init(keyId: String, use: String, alg: String) {
+        self.keyId = keyId
+        self.use = use
+        self.alg = alg
+    }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         keyId = try container.decode(String.self, forKey: .keyId)
         use = try container.decode(String.self, forKey: .use)
         alg = try container.decode(String.self, forKey: .alg)
-        subjectPublicKeyInfo = try container.decode(String.self, forKey: .subjectPublicKeyInfo)
-        crv = try container.decode(String.self, forKey: .crv)
-        x = try container.decode(String.self, forKey: .x)
-        y = try container.decode(String.self, forKey: .y)
+        subjectPublicKeyInfo = try container.decodeIfPresent(String.self, forKey: .subjectPublicKeyInfo)
+        crv = try container.decodeIfPresent(String.self, forKey: .crv)
+        x = try container.decodeIfPresent(String.self, forKey: .x)
+        y = try container.decodeIfPresent(String.self, forKey: .y)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -60,10 +66,10 @@ class TrustCertificate: Codable {
         try container.encode(keyId, forKey: .keyId)
         try container.encode(use, forKey: .use)
         try container.encode(alg, forKey: .alg)
-        try container.encode(subjectPublicKeyInfo, forKey: .subjectPublicKeyInfo)
-        try container.encode(crv, forKey: .crv)
-        try container.encode(x, forKey: .x)
-        try container.encode(y, forKey: .y)
+        try container.encodeIfPresent(subjectPublicKeyInfo, forKey: .subjectPublicKeyInfo)
+        try container.encodeIfPresent(crv, forKey: .crv)
+        try container.encodeIfPresent(x, forKey: .x)
+        try container.encodeIfPresent(y, forKey: .y)
     }
 }
 
