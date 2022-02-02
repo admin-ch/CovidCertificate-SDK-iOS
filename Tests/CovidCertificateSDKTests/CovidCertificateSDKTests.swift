@@ -73,7 +73,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let key = TrustCertificate(keyId: "AAABAQICAwM=", use: "sig", alg: "ES256")
         key.x = "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc="
         key.y = "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM="
-        
+
         let keys: [TrustCertificate] = [key]
 
         guard let certificateHolder = try? verifier.decode(encodedData: hcert).get() else {
@@ -126,13 +126,13 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTFail("Could not decode")
             return
         }
-        
+
         let key = TrustCertificate(keyId: "AAABAQICAwM=", use: "sig", alg: "ES256")
         key.x = "S/yUgaRwgbGh73OGTAaidN+WSf16Tak3oYi4KwjeA4g="
         key.y = "4nWXiEKZkApaDwzXrUcA1zphiCSry8Xd4zqNL5XVREw="
-        
+
         let keys: [TrustCertificate] = [key]
-        
+
         let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
@@ -159,9 +159,9 @@ final class CovidCertificateSDKTests: XCTestCase {
         let key = TrustCertificate(keyId: "AAABAQICAwM=", use: "sig", alg: "ES256")
         key.x = "8OvCEph8PWTFDrLaObg5c6gK9HI0tfJUMmma/WfvlVE="
         key.y = "uJ2i55ZbAVpMhklwqZfVKhLXeO0Yrz69qKoh2Y86FR8="
-        
+
         let keys: [TrustCertificate] = [key]
-        
+
         let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {

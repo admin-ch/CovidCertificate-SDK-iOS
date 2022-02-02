@@ -43,7 +43,7 @@ class TrustCertificate: Codable {
         case x
         case y
     }
-    
+
     init(keyId: String, use: String, alg: String) {
         self.keyId = keyId
         self.use = use

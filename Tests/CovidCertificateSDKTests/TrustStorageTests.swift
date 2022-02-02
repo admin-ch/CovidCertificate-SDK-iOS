@@ -57,12 +57,12 @@ final class TrustStorageTests: XCTestCase {
         certificates.certs = try! JSONDecoder().decode([TrustCertificate].self, from: json.data(using: .utf8)!)
         _ = trustStorage.updateCertificateList(certificates, since: "")
 
-        let activeCerts = trustStorage.activeCertificatePublicKeys().filter { $0.containsUse(trustListUseFilters: CertificateType.dccCert.trustListUseFilters)}
+        let activeCerts = trustStorage.activeCertificatePublicKeys().filter { $0.containsUse(trustListUseFilters: CertificateType.dccCert.trustListUseFilters) }
         XCTAssert(!activeCerts.isEmpty)
         XCTAssert(activeCerts.count == 1)
         XCTAssertEqual(activeCerts.first!.keyId, "keyid123")
 
-        let activeLightCerts = trustStorage.activeCertificatePublicKeys().filter { $0.containsUse(trustListUseFilters: CertificateType.lightCert.trustListUseFilters)}
+        let activeLightCerts = trustStorage.activeCertificatePublicKeys().filter { $0.containsUse(trustListUseFilters: CertificateType.lightCert.trustListUseFilters) }
         XCTAssert(!activeLightCerts.isEmpty)
         XCTAssert(activeLightCerts.count == 1)
         XCTAssertEqual(activeLightCerts.first!.keyId, "keyidLight")
