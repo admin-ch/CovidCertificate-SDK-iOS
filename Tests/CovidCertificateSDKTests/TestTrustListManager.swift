@@ -49,7 +49,7 @@ class TestTrustlistManager: TrustlistManagerProtocol {
         nationalRulesListUpdater = TestTrustListUpdate(trustStorage: trustStorage)
     }
 
-    init(publicKeys: [TrustListPublicKey]) {
+    init(publicKeys: [TrustCertificate]) {
         trustStorage = TestTrustStorage(publicKeys: publicKeys)
         revocationListUpdater = TestTrustListUpdate(trustStorage: trustStorage)
         trustCertificateUpdater = TestTrustListUpdate(trustStorage: trustStorage)
@@ -70,11 +70,11 @@ class TestTrustListUpdate: TrustListUpdate {
 }
 
 class TestTrustStorage: TrustStorageProtocol {
-    private let publicKeys: [TrustListPublicKey]
+    private let publicKeys: [TrustCertificate]
     public var revokedCerts: Set<String> = []
     public var nextSince: String?
 
-    init(publicKeys: [TrustListPublicKey]) {
+    init(publicKeys: [TrustCertificate]) {
         self.publicKeys = publicKeys
     }
 
@@ -100,7 +100,7 @@ class TestTrustStorage: TrustStorageProtocol {
 
     // MARK: - Active Certificates
 
-    func activeCertificatePublicKeys(useFilters _: [String]) -> [TrustListPublicKey] {
+    func activeCertificatePublicKeys() -> [TrustCertificate] {
         publicKeys
     }
 
@@ -144,18 +144,32 @@ class TestTrustStorage: TrustStorageProtocol {
 class StaticTestTrustList {
     // MARK: - RSA
 
-    private let DEV_RSA_ASN1_DER = "MIIBCgKCAQEA4uZO4/7tneZ3XD5OAiTyoANOohQZC+DzZ4YC0AoLnEO+Z3PcTialCuRKS1zHfujNPI0GGG09DRVVXdv+tcKNXFDt/nRU1zlWDGFf4/63l5RIjkWFD3JFKqR8IlcJjrYYxstuZs3May3SGQJ+kZaeH5GFZMRvE0waHqMxbfwakvjf8qyBXCrZ1WsK+XJf7iYbJS2dO1a5HnegxPuRA7Zz8ikO7QRzmSongqOlkejEaIkFjx7gLGTUsOrBPYa5sdZqinDwmnjtKi52HLWarMXs+t1MN4etIp7GE7/zarjBNxk1Efiiwl+RdcwJ2uVwfrgzxfv3/TekZF8IUykV2Geu3QIDAQAB"
-    private let ABN_RSA_ASN1_DER = "MIIBCgKCAQEA0bVecdVEUBEaB6Uu8VtXrtVnN0Fa9+hAcO0XcjLgLVDB89Y4+huGO94Y93TY43x9eXRRWcNleacBR0OdzDpAUOfdUbvrw2nNSb5OhhKG+mHbuBaImWKpvima0BeK0Gid01IG8u83SKBOabU34WUn5m37mPj0YonqFOyjnyCE1wrnaeG95lh0ZC5WCUB2BqNI4ZZQXwDCCC5STka3l02ZNAIHMoHLmgqAqWbXXS5r41ltumbRRaVGu47pSURpzz/wCZep6HnmhNvOE/T5lNzlolxgcltKc7VZtcoZnK9JFkT7tk4GR2H4mnA1lxAHOkJOaEkZxT6Nrm5r8OvA0ybuMQIDAQAB"
-    private let PROD_RSA_ASN1_DER = "MIIBCgKCAQEAtk/51stJXU48RqD2lh4IdsxFrjlJfmTCrLr3cQNEXkrEoI3OEV8NnotE1RjVmQrqLTT04oxpWlcbMolXtJBtu3rOiLNwQvyVEbj/xSc6KT84Tp7GBo1P/kkunY+Vmab6HUCV/oGZYmsdiUP/OnTPX6Wy6delDhnrgHIDti73/TSsG7Zl1V6km7+KIkjAkVCEDkkUD7uffd4G+GBZ0B9F1KOT0IcFQNvDm0zlROVoGFlmPS8DWlrLHuIdMbB281uiDjcN+kNUt7rUyyj6TFgX9WCgEB/5mQBMRaaXK1zeDTaNkmC2S7IWxhMQsMBXJyAdbD9AnQOZc6XRjBauO7gz0wIDAQAB"
-
-    func publicKeys() -> [TrustListPublicKey] {
+    private var DEV_CERT: TrustCertificate = {
+        let certificate = TrustCertificate(keyId: "mmrfzpMU6xc=", use: "sig", alg: "RS256")
+        certificate.subjectPublicKeyInfo = "MIIBCgKCAQEA4uZO4/7tneZ3XD5OAiTyoANOohQZC+DzZ4YC0AoLnEO+Z3PcTialCuRKS1zHfujNPI0GGG09DRVVXdv+tcKNXFDt/nRU1zlWDGFf4/63l5RIjkWFD3JFKqR8IlcJjrYYxstuZs3May3SGQJ+kZaeH5GFZMRvE0waHqMxbfwakvjf8qyBXCrZ1WsK+XJf7iYbJS2dO1a5HnegxPuRA7Zz8ikO7QRzmSongqOlkejEaIkFjx7gLGTUsOrBPYa5sdZqinDwmnjtKi52HLWarMXs+t1MN4etIp7GE7/zarjBNxk1Efiiwl+RdcwJ2uVwfrgzxfv3/TekZF8IUykV2Geu3QIDAQAB"
+        return certificate
+    }()
+    
+    private var ABN_CERT: TrustCertificate = {
+        let certificate = TrustCertificate(keyId: "JLxre3vSwyg=", use: "sig", alg: "RS256")
+        certificate.subjectPublicKeyInfo = "MIIBCgKCAQEA0bVecdVEUBEaB6Uu8VtXrtVnN0Fa9+hAcO0XcjLgLVDB89Y4+huGO94Y93TY43x9eXRRWcNleacBR0OdzDpAUOfdUbvrw2nNSb5OhhKG+mHbuBaImWKpvima0BeK0Gid01IG8u83SKBOabU34WUn5m37mPj0YonqFOyjnyCE1wrnaeG95lh0ZC5WCUB2BqNI4ZZQXwDCCC5STka3l02ZNAIHMoHLmgqAqWbXXS5r41ltumbRRaVGu47pSURpzz/wCZep6HnmhNvOE/T5lNzlolxgcltKc7VZtcoZnK9JFkT7tk4GR2H4mnA1lxAHOkJOaEkZxT6Nrm5r8OvA0ybuMQIDAQAB"
+        return certificate
+    }()
+    
+    private var PROD_CERT: TrustCertificate = {
+        let certificate = TrustCertificate(keyId: "Ll3NP03zOxY=", use: "sig", alg: "RS256")
+        certificate.subjectPublicKeyInfo = "MIIBCgKCAQEAtk/51stJXU48RqD2lh4IdsxFrjlJfmTCrLr3cQNEXkrEoI3OEV8NnotE1RjVmQrqLTT04oxpWlcbMolXtJBtu3rOiLNwQvyVEbj/xSc6KT84Tp7GBo1P/kkunY+Vmab6HUCV/oGZYmsdiUP/OnTPX6Wy6delDhnrgHIDti73/TSsG7Zl1V6km7+KIkjAkVCEDkkUD7uffd4G+GBZ0B9F1KOT0IcFQNvDm0zlROVoGFlmPS8DWlrLHuIdMbB281uiDjcN+kNUt7rUyyj6TFgX9WCgEB/5mQBMRaaXK1zeDTaNkmC2S7IWxhMQsMBXJyAdbD9AnQOZc6XRjBauO7gz0wIDAQAB"
+        return certificate
+    }()
+    
+    func publicKeys() -> [TrustCertificate] {
         switch CovidCertificateSDK.currentEnvironment {
         case .dev:
-            return [TrustListPublicKey(keyId: "mmrfzpMU6xc=", withRsaKey: DEV_RSA_ASN1_DER)].compactMap { $0 }
+            return [DEV_CERT]
         case .abn:
-            return [TrustListPublicKey(keyId: "JLxre3vSwyg=", withRsaKey: ABN_RSA_ASN1_DER)].compactMap { $0 }
+            return [ABN_CERT]
         case .prod:
-            return [TrustListPublicKey(keyId: "Ll3NP03zOxY=", withRsaKey: PROD_RSA_ASN1_DER)].compactMap { $0 }
+            return [PROD_CERT]
         }
     }
 }

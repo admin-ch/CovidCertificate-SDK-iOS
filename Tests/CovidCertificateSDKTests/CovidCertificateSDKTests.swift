@@ -70,8 +70,11 @@ final class CovidCertificateSDKTests: XCTestCase {
     func testCustomCBOR() {
         let hcert = "HC1:6BFMY3ZX73PO%203CCBR4OF7NI2*RLLTIKQDKYMW03%MG:GKCDKP-38E9/:N2QIL44RC5WA9+-0*Q3Q56CE0WC6W77K66U$QO37HMG.MO+FLAHV9LP9GK0JL2I989BBCL$G4.R3ITA6URNWLWMLW7H+SSOI8YF5MIP8 6VWK*96PYJ:D3:T0-Y5DLITLUM5K $25QHGJEQ85B54W7B8JCM40-D2R+8T1O2SI2DPYRJO9C5Q1693$58EFQ/%IH*O7JGS+GAV2PYFGYHXC707CGU8/4S5ART-45GHCCRI-9%MH 0BB%4U7VUONPWPBAG4-SDC6T3D 50E+CU+GCTIL64HEHAGUBJD9A3:72S471JOJQBMLPWDI910RH0IUG53SUFBK7RRJH9IC%NRC:AT15OC4%CM19DQZ33APNY9/P9DBWNCC5M6E9I6-0N6M-VR$7P+DQEXOUKMAW8I4VX19VLV6S3JZBJ7P:*I 392*TPPAQ1GGQV61Q:8R1OLE14W6PZLOQFERKJJ9NCMD55DVVF"
 
-        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc=", andY: "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM=")
-        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        let key = TrustCertificate(keyId: "AAABAQICAwM=", use: "sig", alg: "ES256")
+        key.x = "YRmTm5MEXXVb/stIK+dkoD63b5I+jgOjPrvvYHFfdHc="
+        key.y = "xbfq2DlfMkGHxYVw7bRmteVEcNChdETQ+GyLkrBnBFM="
+        
+        let keys: [TrustCertificate] = [key]
 
         guard let certificateHolder = try? verifier.decode(encodedData: hcert).get() else {
             XCTAssertTrue(false)
@@ -123,8 +126,13 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTFail("Could not decode")
             return
         }
-        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "S/yUgaRwgbGh73OGTAaidN+WSf16Tak3oYi4KwjeA4g=", andY: "4nWXiEKZkApaDwzXrUcA1zphiCSry8Xd4zqNL5XVREw=")
-        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        
+        let key = TrustCertificate(keyId: "AAABAQICAwM=", use: "sig", alg: "ES256")
+        key.x = "S/yUgaRwgbGh73OGTAaidN+WSf16Tak3oYi4KwjeA4g="
+        key.y = "4nWXiEKZkApaDwzXrUcA1zphiCSry8Xd4zqNL5XVREw="
+        
+        let keys: [TrustCertificate] = [key]
+        
         let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
@@ -148,8 +156,12 @@ final class CovidCertificateSDKTests: XCTestCase {
             XCTFail("Could not decode")
             return
         }
-        let key = TrustListPublicKey(keyId: "AAABAQICAwM=", withX: "8OvCEph8PWTFDrLaObg5c6gK9HI0tfJUMmma/WfvlVE=", andY: "uJ2i55ZbAVpMhklwqZfVKhLXeO0Yrz69qKoh2Y86FR8=")
-        let keys: [TrustListPublicKey] = [key].compactMap { $0 }
+        let key = TrustCertificate(keyId: "AAABAQICAwM=", use: "sig", alg: "ES256")
+        key.x = "8OvCEph8PWTFDrLaObg5c6gK9HI0tfJUMmma/WfvlVE="
+        key.y = "uJ2i55ZbAVpMhklwqZfVKhLXeO0Yrz69qKoh2Y86FR8="
+        
+        let keys: [TrustCertificate] = [key]
+        
         let customVerifier = CovidCertificateImpl(environment: SDKEnvironment.dev, apiKey: "", trustListManager: TestTrustlistManager(publicKeys: keys))
         customVerifier.checkSignature(holder: certificateHolder, forceUpdate: false) { result in
             switch result {
