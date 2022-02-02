@@ -52,4 +52,3 @@ class TrustListPublicKey {
         self.keyId = keyId
     }
 }
-

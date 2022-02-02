@@ -23,7 +23,7 @@ class TrustCertificate: Codable {
     var crv: String?
     var x: String?
     var y: String?
-    
+
     lazy var trustListPublicKey: TrustListPublicKey? = {
         if alg == "RS256" {
             return TrustListPublicKey(keyId: keyId, withRsaKey: subjectPublicKeyInfo)
@@ -33,7 +33,7 @@ class TrustCertificate: Codable {
             return nil
         }
     }()
-    
+
     enum CodingKeys: String, CodingKey {
         case keyId
         case use
@@ -43,7 +43,7 @@ class TrustCertificate: Codable {
         case x
         case y
     }
-    
+
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         keyId = try container.decode(String.self, forKey: .keyId)
@@ -54,7 +54,7 @@ class TrustCertificate: Codable {
         x = try container.decode(String.self, forKey: .x)
         y = try container.decode(String.self, forKey: .y)
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(keyId, forKey: .keyId)
@@ -75,14 +75,15 @@ class ActiveTrustCertificates: Codable, JWTExtension {
 
 extension TrustCertificate {
     func containsUse(trustListUseFilters: [String]) -> Bool {
-        return trustListUseFilters.contains(where: { use.contains($0) })
+        trustListUseFilters.contains(where: { use.contains($0) })
     }
 }
 
 extension Array where Element == TrustCertificate {
     func hasValidSignature(for holder: CertificateHolder) -> ValidationError? {
         let filteredList = filter { $0.keyId == holder.keyId.base64EncodedString() &&
-                                    $0.containsUse(trustListUseFilters: holder.certificate.type.trustListUseFilters) }
+            $0.containsUse(trustListUseFilters: holder.certificate.type.trustListUseFilters)
+        }
 
         guard filteredList.count > 0 else {
             return ValidationError.KEY_NOT_IN_TRUST_LIST
