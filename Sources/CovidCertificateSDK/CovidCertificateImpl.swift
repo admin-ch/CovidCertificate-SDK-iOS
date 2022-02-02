@@ -140,7 +140,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let list = self.trustListManager.trustStorage.activeCertificatePublicKeys(useFilters: holder.certificate.type.trustListUseFilters)
+            let list = self.trustListManager.trustStorage.activeCertificatePublicKeys()
             let validationError = list.hasValidSignature(for: holder)
 
             // if there is a signature error we return it before checking the cwt validity
