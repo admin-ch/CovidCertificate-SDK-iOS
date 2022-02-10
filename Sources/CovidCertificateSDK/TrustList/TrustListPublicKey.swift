@@ -52,21 +52,3 @@ class TrustListPublicKey {
         self.keyId = keyId
     }
 }
-
-extension Array where Element == TrustListPublicKey {
-    func hasValidSignature(for holder: CertificateHolder) -> ValidationError? {
-        let filteredList = filter { $0.keyId == holder.keyId.base64EncodedString() }
-
-        guard filteredList.count > 0 else {
-            return ValidationError.KEY_NOT_IN_TRUST_LIST
-        }
-
-        let isValid = filteredList.contains { t in holder.hasValidSignature(for: t.key) }
-
-        guard isValid else {
-            return ValidationError.KEY_NOT_IN_TRUST_LIST
-        }
-
-        return nil
-    }
-}

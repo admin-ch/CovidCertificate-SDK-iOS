@@ -17,7 +17,7 @@ protocol TrustStorageProtocol {
     var revocationListNextSince: String? { get }
     func revocationListIsValid() -> Bool
 
-    func activeCertificatePublicKeys(useFilters: [String]) -> [TrustListPublicKey]
+    func activeCertificatePublicKeys() -> [TrustCertificate]
     func certificateSince() -> String
     func updateCertificateList(_ update: TrustCertificates, since: String) -> Bool
     func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool
@@ -110,21 +110,9 @@ class TrustStorage: TrustStorageProtocol {
         }
     }
 
-    func activeCertificatePublicKeys(useFilters: [String]) -> [TrustListPublicKey] {
+    func activeCertificatePublicKeys() -> [TrustCertificate] {
         certificateQueue.sync {
-            self.activeCertificatesStorage.activeCertificates.compactMap { t in
-                // only return certificate if use is contained in the useFilters array
-                guard useFilters.contains(where: { t.use.contains($0) }) else {
-                    return nil
-                }
-                if t.alg == "RS256" {
-                    return TrustListPublicKey(keyId: t.keyId, withRsaKey: t.subjectPublicKeyInfo)
-                } else if t.alg == "ES256" {
-                    return TrustListPublicKey(keyId: t.keyId, withX: t.x, andY: t.y)
-                } else {
-                    return nil
-                }
-            }
+            self.activeCertificatesStorage.activeCertificates
         }
     }
 
