@@ -40,7 +40,7 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, mode: CheckMode?, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            instance.check(holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : []) { result in
+            instance.check(holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : [], useBloomFilter: true) { result in
                 completionHandler(result.anonymized)
             }
         }
@@ -59,7 +59,7 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
+            return instance.check(holder: holder, forceUpdate: forceUpdate, modes: modes, useBloomFilter: false, completionHandler)
         }
 
         public static var activeModes: [CheckMode] {

@@ -16,6 +16,8 @@ protocol TrustStorageProtocol {
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool
     var revocationListNextSince: String? { get }
     func revocationListIsValid() -> Bool
+    func revocationCertIsValid(_ certificate: DCCCert) -> Bool
+
 
     func activeCertificatePublicKeys() -> [TrustCertificate]
     func certificateSince() -> String
@@ -36,6 +38,8 @@ class TrustStorage: TrustStorageProtocol {
 
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
+    
+    private let revocationDBManager = RevocationDBManager()
 
     private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage.getBundledStorage()
     private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocations")
@@ -76,6 +80,16 @@ class TrustStorage: TrustStorageProtocol {
     func revocationListIsValid() -> Bool {
         revocationQueue.sync {
             isStillValid(lastDownloadTimeStamp: self.revocationStorage.lastRevocationListDownload, validDuration: self.revocationStorage.revocationList.validDuration)
+        }
+    }
+    
+    //MARK: checks if a certain certificate is currently in the hash-DB and it's not expired
+    func revocationCertIsValid(_ cert: DCCCert) -> Bool {
+        revocationQueue.sync {
+            //TODO: DE These two values need to come from the DB
+            let lastDownloadTimeStampForCert: Int64 = revocationDBManager.
+            let validDurationForCert: Int64 = 2
+            return isStillValid(lastDownloadTimeStamp: lastDownloadTimeStampForCert, validDuration: validDurationForCert)
         }
     }
 

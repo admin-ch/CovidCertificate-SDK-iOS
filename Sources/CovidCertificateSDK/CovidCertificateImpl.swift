@@ -59,7 +59,7 @@ struct CovidCertificateImpl {
         return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], useBloomFilter: Bool, _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
@@ -81,9 +81,16 @@ struct CovidCertificateImpl {
         switch holder.certificate {
         case let certificate as DCCCert:
             group.enter()
-            checkRevocationStatus(certificate: certificate, forceUpdate: forceUpdate) { result in
-                revocationStatusResult = result
-                group.leave()
+            if useBloomFilter {
+                checkRevocationStatusVerifier(certificate: certificate, forceUpdate: forceUpdate) { result in
+                    revocationStatusResult = result
+                    group.leave()
+                }
+            } else {
+                checkRevocationStatusWallet(certificate: certificate, forceUpdate: forceUpdate) { result in
+                    revocationStatusResult = result
+                    group.leave()
+                }
             }
         case is LightCert:
             // Skip revocation check for light certificates
@@ -170,7 +177,7 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkRevocationStatusVerifier(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
@@ -181,9 +188,50 @@ struct CovidCertificateImpl {
                     return
                 }
             }
+            
+            //TODO: DE Here we have to check if bloomfilter of certificate is already in DB
+            //TODO: DE If bloomfilter of cert in DB: check if bloomfilter valid && no hit -> certificate is not revoked
+            //TODO: DE If bloomfilter not in DB or bloomfilter in DB but bloomfilter invalid -> Get bloomfilter
 
             // Safe-guard that we have a recent revocation list available at this point
             guard trustListManager.trustStorage.revocationListIsValid() else {
+                if let e = lastError?.asValidationError() {
+                    // If available, return specific last (networking) error
+                    completionHandler(.failure(e))
+                } else {
+                    // Otherwise generic offline error
+                    completionHandler(.failure(ValidationError.NETWORK_NO_INTERNET_CONNECTION(errorCode: "")))
+                }
+                return
+            }
+
+            let list = self.trustListManager.trustStorage.revokedCertificates()
+            let isRevoked = certificate.certIdentifiers().contains { list.contains($0) }
+            let error: ValidationError? = isRevoked ? .REVOKED : nil
+
+            completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: certificate, error: error)))
+        })
+    }
+    
+    func checkRevocationStatusWallet(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+        trustListManager.revocationListUpdater.addCheckOperation(for: certificate, forceUpdate: forceUpdate, checkOperation: { lastError in
+
+            if options?.timeshiftDetectionEnabled ?? false {
+                if case .NETWORK_SERVER_ERROR = lastError {
+                    // Only continue with cached revocation list for NETWORK_SERVER_ERRORS (HTTP status != 200)
+                } else if let e = lastError?.asValidationError() {
+                    completionHandler(.failure(e))
+                    return
+                }
+            }
+            
+            /*TODO: DE We first check if we already have a list of hashes saved for the 'certificate'
+              TODO: DE If there is already one saved and it's valid we can check if the 'certificate' is in this list, if not -> done, not revoked
+              TODO: DE If there is not already one saved or it's expired, we request the hashes for all revoked certificates with matching kid&prefix -> check in there if it's valid or not
+             
+             */
+            
+            guard trustListManager.trustStorage.revocationCertIsValid(certificate) else {
                 if let e = lastError?.asValidationError() {
                     // If available, return specific last (networking) error
                     completionHandler(.failure(e))

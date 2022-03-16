@@ -102,11 +102,13 @@ class TrustListUpdate {
     // MARK: - Operation queue handling
 
     private let operationQueue = OperationQueue()
+    private let singleOperationQueue = OperationQueue()
     private let forceUpdateQueue = OperationQueue()
 
     private let internalQueue = DispatchQueue(label: "TrustListUpdateInternalDispatchQueue")
 
     private var updateOperation: Operation?
+    private var singleUpdateOperation: Operation?
     private var forceUpdateOperation: Operation?
 
     private var lastError: NetworkError?
@@ -162,6 +164,28 @@ class TrustListUpdate {
             }
         }
     }
+    
+    //This function doesn't require the whole list to be valid. It only checks if a single list corresponding to one DCCCert is valid or not and doesn't download the whole list if not
+    func addCheckOperation(for certificate: DCCCert, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
+        internalQueue.async {
+            let updateNeeded = !self.isCertStillValid(certificate) || forceUpdate
+            let updateAlreadyRunnning = self.singleUpdateOperation != nil
+
+            if updateNeeded, !updateAlreadyRunnning {
+                self.singleUpdateOperation = BlockOperation(block: { [weak self] in
+                    guard let strongSelf = self else { return }
+                    strongSelf.startSingleUpdate(certificate)
+                })
+
+                // !: initialized just above
+                self.singleOperationQueue.addOperation(self.singleUpdateOperation!)
+            }
+
+            self.singleOperationQueue.addOperation {
+                checkOperation(self.lastError)
+            }
+        }
+    }
 
     // MARK: - Update
 
@@ -169,8 +193,17 @@ class TrustListUpdate {
         // download data and update local storage
         nil
     }
+    
+    func synchronousUpdate(for certificate: DCCCert, ignoreLocalCache _: Bool = false) -> NetworkError? {
+        //download data and update local variable
+        nil
+    }
 
     func isListStillValid() -> Bool {
+        true
+    }
+    
+    func isCertStillValid(_ certificate: DCCCert) -> Bool {
         true
     }
 
@@ -178,6 +211,13 @@ class TrustListUpdate {
         internalQueue.sync {
             lastError = synchronousUpdate(ignoreLocalCache: true)
             updateOperation = nil
+        }
+    }
+    
+    private func startSingleUpdate(_ certificate: DCCCert) {
+        internalQueue.sync {
+            lastError = synchronousUpdate(for: certificate, ignoreLocalCache: true)
+            singleUpdateOperation = nil
         }
     }
 

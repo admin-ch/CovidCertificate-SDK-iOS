@@ -91,6 +91,10 @@ class RevocationListUpdate: TrustListUpdate {
     override func isListStillValid() -> Bool {
         trustStorage.revocationListIsValid()
     }
+    
+    override func isCertStillValid(_ certificate: DCCCert) -> Bool {
+        trustStorage.revocationCertIsValid(certificate)
+    }
 }
 
 protocol RevocationListDecoder {
