@@ -228,7 +228,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         waitForExpectations(timeout: 60, handler: nil)
-//            verifier.checkNationalRules(dgc: dgcHolder!.healthCer, modes: .threeGt) {result in
+//            verifier.checkNationalRules(country: .Switzerland, date: Date(),  dgc: dgcHolder!.healthCer, modes: .threeGt) {result in
 //                let res : VerificationResult? = try? result.get()
 //                XCTAssertNotNil(res)
 //                XCTAssertTrue(res!.isValid)
@@ -250,7 +250,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "succes")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: certificateHolder!, forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(), holder: certificateHolder!, forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTFail("Disease target sarscov should pass")
@@ -264,7 +264,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let invalidCertificateHolder = try? verifier.decode(encodedData: hcert_does_not_target_covid).get()
         XCTAssertNotNil(invalidCertificateHolder)
 
-        verifier.checkNationalRules(holder: invalidCertificateHolder!, forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: invalidCertificateHolder!, forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTAssertTrue(true)
@@ -314,7 +314,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -325,7 +325,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let invalid_hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001600", mp: "Sputnik-VII", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case .failure(.NO_VALID_PRODUCT):
                 XCTAssertTrue(true)
@@ -343,7 +343,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let today = Calendar.current.startOfDay(for: Date())
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -363,7 +363,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let today = Calendar.current.startOfDay(for: Date())
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -389,7 +389,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let today = Calendar.current.startOfDay(for: Date())
         let time = Calendar.current.date(byAdding: DateComponents(day: -21), to: today)!
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -403,7 +403,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_cert = generateVacineCert(dn: 1, sd: 1, ma: "ORG-100001417", mp: "EU/1/20/1525", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -20))
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_cert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_cert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertFalse(r.isValid)
@@ -425,7 +425,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpcetation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -437,7 +437,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_hcert = generateVacineCert(dn: 1, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.nationalRules {
             case .failure(.NOT_FULLY_PROTECTED):
                 XCTAssertTrue(true)
@@ -462,7 +462,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
             let successExpcetation = expectation(description: "success")
 
-            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: issued, expiresAt: expires), forceUpdate: false, modes: .twoG) { result in
+            verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: validCert, issuedAt: issued, expiresAt: expires), forceUpdate: false, modes: .twoG) { result in
                 switch result.nationalRules {
                 case let .success(r):
                     XCTAssertTrue(r.isValid)
@@ -491,7 +491,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
             let successExpcetation = expectation(description: "success")
 
-            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: issued, expiresAt: expires), forceUpdate: false, modes: .threeG) { result in
+            verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: validCert, issuedAt: issued, expiresAt: expires), forceUpdate: false, modes: .threeG) { result in
                 switch result.nationalRules {
                 case let .success(r):
                     XCTAssertTrue(r.isValid)
@@ -518,7 +518,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
             let successExpcetation = expectation(description: "success")
 
-            verifier.checkNationalRules(holder: TestCertificateHolder(cert: validCert, issuedAt: nil, expiresAt: nil), forceUpdate: false, modes: .threeG) { result in
+            verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: validCert, issuedAt: nil, expiresAt: nil), forceUpdate: false, modes: .threeG) { result in
                 switch result.nationalRules {
                 case let .success(r):
                     XCTAssertTrue(r.isValid)
@@ -578,7 +578,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpecation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -590,7 +590,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_hcert = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: "12345", sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTAssertTrue(true)
@@ -611,7 +611,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation3 = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_rat), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_rat), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -623,7 +623,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let hcert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_pcr), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_pcr), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -635,7 +635,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let hcert_sero = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "Serological", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_sero), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_sero), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -647,7 +647,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_cert = generateTestCert(testType: "asdbas", testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_cert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_cert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.WRONG_TEST_TYPE):
                 XCTAssertTrue(true)
@@ -665,7 +665,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let invalid_cert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "abcdef", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -10))
         let expectation = self.expectation(description: "async task")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_cert_pcr), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_cert_pcr), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -686,7 +686,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let now = Date()
         let time = Calendar.current.date(byAdding: DateComponents(hour: -71), to: now)!
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 /// TEST MUST BE VALID
@@ -700,7 +700,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let invalid_hcert = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -72))
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 /// TEST MUST BE INVALID
@@ -720,7 +720,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let time = Calendar.current.date(byAdding: DateComponents(hour: -23), to: now)!
 
         let correctExpectation = expectation(description: "correct")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 /// TEST MUST BE VALID
@@ -735,7 +735,7 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         let invalid_hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -24))
         let wrongExpectation = expectation(description: "wrong")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 /// TEST MUST BE INVALID
@@ -756,7 +756,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_rat), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_rat), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(state):
                 XCTAssertFalse(state.isValid)
@@ -767,7 +767,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let hcert_pcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Positive, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -71))
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_pcr), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_pcr), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.POSITIVE_RESULT):
                 XCTAssertTrue(true)
@@ -784,7 +784,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let failExpectation = expectation(description: "fail")
         let successExpectation = expectation(description: "success")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_sero), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_sero), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.NEGATIVE_RESULT):
                 XCTAssertTrue(true)
@@ -795,7 +795,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let hcert_sero2 = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_sero2), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_sero2), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -812,7 +812,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let hcert = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(day: -89))
 
         let correctExpectation = expectation(description: "correct")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 /// TEST MUST BE VALID
@@ -826,7 +826,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let invalid_hcert = generateTestCert(testType: TestType.Serological.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(day: -90))
 
         let wrongExpectation = expectation(description: "wrong")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid_hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 /// TEST MUST BE INVALID
@@ -888,7 +888,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -899,7 +899,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 6), firstResultWasAgo: DateComponents(day: -20), tg: "abcdef")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: invalid), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: invalid), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case .failure(.WRONG_DISEASE_TARGET):
                 XCTAssertTrue(true)
@@ -961,7 +961,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 // SHOULD BE VALID
@@ -973,7 +973,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
         // the certificate should not be valid anymore, since it was issued yesterday 364 days ago (hence yesterday was the 365th day)
         let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -365), tg: Disease.SarsCov2.rawValue)
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_invalid), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_invalid), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 // SHOULD BE INVALID
@@ -992,7 +992,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let successExpectation = expectation(description: "success")
         let failExpectation = expectation(description: "fail")
 
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 // SHOULD BE VALID
@@ -1003,7 +1003,7 @@ final class CovidCertificateSDKTests: XCTestCase {
             successExpectation.fulfill()
         }
         let hcert_invalid = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -9), tg: Disease.SarsCov2.rawValue)
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert_invalid), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert_invalid), forceUpdate: false, modes: .threeG) { result in
             switch result.nationalRules {
             case let .success(r):
                 // SHOULD BE INVALID
@@ -1024,7 +1024,7 @@ final class CovidCertificateSDKTests: XCTestCase {
                                      sampleCollectionWasAgo: DateComponents(hour: -5))
 
         let expectation = expectation(description: "fail")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.modeResults.getResult(for: .twoG) {
             case let .success(r):
                 /// TEST IS NOT VALID IN 2G MODE
@@ -1045,7 +1045,7 @@ final class CovidCertificateSDKTests: XCTestCase {
                                      sampleCollectionWasAgo: DateComponents(hour: -5))
 
         let expectation = expectation(description: "fail")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.modeResults.getResult(for: .threeG) {
             case let .success(r):
                 /// TEST IS VALID IN 2G MODE
@@ -1062,7 +1062,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
 
         let twoGExpecation = expectation(description: "success")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoG) { result in
             switch result.modeResults.getResult(for: .twoG) {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -1073,7 +1073,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         }
 
         let threeGExpecation = expectation(description: "success")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
             switch result.modeResults.getResult(for: .threeG) {
             case let .success(r):
                 XCTAssertTrue(r.isValid)
@@ -1089,7 +1089,7 @@ final class CovidCertificateSDKTests: XCTestCase {
         let hcert = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: -15))
 
         let twoGPlusExpecation = expectation(description: "success")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
             switch result.modeResults.getResult(for: .twoGPlus) {
             case let .success(r):
                 /// VACCINATION IS VALID IN 2G+ MODE AND RETURNS SUCCESS
@@ -1112,7 +1112,7 @@ final class CovidCertificateSDKTests: XCTestCase {
                                      sampleCollectionWasAgo: DateComponents(hour: -5))
 
         let expectation = expectation(description: "success")
-        verifier.checkNationalRules(holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
+        verifier.checkNationalRules(country: .Switzerland, date: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .twoGPlus) { result in
             switch result.modeResults.getResult(for: .twoGPlus) {
             case let .success(r):
                 /// TEST IS VALID IN 2G+ MODE AND RETURNS SUCCESS_2G_PLUS

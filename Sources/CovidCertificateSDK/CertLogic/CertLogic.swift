@@ -20,6 +20,8 @@ enum CertLogicValidationError: Error {
     case JSON_ERROR
     case TESTS_FAILED(tests: [String: String])
     case TEST_COULD_NOT_BE_PERFORMED(test: String)
+    case NO_VALID_RULES_FOR_SPECIFIC_DATE
+    case COUNTRY_CODE_NOT_SUPPORTED
 }
 
 struct DisplayRulesResult {
@@ -58,7 +60,7 @@ class CertLogic {
         return .success(())
     }
 
-    func checkRules(hcert: DCCCert, validationClock: Date = Date()) -> Result<Void, CertLogicValidationError> {
+    func checkRules(hcert: DCCCert, validationClock: Date = Date(), arrivalCountry: ArrivalCountry) -> Result<Void, CertLogicValidationError> {
         let external = externalJson(validationClock: validationClock)
 
         var failedTests: [String: String] = [:]
@@ -66,8 +68,22 @@ class CertLogic {
             return .failure(.JSON_ERROR)
         }
 
+        // If the country to check for is not Switzerland, we filter the rules so that only rules in
+        // which the arrivalDate is within the validFrom and validTo range are selected
+        var filteredRules = [JSON]() // filterValidRules(rules: rules, arrivalCountry: arrivalCountry, arrivalDate: validationClock)
+        
+        // If the country to check for is not Switzerland, there might be multiple rules with the same ID but different validFrom
+        // timestamps. We select the one that has the latest validFrom date.
+        // Since we already filtered out rules whose validFrom-validTo range does not include the arrivalDate,
+        // we are guaranteed that the latest validFrom date of a rule is earlier than the arrivalDate
+        filteredRules = filterDuplicateIdentifiers(rules: filteredRules, arrivalCountry: arrivalCountry)
+
+        guard !filteredRules.isEmpty else {
+            return .failure(.NO_VALID_RULES_FOR_SPECIFIC_DATE)
+        }
+        
         let context = JSON(["external": external, "payload": JSON(dccJson)])
-        for rule in rules {
+        for rule in filteredRules {
             let logic = rule["logic"]
             guard let result: Bool = try? applyRule(logic, to: context) else {
                 return .failure(.TEST_COULD_NOT_BE_PERFORMED(test: rule["identifier"].string ?? "TEST_ID_UNKNOWN"))
@@ -212,5 +228,50 @@ class CertLogic {
              "validationClockAtStartOfDay": formatter.string(from: calendar.startOfDay(for: validationClock))])
         external["valueSets"] = valueSets
         return external
+    }
+    
+    private static let dateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        return dateFormatter
+    }()
+    
+    private func filterValidRules(rules: [JSON], arrivalCountry: ArrivalCountry, arrivalDate: Date) ->  [JSON] {
+        guard !arrivalCountry.isSwitzerland else {
+            // Switzerland has no validity information since only valid rules are served anyways
+            return rules
+        }
+        var validRules: [JSON] = []
+        
+        for rule in rules {
+            // We need to check if the arrivalDate is within validFrom and validTo.
+            if let validFrom = Self.dateFormatter.date(from: rule["validFrom"].string ?? ""), let validTo = Self.dateFormatter.date(from: rule["validTo"].string ?? ""), (validFrom ... validTo).contains(arrivalDate) {
+                validRules.append(rule)
+            }
+        }
+
+        return rules
+    }
+  
+    private func filterDuplicateIdentifiers(rules: [JSON], arrivalCountry: ArrivalCountry) ->  [JSON] {
+        guard !arrivalCountry.isSwitzerland else {
+            // Switzerland has no duplicate rules since only non-duplicate rules are served anyways
+            return rules
+        }
+        
+        let rulesGroupedById = Dictionary(grouping: rules) { $0["identifier"] }
+
+        // From all the rules with the same identifier we select the one that has the latest validFrom date.
+        let filteredRules = rulesGroupedById.map({ (_, rulesWithSameID ) in
+            return rulesWithSameID.sorted(by: {
+                guard let date1 = Self.dateFormatter.date(from: $0["validFrom"].string ?? ""), let date2 = Self.dateFormatter.date(from: $1["validFrom"].string ?? "") else {
+                    return true
+                }
+                
+                return date1 > date2
+            }).first!
+        })
+
+        return filteredRules
     }
 }

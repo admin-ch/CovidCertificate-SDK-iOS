@@ -40,7 +40,7 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, mode: CheckMode?, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            instance.check(holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : []) { result in
+            instance.check(arrivalCountryCode: ArrivalCountry.Switzerland.id, arrivalDate: Date(), holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : []) { result in
                 completionHandler(result.anonymized)
             }
         }
@@ -59,7 +59,17 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
+            return instance.check(arrivalCountryCode: ArrivalCountry.Switzerland.id, arrivalDate: Date(), holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
+        }
+        
+        public static func check(arrivalCountryCode: String, arrivalDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+            instancePrecondition()
+            return instance.check(arrivalCountryCode: arrivalCountryCode, arrivalDate: arrivalDate, holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
+        }
+        
+        public static func foreignCountries(_ completionHandler: @escaping (Result<[ArrivalCountry], NetworkError>) -> Void) {
+            instancePrecondition()
+            return instance.foreignCountries(completionHandler)
         }
 
         public static var activeModes: [CheckMode] {

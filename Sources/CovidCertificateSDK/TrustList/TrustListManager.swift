@@ -169,6 +169,11 @@ class TrustListUpdate {
         // download data and update local storage
         nil
     }
+    
+    func setArrivalCountry(_ arrivalCountry: ArrivalCountry) {
+        // Sets arrivalCountry where validation should happen. Uses Switzerland if no arrivalCountry is set
+        return
+    }
 
     func isListStillValid() -> Bool {
         true

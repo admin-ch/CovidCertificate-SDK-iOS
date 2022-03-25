@@ -59,7 +59,7 @@ struct CovidCertificateImpl {
         return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(arrivalCountryCode: ArrivalCountry.ID, arrivalDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
@@ -73,7 +73,7 @@ struct CovidCertificateImpl {
         }
 
         group.enter()
-        checkNationalRules(holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
+        checkNationalRules(arrivalCountryCode: arrivalCountryCode, arrivalDate: arrivalDate, holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
             nationalRulesResult = result
             group.leave()
         }
@@ -105,6 +105,11 @@ struct CovidCertificateImpl {
                                     modeResults: nationalRulesResult.modeResults))
         }
     }
+    
+    func foreignCountries(_ completionHandler: @escaping (Result<[ArrivalCountry], NetworkError>) -> Void) {
+        NationalListsManager.shared.foreignCountries(completionHandler)
+    }
+
 
     func checkSignature(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch holder.certificate {
@@ -207,13 +212,27 @@ struct CovidCertificateImpl {
         var modeResults: ModeResults = .init(results: [:])
     }
 
-    func checkNationalRules(holder: CertificateHolderType,
+    func checkNationalRules(arrivalCountryCode: ArrivalCountry.ID, arrivalDate: Date, holder: CertificateHolderType,
                             forceUpdate: Bool,
                             modes: [CheckMode],
                             _ completionHandler: @escaping (CheckRulesResult) -> Void) {
+        
+    
         var result = CheckRulesResult()
         var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
+        guard let arrivalCountry = ArrivalCountry(countryCode: arrivalCountryCode) else {
+            // Failure
+            result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
+            for mode in modes {
+                modeResults[mode] = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
+            }
+            result.modeResults = .init(results: modeResults)
+            completionHandler(result)
+            return
+        }
+        
+        trustListManager.nationalRulesListUpdater.setArrivalCountry(arrivalCountry)
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
@@ -231,7 +250,7 @@ struct CovidCertificateImpl {
             }
 
             // Safe-guard that we have a recent national rules list available at this point
-            guard trustListManager.trustStorage.nationalRulesListIsStillValid() else {
+            guard trustListManager.trustStorage.nationalRulesListIsStillValid(arrivalCountry: arrivalCountry) else {
                 if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
                     result.nationalRules = .failure(e)
@@ -252,7 +271,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let list = self.trustListManager.trustStorage.nationalRules()
+            let list = self.trustListManager.trustStorage.nationalRules(arrivalCountry: arrivalCountry)
 
             guard let certLogic = CertLogic(),
                   let valueSets = list.valueSets,
@@ -267,7 +286,7 @@ struct CovidCertificateImpl {
                 completionHandler(result)
                 return
             }
-
+            
             let modeRule = list.modeRules.logic
 
             if case .failure = certLogic.updateData(rules: rules,
@@ -323,8 +342,8 @@ struct CovidCertificateImpl {
             }
 
             let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder).get()
-
-            switch certLogic.checkRules(hcert: certificate) {
+            
+            switch certLogic.checkRules(hcert: certificate, validationClock: arrivalDate, arrivalCountry: arrivalCountry) {
             case .success:
                 result.nationalRules = .success(VerificationResult(isValid: true,
                                                                    validUntil: displayRulesResult?.validUntil,
@@ -494,21 +513,29 @@ struct CovidCertificateImpl {
                 return
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
                 result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                // TODO: IZ-954 Why is there no completion handler?
                 return
+            case .failure(.COUNTRY_CODE_NOT_SUPPORTED):
+                result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
+                completionHandler(result)
+            case .failure(.NO_VALID_RULES_FOR_SPECIFIC_DATE):
+                result.nationalRules = .failure(.NO_VALID_RULES_FOR_SPECIFIC_DATE)
+                completionHandler(result)
             default:
                 result.nationalRules = .failure(.NO_VALID_DATE)
+                // TODO: IZ-954 Why is there no completion handler?
                 return
             }
         })
     }
 
     func getActiveModesForWallet() -> [CheckMode] {
-        let list = trustListManager.trustStorage.nationalRules()
+        let list = trustListManager.trustStorage.nationalRules(arrivalCountry: .Switzerland)
         return list.modeRules.walletActiveModes ?? list.modeRules.activeModes
     }
 
     func getActiveModesForVerifier() -> [CheckMode] {
-        let list = trustListManager.trustStorage.nationalRules()
+        let list = trustListManager.trustStorage.nationalRules(arrivalCountry: .Switzerland)
         return list.modeRules.verifierActiveModes
     }
 

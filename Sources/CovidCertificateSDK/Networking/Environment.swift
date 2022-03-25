@@ -29,7 +29,7 @@ public enum SDKEnvironment {
 
     public static let applicationJwtPlusJws: String = "application/json+jws"
 
-    func revocationListService(since: String?) -> Endpoint {
+    func revocationListService(since: String?) -> Endpoint { 
         var queryParameters: [String: String]?
 
         if let since = since {
@@ -44,6 +44,18 @@ public enum SDKEnvironment {
 
     var nationalRulesListService: Endpoint {
         trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
+    }
+    
+    func foreignRulesListService(arrivalCountry: ArrivalCountry) -> Endpoint {
+        trustBackend.endpoint("foreignRules/\(arrivalCountry.id)",
+                              headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
+                              overwriteVersion: "v2") // TODO
+    }
+    
+    func foreignCountriesService() -> Endpoint {
+        trustBackend.endpoint("foreignRules",
+                              headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
+                              overwriteVersion: "v2") // TODO
     }
 
     func trustCertificatesService(since: String, upTo: String) -> Endpoint {
