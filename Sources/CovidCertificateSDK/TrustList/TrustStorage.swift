@@ -31,8 +31,6 @@ protocol TrustStorageProtocol {
 class TrustStorage: TrustStorageProtocol {
     
     // MARK: - Storage
-    private lazy var nationalRulesStorage = NationalRulesStorage()
-    
     private lazy var nationalRulesListEntry = NationalRulesListEntry(nationalRulesList: .init(), lastDownloaded: 0)
 
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
@@ -64,7 +62,7 @@ class TrustStorage: TrustStorageProtocol {
            FileManager.default.fileExists(atPath: path.path) {
             // We delete the file no matter if the migration worked or not
             if let nationalList = SecureStorage<NationalRulesList>(name: "national_rules").loadSynchronously() {
-                _ = nationalRulesStorage.updateOrInsertNationalRulesList(list: nationalList, countryCode: ArrivalCountry.Switzerland.id)
+                _ = NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalList, countryCode: ArrivalCountry.Switzerland.id)
             }
             
             try? FileManager.default.removeItem(atPath: path.path)

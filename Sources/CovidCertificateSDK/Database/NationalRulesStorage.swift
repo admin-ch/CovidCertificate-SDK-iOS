@@ -36,6 +36,8 @@ class NationalRulesListEntry {
 
 class NationalRulesStorage {
     
+    static let shared = NationalRulesStorage()
+    
     /// Database connection
     private let database: Connection
     
@@ -57,7 +59,7 @@ class NationalRulesStorage {
     }
     
     /// Initializer
-    public init() {
+    private init() {
         let filePath = NationalRulesStorage.getDatabasePath()
         database = try! Connection(filePath.absoluteString, readonly: false)
         try! createTable()

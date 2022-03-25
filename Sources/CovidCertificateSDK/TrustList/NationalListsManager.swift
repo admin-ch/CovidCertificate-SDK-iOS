@@ -13,29 +13,24 @@ import Foundation
 
 class NationalListsManager {
     static let shared = NationalListsManager()
-    
-    let session = URLSession.certificatePinned
-    let nationalRulesStorage: NationalRulesStorage = NationalRulesStorage()
-
-    
+        
     @UBUserDefault(key: "covidcertificate.foreignCountries", defaultValue: nil)
     var storedForeignCountries: [ArrivalCountry]?
     
     @UBUserDefault(key: "covidcertificate.foreignCountries.validUntil", defaultValue: nil)
     var validUntil: Date?
     
-    
     func nationalRulesListIsStillValid(arrivalCountry: ArrivalCountry) -> Bool {
-        let nationalList = nationalRulesStorage.getNationalRulesListEntry(countryCode: arrivalCountry.id)
+        let nationalList = NationalRulesStorage.shared.getNationalRulesListEntry(countryCode: arrivalCountry.id)
         return nationalList?.isValid ?? false
     }
     
     func updateNationalRules(countryCode: ArrivalCountry.ID, nationalRulesList: NationalRulesList) -> Bool {
-        return nationalRulesStorage.updateOrInsertNationalRulesList(list: nationalRulesList, countryCode: countryCode)
+        return NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalRulesList, countryCode: countryCode)
     }
     
     func nationalRulesList(countryCode: ArrivalCountry.ID) -> NationalRulesList {
-        guard let listEntry = nationalRulesStorage.getNationalRulesListEntry(countryCode: countryCode), listEntry.isValid else {
+        guard let listEntry = NationalRulesStorage.shared.getNationalRulesListEntry(countryCode: countryCode), listEntry.isValid else {
             return NationalRulesList()
         }
         return listEntry.nationalRulesList
