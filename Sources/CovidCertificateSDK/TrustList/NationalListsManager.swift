@@ -13,9 +13,11 @@ import Foundation
 
 class NationalListsManager {
     static let shared = NationalListsManager()
-        
-    @UBUserDefault(key: "covidcertificate.foreignCountries", defaultValue: nil)
-    var storedForeignCountries: [ArrivalCountry]?
+    
+    private let session = URLSession.certificatePinned
+    
+    @UBUserDefault(key: "covidcertificate.foreignCountries.list", defaultValue: [])
+    var storedForeignCountries: [ArrivalCountry.ID]
     
     @UBUserDefault(key: "covidcertificate.foreignCountries.validUntil", defaultValue: nil)
     var validUntil: Date?
@@ -37,14 +39,51 @@ class NationalListsManager {
     }
     
     func foreignCountries(_ completionHandler: @escaping (Result<[ArrivalCountry], NetworkError>) -> Void) {
-        // TODO: IZ-954
-        completionHandler(.success([.Switzerland]))
+        let request = CovidCertificateSDK.currentEnvironment.foreignCountriesService().request(reloadRevalidatingCacheData: false)
+
+        let (data, response, error) = session.synchronousDataTask(with: request)
+        
+        if error != nil {
+            completionHandler(handleError(error!.asNetworkError()))
+            return
+        }
+        
+        guard let d = data,
+              let httpResponse = response as? HTTPURLResponse else {
+            completionHandler(handleError(.NETWORK_PARSE_ERROR))
+            return
+        }
+        
+        // Make sure HTTP response code is 2xx
+        guard httpResponse.statusCode / 100 == 2 else {
+            completionHandler(handleError(.NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)))
+            return
+        }
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        var outcome: Swift.Result<ArrivalCountries, JWSError> = .failure(.SIGNATURE_INVALID)
+        
+        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: d) { (result: Swift.Result<ArrivalCountries, JWSError>) in
+            outcome = result
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        guard let result = try? outcome.get() else {
+            completionHandler(handleError(.NETWORK_PARSE_ERROR))
+            return
+        }
+        
+        validUntil = Date() // TODO: IZ-954 Read validUntil from request
+        let countries = result.toArrivalCountryList()
+        storedForeignCountries = result.countries
+        completionHandler(.success(countries))
     }
     
     private func handleError(_ error: NetworkError) -> Swift.Result<[ArrivalCountry], NetworkError> {
-        // Check if we have any offline date that is valid
-        if let countries = storedForeignCountries, let validUntil = validUntil, validUntil > Date() {
-            return .success(countries)
+        if !storedForeignCountries.isEmpty, let validUntil = validUntil, validUntil >= Date() {
+            return .success(storedForeignCountries.map{ArrivalCountry(countryCode: $0)}.compactMap ({ $0 }))
         } else {
             return .failure(error)
         }

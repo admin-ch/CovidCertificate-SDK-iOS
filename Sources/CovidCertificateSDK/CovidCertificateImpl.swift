@@ -518,8 +518,8 @@ struct CovidCertificateImpl {
             case .failure(.COUNTRY_CODE_NOT_SUPPORTED):
                 result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
                 completionHandler(result)
-            case .failure(.NO_VALID_RULES_FOR_SPECIFIC_DATE):
-                result.nationalRules = .failure(.NO_VALID_RULES_FOR_SPECIFIC_DATE)
+            case .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE):
+                result.nationalRules = .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE)
                 completionHandler(result)
             default:
                 result.nationalRules = .failure(.NO_VALID_DATE)

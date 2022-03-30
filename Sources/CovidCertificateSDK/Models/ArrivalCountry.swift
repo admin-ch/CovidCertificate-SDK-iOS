@@ -10,22 +10,33 @@
 import Foundation
 
 
+class ArrivalCountries: JWTExtension {
+    internal init(countries: [String]) {
+        self.countries = countries
+    }
+    
+    let countries: [String]
+    
+    func toArrivalCountryList() -> [ArrivalCountry] {
+        return countries.map {ArrivalCountry(countryCode: $0)}.compactMap ({ $0 })
+    }
+}
 public class ArrivalCountry: Codable, UBUserDefaultValue, JWTExtension {
-    typealias ID = String
+    public typealias ID = String
     
-    let id: ID
+    public let id: ID
     
-    let localizedName: String
+    public let localizedString: String
     
     init?(countryCode: ID) {
         // TODO: IZ-954 Check identifiers
         guard let name = Locale.current.localizedString(forRegionCode: countryCode.lowercased()) else { return nil }
 
         self.id = countryCode
-        self.localizedName = name
+        self.localizedString = name
     }
     
-    static var Switzerland: ArrivalCountry {
+    public static var Switzerland: ArrivalCountry {
         return .init(countryCode: "CH")!
     }
     
@@ -36,6 +47,6 @@ public class ArrivalCountry: Codable, UBUserDefaultValue, JWTExtension {
 
 extension Array where Element == ArrivalCountry {
     var sortedByLocalizedName: [ArrivalCountry] {
-        self.sorted { $0.localizedName.localizedCompare($1.localizedName) == .orderedAscending }
+        self.sorted { $0.localizedString.localizedCompare($1.localizedString) == .orderedAscending }
     }
 }

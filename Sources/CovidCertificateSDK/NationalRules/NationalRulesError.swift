@@ -25,7 +25,7 @@ public enum NationalRulesError: Error, Equatable {
     case NETWORK_NO_INTERNET_CONNECTION(errorCode: String)
     case TIME_INCONSISTENCY(timeShift: TimeInterval)
     case UNKNOWN_CERTLOGIC_FAILURE
-    case NO_VALID_RULES_FOR_SPECIFIC_DATE
+    case NO_VALID_RULE_FOR_SPECIFIC_DATE
     case COUNTRY_CODE_NOT_SUPPORTED
     case TOO_MANY_VACCINE_ENTRIES
     case TOO_MANY_TEST_ENTRIES
@@ -46,7 +46,7 @@ public enum NationalRulesError: Error, Equatable {
         case let .NETWORK_NO_INTERNET_CONNECTION(code): return code.count > 0 ? "NE|\(code)" : "NE|NIC"
         case .TIME_INCONSISTENCY: return "NE|TI"
         case .UNKNOWN_CERTLOGIC_FAILURE: return "N|UKN"
-        case .NO_VALID_RULES_FOR_SPECIFIC_DATE: return "N|NVR"
+        case .NO_VALID_RULE_FOR_SPECIFIC_DATE: return "N|NVR"
         case .COUNTRY_CODE_NOT_SUPPORTED: return "N|CCNS"
         case .TOO_MANY_VACCINE_ENTRIES: return "N|TMVE"
         case .TOO_MANY_TEST_ENTRIES: return "N|TMTE"

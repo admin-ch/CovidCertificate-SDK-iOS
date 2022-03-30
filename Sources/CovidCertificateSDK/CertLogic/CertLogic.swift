@@ -20,7 +20,7 @@ enum CertLogicValidationError: Error {
     case JSON_ERROR
     case TESTS_FAILED(tests: [String: String])
     case TEST_COULD_NOT_BE_PERFORMED(test: String)
-    case NO_VALID_RULES_FOR_SPECIFIC_DATE
+    case NO_VALID_RULE_FOR_SPECIFIC_DATE
     case COUNTRY_CODE_NOT_SUPPORTED
 }
 
@@ -70,7 +70,7 @@ class CertLogic {
 
         // If the country to check for is not Switzerland, we filter the rules so that only rules in
         // which the arrivalDate is within the validFrom and validTo range are selected
-        var filteredRules = [JSON]() // filterValidRules(rules: rules, arrivalCountry: arrivalCountry, arrivalDate: validationClock)
+        var filteredRules = filterValidRules(rules: rules, arrivalCountry: arrivalCountry, arrivalDate: validationClock)
         
         // If the country to check for is not Switzerland, there might be multiple rules with the same ID but different validFrom
         // timestamps. We select the one that has the latest validFrom date.
@@ -79,7 +79,7 @@ class CertLogic {
         filteredRules = filterDuplicateIdentifiers(rules: filteredRules, arrivalCountry: arrivalCountry)
 
         guard !filteredRules.isEmpty else {
-            return .failure(.NO_VALID_RULES_FOR_SPECIFIC_DATE)
+            return .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE)
         }
         
         let context = JSON(["external": external, "payload": JSON(dccJson)])
