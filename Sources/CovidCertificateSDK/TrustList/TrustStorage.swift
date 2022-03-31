@@ -16,7 +16,7 @@ protocol TrustStorageProtocol {
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool
     var revocationListNextSince: String? { get }
     func revocationListIsValid() -> Bool
-    func revocationCertIsValid(_ certificate: DCCCert) -> Bool
+    func revocationCertIsValid(for holder: CertificateHolder) -> Bool
 
 
     func activeCertificatePublicKeys() -> [TrustCertificate]
@@ -83,13 +83,13 @@ class TrustStorage: TrustStorageProtocol {
         }
     }
     
-    //MARK: checks if a certain certificate is currently in the hash-DB and it's not expired
-    func revocationCertIsValid(_ cert: DCCCert) -> Bool {
+    //MARK: checks if a certain certificate is currently in the hash-DB and is not expired
+    func revocationCertIsValid(for holder: CertificateHolder) -> Bool {
         revocationQueue.sync {
-            //TODO: DE These two values need to come from the DB
-            let lastDownloadTimeStampForCert: Int64 = revocationDBManager.
-            let validDurationForCert: Int64 = 2
-            return isStillValid(lastDownloadTimeStamp: lastDownloadTimeStampForCert, validDuration: validDurationForCert)
+            //Continue here!
+            //TODO: First check if this specific certificate actually is in the DB, get lastDownload- and Expires-column from DB
+            let (lastDownload, validDuration) = revocationDBManager.checkSingleCert(holder)
+            return isStillValid(lastDownloadTimeStamp: lastDownload, validDuration: validDuration)
         }
     }
 

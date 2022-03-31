@@ -87,7 +87,7 @@ struct CovidCertificateImpl {
                     group.leave()
                 }
             } else {
-                checkRevocationStatusWallet(certificate: certificate, forceUpdate: forceUpdate) { result in
+                checkRevocationStatusWallet(holder: holder, forceUpdate: forceUpdate) { result in
                     revocationStatusResult = result
                     group.leave()
                 }
@@ -213,7 +213,12 @@ struct CovidCertificateImpl {
         })
     }
     
-    func checkRevocationStatusWallet(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkRevocationStatusWallet(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+        guard let certificate = holder.certificate as? DCCCert else {
+            completionHandler(.failure(ValidationError.GENERAL_ERROR))
+            return
+        }
+        
         trustListManager.revocationListUpdater.addCheckOperation(for: certificate, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
@@ -228,10 +233,9 @@ struct CovidCertificateImpl {
             /*TODO: DE We first check if we already have a list of hashes saved for the 'certificate'
               TODO: DE If there is already one saved and it's valid we can check if the 'certificate' is in this list, if not -> done, not revoked
               TODO: DE If there is not already one saved or it's expired, we request the hashes for all revoked certificates with matching kid&prefix -> check in there if it's valid or not
-             
              */
             
-            guard trustListManager.trustStorage.revocationCertIsValid(certificate) else {
+            guard trustListManager.trustStorage.revocationCertIsValid(for: holder) else {
                 if let e = lastError?.asValidationError() {
                     // If available, return specific last (networking) error
                     completionHandler(.failure(e))

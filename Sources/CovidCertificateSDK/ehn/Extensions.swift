@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import SwiftCBOR
 
 extension Data {
     func humanReadable() -> String {
@@ -70,5 +71,47 @@ extension DCCCert {
         default:
             return []
         }
+    }
+}
+
+
+extension CertificateHolder {
+    //MARK: - Hashes for revocation search
+    //Heavily inspired by: https://github.com/eu-digital-green-certificates/dgca-app-core-ios/blob/main/Sources/Models/HCert.swift (Line 230)
+    
+    private var uvci: String? {
+        
+        guard let certificate = self.certificate  as? DCCCert else { return nil }
+        
+        return certificate.vaccinations?.first?.certificateIdentifier ??
+        certificate.pastInfections?.first?.certificateIdentifier ??
+        certificate.tests?.first?.certificateIdentifier
+    }
+    
+    public var uvciHash: Data? {
+        if let uvci = uvci, !uvci.isEmpty, let issuer = issuer, let countryCodeUvciData = (issuer + uvci).data(using: .utf8) {
+            return Sha256.sha256(data: countryCodeUvciData) // .hexString
+        } else {
+            return nil
+        }
+    }
+    
+    public var countryCodeUvciHash: Data? {
+        if let uvci = uvci, !uvci.isEmpty, let uvciData = uvci.data(using: .utf8) {
+            return Sha256.sha256(data: uvciData) //.hexString
+        } else {
+            return nil
+        }
+    }
+    
+    public var signatureHash: Data? {
+        var signatureBytesToHash = self.cose.signature
+        
+        if self.cose.protectedHeader.algorithm == .es256 {
+            signatureBytesToHash = Data(Array(signatureBytesToHash.prefix(32)))
+        }
+        
+        return Sha256.sha256(data: signatureBytesToHash)
+        
     }
 }
