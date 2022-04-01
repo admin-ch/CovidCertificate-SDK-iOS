@@ -68,9 +68,9 @@ public enum CovidCertificateSDK {
         }
     }
 
-    public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+    public static func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval, holders: [CertificateHolder]? = nil) {
         instancePrecondition()
-        instance.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+        instance.restartTrustListUpdate(for: holders, completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
     }
 
     private static func instancePrecondition() {

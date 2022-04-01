@@ -13,13 +13,13 @@ import Foundation
 
 protocol TrustlistManagerProtocol {
     static var jwsVerifier: JWSVerifier { get }
-    var revocationListHashUpdater: TrustListUpdate { get }
+    var revocationListHashUpdater: RevocationListHashUpdate { get }
     var trustCertificateUpdater: TrustListUpdate { get }
     var nationalRulesListUpdater: TrustListUpdate { get }
 
     var trustStorage: TrustStorageProtocol { get }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval)
+    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval, holders: [CertificateHolder]?)
 }
 
 class TrustlistManager: TrustlistManagerProtocol {
@@ -50,7 +50,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     // MARK: - Components
 
     var trustStorage: TrustStorageProtocol
-    var revocationListHashUpdater: TrustListUpdate
+    var revocationListHashUpdater: RevocationListHashUpdate
     var trustCertificateUpdater: TrustListUpdate
     var nationalRulesListUpdater: TrustListUpdate
 
@@ -68,12 +68,12 @@ class TrustlistManager: TrustlistManagerProtocol {
         trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: trustStorage)
     }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
+    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval, holders: [CertificateHolder]?) {
         timer = DispatchSource.makeTimerSource(queue: timerQueue)
 
         timer?.setEventHandler(handler: { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.forceUpdate(completionHandler: completionHandler)
+            strongSelf.forceUpdate(holders: holders, completionHandler: completionHandler)
         })
 
         timer?.schedule(deadline: .now(), repeating: updateTimeInterval)
@@ -81,7 +81,7 @@ class TrustlistManager: TrustlistManagerProtocol {
         timer?.resume()
     }
 
-    private func forceUpdate(completionHandler: @escaping (() -> Void)) {
+    private func forceUpdate(holders: [CertificateHolder]?, completionHandler: @escaping (() -> Void)) {
         let group = DispatchGroup()
 
         for updater in [revocationListHashUpdater, trustCertificateUpdater, nationalRulesListUpdater] {

@@ -23,6 +23,8 @@ class RevocationListHashUpdate: TrustListUpdate {
     private static let trueConstant = "true"
 
     private static let maximumNumberOfRequests = 20
+    
+    public var holders: [CertificateHolder] = []
 
     init(trustStorage: TrustStorageProtocol, decoder: RevocationListDecoder = RevocationListJWSDecoder(), session: URLSession = .certificatePinned) {
         self.decoder = decoder

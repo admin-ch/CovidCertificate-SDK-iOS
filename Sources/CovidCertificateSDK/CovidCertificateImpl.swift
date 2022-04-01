@@ -239,6 +239,8 @@ struct CovidCertificateImpl {
               TODO: DE If there is not already one saved or it's expired, we request the hashes for all revoked certificates with matching kid&prefix -> check in there if it's valid or not
              */
             
+            
+            //TODO: Here we want safe-guard that the prefix of the certificate (given as parameter) is in the DB and is still valid (which it should be since we update the list every 1 hour)
             guard trustListManager.trustStorage.revocationHashIsValid(for: holder) else {
                 if let e = lastError?.asValidationError() {
                     // If available, return specific last (networking) error
@@ -249,7 +251,8 @@ struct CovidCertificateImpl {
                 }
                 return
             }
-
+            
+            //TODO: Here we check if the hash of the certificate is in the revoked certificates list or not
             let list = self.trustListManager.trustStorage.revokedCertificates()
             let isRevoked = certificate.certIdentifiers().contains { list.contains($0) }
             let error: ValidationError? = isRevoked ? .REVOKED : nil
@@ -567,9 +570,9 @@ struct CovidCertificateImpl {
         let list = trustListManager.trustStorage.nationalRules()
         return list.modeRules.verifierActiveModes
     }
-
-    func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
-        trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+    
+    func restartTrustListUpdate(for holders: [CertificateHolder]?, completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+        trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval, holders: holders)
     }
 
     func updateMetadata() {
