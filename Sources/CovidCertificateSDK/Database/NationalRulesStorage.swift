@@ -75,7 +75,7 @@ class NationalRulesStorage {
     }
     
     /// Updates the entries of a nationalRulesList or inserts a new one if not existing yet.
-    public func updateOrInsertNationalRulesList(list: NationalRulesList, countryCode: ArrivalCountry.ID) -> Bool {
+    public func updateOrInsertNationalRulesList(list: NationalRulesList, countryCode: String) -> Bool {
         queue.sync { [weak self] in
             guard let self = self else { return false }
             let encodedList = try? JSONEncoder().encode(list)
@@ -94,7 +94,7 @@ class NationalRulesStorage {
         }
     }
     
-    public func getNationalRulesListEntry(countryCode: ArrivalCountry.ID) -> NationalRulesListEntry? {
+    public func getNationalRulesListEntry(countryCode: String) -> NationalRulesListEntry? {
         queue.sync {
             let query = table.filter(countryCodeColumn == countryCode).limit(1).select(nationalListColumn, lastDownloadColumn)
             

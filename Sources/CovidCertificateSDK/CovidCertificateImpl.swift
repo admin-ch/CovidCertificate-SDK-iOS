@@ -59,7 +59,7 @@ struct CovidCertificateImpl {
         return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(arrivalCountryCode: ArrivalCountry.ID, arrivalDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(countryCode: String, arrivalDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
@@ -73,7 +73,7 @@ struct CovidCertificateImpl {
         }
 
         group.enter()
-        checkNationalRules(arrivalCountryCode: arrivalCountryCode, arrivalDate: arrivalDate, holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
+        checkNationalRules(countryCode: countryCode, arrivalDate: arrivalDate, holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
             nationalRulesResult = result
             group.leave()
         }
@@ -106,8 +106,8 @@ struct CovidCertificateImpl {
         }
     }
     
-    func foreignCountries(_ completionHandler: @escaping (Result<[ArrivalCountry], NetworkError>) -> Void) {
-        NationalListsManager.shared.foreignCountries(completionHandler)
+    func getForeignRulesCountryCodes(forceUpdate: Bool = false, _ completionHandler: @escaping (Result<[String], NetworkError>) -> Void) {
+        NationalListsManager.shared.getForeignRulesCountryCodes(completionHandler)
     }
 
 
@@ -212,7 +212,7 @@ struct CovidCertificateImpl {
         var modeResults: ModeResults = .init(results: [:])
     }
 
-    func checkNationalRules(arrivalCountryCode: ArrivalCountry.ID, arrivalDate: Date, holder: CertificateHolderType,
+    func checkNationalRules(countryCode: String, arrivalDate: Date, holder: CertificateHolderType,
                             forceUpdate: Bool,
                             modes: [CheckMode],
                             _ completionHandler: @escaping (CheckRulesResult) -> Void) {
@@ -221,18 +221,7 @@ struct CovidCertificateImpl {
         var result = CheckRulesResult()
         var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
-        guard let arrivalCountry = ArrivalCountry(countryCode: arrivalCountryCode) else {
-            // Failure
-            result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
-            for mode in modes {
-                modeResults[mode] = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
-            }
-            result.modeResults = .init(results: modeResults)
-            completionHandler(result)
-            return
-        }
-        
-        trustListManager.nationalRulesListUpdater.setArrivalCountry(arrivalCountry)
+        trustListManager.nationalRulesListUpdater.setArrivalCountry(countryCode)
         trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
@@ -250,7 +239,9 @@ struct CovidCertificateImpl {
             }
 
             // Safe-guard that we have a recent national rules list available at this point
-            guard trustListManager.trustStorage.nationalRulesListIsStillValid(arrivalCountry: arrivalCountry) else {
+            guard trustListManager.trustStorage.nationalRulesAreStillValid(countryCode: countryCode) else {
+                // TODO: IZ-954: Check if list is "empty". Of so, return COUNTRY_CODE_NOT_SUPPORTED error
+                
                 if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
                     result.nationalRules = .failure(e)
@@ -271,7 +262,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let list = self.trustListManager.trustStorage.nationalRules(arrivalCountry: arrivalCountry)
+            let list = self.trustListManager.trustStorage.getNationalRules(countryCode: countryCode)
 
             guard let certLogic = CertLogic(),
                   let valueSets = list.valueSets,
@@ -343,7 +334,7 @@ struct CovidCertificateImpl {
 
             let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder).get()
             
-            switch certLogic.checkRules(hcert: certificate, validationClock: arrivalDate, arrivalCountry: arrivalCountry) {
+            switch certLogic.checkRules(hcert: certificate, validationClock: arrivalDate, countryCode: countryCode) {
             case .success:
                 result.nationalRules = .success(VerificationResult(isValid: true,
                                                                    validUntil: displayRulesResult?.validUntil,
@@ -530,12 +521,12 @@ struct CovidCertificateImpl {
     }
 
     func getActiveModesForWallet() -> [CheckMode] {
-        let list = trustListManager.trustStorage.nationalRules(arrivalCountry: .Switzerland)
+        let list = trustListManager.trustStorage.getNationalRules(countryCode: CountryCodes.Switzerland)
         return list.modeRules.walletActiveModes ?? list.modeRules.activeModes
     }
 
     func getActiveModesForVerifier() -> [CheckMode] {
-        let list = trustListManager.trustStorage.nationalRules(arrivalCountry: .Switzerland)
+        let list = trustListManager.trustStorage.getNationalRules(countryCode: CountryCodes.Switzerland)
         return list.modeRules.verifierActiveModes
     }
 

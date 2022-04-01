@@ -46,16 +46,16 @@ public enum SDKEnvironment {
         trustBackend.endpoint("verificationRules", headers: ["Accept": SDKEnvironment.applicationJwtPlusJws], overwriteVersion: "v2")
     }
     
-    func foreignRulesListService(arrivalCountry: ArrivalCountry) -> Endpoint {
-        trustBackend.endpoint("foreignRules/\(arrivalCountry.id)",
+    func foreignRulesListService(countryCode: String) -> Endpoint {
+        trustBackend.endpoint("foreignRules/\(countryCode)",
                               headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
-                              overwriteVersion: "v2") // TODO
+                              overwriteVersion: "v2")
     }
     
-    func foreignCountriesService() -> Endpoint {
+    func foreignCountryCodesService() -> Endpoint {
         trustBackend.endpoint("foreignRules",
                               headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
-                              overwriteVersion: "v2") // TODO
+                              overwriteVersion: "v2")
     }
 
     func trustCertificatesService(since: String, upTo: String) -> Endpoint {

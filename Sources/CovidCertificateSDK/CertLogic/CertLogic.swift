@@ -60,7 +60,7 @@ class CertLogic {
         return .success(())
     }
 
-    func checkRules(hcert: DCCCert, validationClock: Date = Date(), arrivalCountry: ArrivalCountry) -> Result<Void, CertLogicValidationError> {
+    func checkRules(hcert: DCCCert, validationClock: Date = Date(), countryCode: String) -> Result<Void, CertLogicValidationError> {
         let external = externalJson(validationClock: validationClock)
 
         var failedTests: [String: String] = [:]
@@ -70,13 +70,13 @@ class CertLogic {
 
         // If the country to check for is not Switzerland, we filter the rules so that only rules in
         // which the arrivalDate is within the validFrom and validTo range are selected
-        var filteredRules = filterValidRules(rules: rules, arrivalCountry: arrivalCountry, arrivalDate: validationClock)
+        var filteredRules = filterValidRules(rules: rules, countryCode: countryCode, arrivalDate: validationClock)
         
         // If the country to check for is not Switzerland, there might be multiple rules with the same ID but different validFrom
         // timestamps. We select the one that has the latest validFrom date.
         // Since we already filtered out rules whose validFrom-validTo range does not include the arrivalDate,
         // we are guaranteed that the latest validFrom date of a rule is earlier than the arrivalDate
-        filteredRules = filterDuplicateIdentifiers(rules: filteredRules, arrivalCountry: arrivalCountry)
+        filteredRules = filterDuplicateIdentifiers(rules: filteredRules, countryCode: countryCode)
 
         guard !filteredRules.isEmpty else {
             return .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE)
@@ -236,8 +236,8 @@ class CertLogic {
         return dateFormatter
     }()
     
-    private func filterValidRules(rules: [JSON], arrivalCountry: ArrivalCountry, arrivalDate: Date) ->  [JSON] {
-        guard !arrivalCountry.isSwitzerland else {
+    private func filterValidRules(rules: [JSON], countryCode: String, arrivalDate: Date) ->  [JSON] {
+        guard !(countryCode == CountryCodes.Switzerland) else {
             // Switzerland has no validity information since only valid rules are served anyways
             return rules
         }
@@ -253,8 +253,8 @@ class CertLogic {
         return rules
     }
   
-    private func filterDuplicateIdentifiers(rules: [JSON], arrivalCountry: ArrivalCountry) ->  [JSON] {
-        guard !arrivalCountry.isSwitzerland else {
+    private func filterDuplicateIdentifiers(rules: [JSON], countryCode: String) ->  [JSON] {
+        guard !(countryCode == CountryCodes.Switzerland) else {
             // Switzerland has no duplicate rules since only non-duplicate rules are served anyways
             return rules
         }

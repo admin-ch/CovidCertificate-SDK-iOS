@@ -23,9 +23,9 @@ protocol TrustStorageProtocol {
     func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool
     func certificateListIsValid() -> Bool
 
-    func nationalRulesListIsStillValid(arrivalCountry: ArrivalCountry) -> Bool
-    func updateNationalRules(arrivalCountry: ArrivalCountry, _ update: NationalRulesList) -> Bool
-    func nationalRules(arrivalCountry: ArrivalCountry) -> NationalRulesList
+    func nationalRulesAreStillValid(countryCode: String) -> Bool
+    func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool
+    func getNationalRules(countryCode: String) -> NationalRulesList
 }
 
 class TrustStorage: TrustStorageProtocol {
@@ -62,7 +62,7 @@ class TrustStorage: TrustStorageProtocol {
            FileManager.default.fileExists(atPath: path.path) {
             // We delete the file no matter if the migration worked or not
             if let nationalList = SecureStorage<NationalRulesList>(name: "national_rules").loadSynchronously() {
-                _ = NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalList, countryCode: ArrivalCountry.Switzerland.id)
+                _ = NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalList, countryCode: CountryCodes.Switzerland)
             }
             
             try? FileManager.default.removeItem(atPath: path.path)
@@ -142,21 +142,21 @@ class TrustStorage: TrustStorageProtocol {
 
     // MARK: - National rules
 
-    func nationalRulesListIsStillValid(arrivalCountry: ArrivalCountry) -> Bool {
+    func nationalRulesAreStillValid(countryCode: String) -> Bool {
         nationalQueue.sync {
-            NationalListsManager.shared.nationalRulesListIsStillValid(arrivalCountry: arrivalCountry)
+            NationalListsManager.shared.nationalRulesAreStillValid(countryCode: countryCode)
         }
     }
 
-    func updateNationalRules(arrivalCountry: ArrivalCountry, _ update: NationalRulesList) -> Bool {
+    func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool {
         nationalQueue.sync {
-            return NationalListsManager.shared.updateNationalRules(countryCode: arrivalCountry.id, nationalRulesList: update)
+            return NationalListsManager.shared.updateNationalRules(countryCode: countryCode, nationalRulesList: update)
         }
     }
 
-    func nationalRules(arrivalCountry: ArrivalCountry) -> NationalRulesList {
+    func getNationalRules(countryCode: String) -> NationalRulesList {
         nationalQueue.sync {
-            return NationalListsManager.shared.nationalRulesList(countryCode: arrivalCountry.id)
+            return NationalListsManager.shared.getNationalRules(countryCode: countryCode)
         }
     }
 

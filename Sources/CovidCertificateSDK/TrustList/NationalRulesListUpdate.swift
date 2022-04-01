@@ -17,17 +17,17 @@ class NationalRulesListUpdate: TrustListUpdate {
 
     let session = URLSession.certificatePinned
 
-    private var arrivalCountry: ArrivalCountry = .Switzerland
+    private var countryCode: String = "CH"
     
     // MARK: - Update
     
     override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
         let request: URLRequest
         
-        if arrivalCountry.isSwitzerland {
+        if countryCode == CountryCodes.Switzerland {
             request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadRevalidatingCacheData: ignoreLocalCache)
         } else {
-            request = CovidCertificateSDK.currentEnvironment.foreignRulesListService(arrivalCountry: arrivalCountry).request(reloadRevalidatingCacheData: ignoreLocalCache)
+            request = CovidCertificateSDK.currentEnvironment.foreignRulesListService(countryCode: countryCode).request(reloadRevalidatingCacheData: ignoreLocalCache)
         }
         
         let (data, response, error) = session.synchronousDataTask(with: request)
@@ -69,17 +69,17 @@ class NationalRulesListUpdate: TrustListUpdate {
         }
         result.requestData = claimsData
 
-        _ = trustStorage.updateNationalRules(arrivalCountry: arrivalCountry, result)
+        _ = trustStorage.updateNationalRules(countryCode: countryCode, result)
 
         return nil
     }
     
-    override func setArrivalCountry(_ arrivalCountry: ArrivalCountry) {
-        self.arrivalCountry = arrivalCountry
+    override func setArrivalCountry(_ countryCode: String) {
+        self.countryCode = countryCode
     }
 
     override func isListStillValid() -> Bool {
-        trustStorage.nationalRulesListIsStillValid(arrivalCountry: arrivalCountry)
+        trustStorage.nationalRulesAreStillValid(countryCode: countryCode)
     }
 }
 
