@@ -13,7 +13,7 @@ import Foundation
 
 protocol TrustlistManagerProtocol {
     static var jwsVerifier: JWSVerifier { get }
-    var revocationListUpdater: TrustListUpdate { get }
+    var revocationListHashUpdater: TrustListUpdate { get }
     var trustCertificateUpdater: TrustListUpdate { get }
     var nationalRulesListUpdater: TrustListUpdate { get }
 
@@ -50,7 +50,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     // MARK: - Components
 
     var trustStorage: TrustStorageProtocol
-    var revocationListUpdater: TrustListUpdate
+    var revocationListHashUpdater: TrustListUpdate
     var trustCertificateUpdater: TrustListUpdate
     var nationalRulesListUpdater: TrustListUpdate
 
@@ -64,7 +64,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     init() {
         trustStorage = TrustStorage()
         nationalRulesListUpdater = NationalRulesListUpdate(trustStorage: trustStorage)
-        revocationListUpdater = RevocationListUpdate(trustStorage: trustStorage)
+        revocationListHashUpdater = RevocationListHashUpdate(trustStorage: trustStorage)
         trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: trustStorage)
     }
 
@@ -84,7 +84,7 @@ class TrustlistManager: TrustlistManagerProtocol {
     private func forceUpdate(completionHandler: @escaping (() -> Void)) {
         let group = DispatchGroup()
 
-        for updater in [revocationListUpdater, trustCertificateUpdater, nationalRulesListUpdater] {
+        for updater in [revocationListHashUpdater, trustCertificateUpdater, nationalRulesListUpdater] {
             group.enter()
 
             updater.forceUpdate {
@@ -166,15 +166,15 @@ class TrustListUpdate {
     }
     
     //This function doesn't require the whole list to be valid. It only checks if a single list corresponding to one DCCCert is valid or not and doesn't download the whole list if not
-    func addCheckOperation(for certificate: DCCCert, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
+    func addCheckOperation(for holder: CertificateHolder, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
         internalQueue.async {
-            let updateNeeded = !self.isCertStillValid(certificate) || forceUpdate
+            let updateNeeded = !self.isCertStillValid(holder) || forceUpdate
             let updateAlreadyRunnning = self.singleUpdateOperation != nil
 
             if updateNeeded, !updateAlreadyRunnning {
                 self.singleUpdateOperation = BlockOperation(block: { [weak self] in
                     guard let strongSelf = self else { return }
-                    strongSelf.startSingleUpdate(certificate)
+                    strongSelf.startSingleUpdate(holder)
                 })
 
                 // !: initialized just above
@@ -194,7 +194,7 @@ class TrustListUpdate {
         nil
     }
     
-    func synchronousUpdate(for certificate: DCCCert, ignoreLocalCache _: Bool = false) -> NetworkError? {
+    func synchronousUpdate(for holder: CertificateHolder, ignoreLocalCache _: Bool = false) -> NetworkError? {
         //download data and update local variable
         nil
     }
@@ -203,7 +203,7 @@ class TrustListUpdate {
         true
     }
     
-    func isCertStillValid(_ certificate: DCCCert) -> Bool {
+    func isCertStillValid(_ holder: CertificateHolder) -> Bool {
         true
     }
 
@@ -214,9 +214,9 @@ class TrustListUpdate {
         }
     }
     
-    private func startSingleUpdate(_ certificate: DCCCert) {
+    private func startSingleUpdate(_ holder: CertificateHolder) {
         internalQueue.sync {
-            lastError = synchronousUpdate(for: certificate, ignoreLocalCache: true)
+            lastError = synchronousUpdate(for: holder, ignoreLocalCache: true)
             singleUpdateOperation = nil
         }
     }

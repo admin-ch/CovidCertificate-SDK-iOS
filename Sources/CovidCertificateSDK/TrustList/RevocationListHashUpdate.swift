@@ -11,7 +11,7 @@
 
 import Foundation
 
-class RevocationListUpdate: TrustListUpdate {
+class RevocationListHashUpdate: TrustListUpdate {
     // MARK: - Session
 
     private let session: URLSession
@@ -26,7 +26,8 @@ class RevocationListUpdate: TrustListUpdate {
 
     init(trustStorage: TrustStorageProtocol, decoder: RevocationListDecoder = RevocationListJWSDecoder(), session: URLSession = .certificatePinned) {
         self.decoder = decoder
-        self.session = session
+        //TODO: DE, change to session whenever JWS works
+        self.session = URLSession.shared
         super.init(trustStorage: trustStorage)
     }
 
@@ -40,7 +41,8 @@ class RevocationListUpdate: TrustListUpdate {
             requestsCount = requestsCount + 1
 
             // download data and update local storage
-            let request = CovidCertificateSDK.currentEnvironment.revocationListService(since: trustStorage.revocationListNextSince).request(reloadIgnoringLocalCache: ignoreLocalCache)
+            //TODO: DE, change to actually make request for specific certificate
+            let request = CovidCertificateSDK.currentEnvironment.revocationListHashService().request(reloadIgnoringLocalCache: ignoreLocalCache)
             let (data, response, error) = session.synchronousDataTask(with: request)
 
             // Only run timeshift detection if request does not come from cache
@@ -65,54 +67,59 @@ class RevocationListUpdate: TrustListUpdate {
                 return .NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)
             }
 
+            //TODO: DE, Currently we don't have next-since & up-to-date header on test-request (add nextSinceHeader in updateRevocationHashes())
             // get the `x-next-since` from HTTP headers, save it and pass to the next request
-            guard let nextSinceHeader = httpResponse.value(forHeaderField: "x-next-since") else {
-                return .NETWORK_PARSE_ERROR
-            }
+//            guard let nextSinceHeader = httpResponse.value(forHeaderField: "x-next-since") else {
+//                return .NETWORK_PARSE_ERROR
+//            }
 
             // get the `up-to-date` from HTTP headers to decide whether we are at the end
-            guard let upToDate = httpResponse.value(forHeaderField: "up-to-date") else {
-                return .NETWORK_PARSE_ERROR
-            }
+//            guard let upToDate = httpResponse.value(forHeaderField: "up-to-date") else {
+//                return .NETWORK_PARSE_ERROR
+//            }
 
             guard let result = decoder.decode(d) else {
                 return .NETWORK_PARSE_ERROR
             }
 
-            let success = trustStorage.updateRevocationList(result, nextSince: nextSinceHeader)
+            let success = trustStorage.updateRevocationHashes(result, nextSince: "")
             assert(success)
 
             // start another request, as long as revocations are coming in
-            listNeedsUpdate = upToDate == Self.falseConstant
+            listNeedsUpdate = false //upToDate == Self.falseConstant
         }
         return nil
     }
 
     override func isListStillValid() -> Bool {
-        trustStorage.revocationListIsValid()
+        trustStorage.revocationHashesAreValid()
     }
     
-//    override func isCertStillValid(_ certificate: DCCCert) -> Bool {
-//        trustStorage.revocationCertIsValid(certificate)
-//    }
+    override func isCertStillValid(_ holder: CertificateHolder) -> Bool {
+        trustStorage.revocationHashIsValid(for: holder)
+    }
 }
 
 protocol RevocationListDecoder {
-    func decode(_ data: Data) -> RevocationList?
+    func decode(_ data: Data) -> RevocationHashes?
 }
 
 class RevocationListJWSDecoder: RevocationListDecoder {
-    func decode(_ data: Data) -> RevocationList? {
-        let semaphore = DispatchSemaphore(value: 0)
-        var outcome: Result<RevocationList, JWSError> = .failure(.SIGNATURE_INVALID)
-
-        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: data) { (result: Result<RevocationList, JWSError>) in
-            outcome = result
-            semaphore.signal()
-        }
-
-        semaphore.wait()
-
-        return try? outcome.get()
+    func decode(_ data: Data) -> RevocationHashes? {
+        //TODO: DE, Currently this is not implemented with JWS yet
+//        let semaphore = DispatchSemaphore(value: 0)
+//        var outcome: Result<RevocationHashes, JWSError> = .failure(.SIGNATURE_INVALID)
+//
+//        TrustlistManager.jwsVerifier.verifyAndDecode(httpBody: data) { (result: Result<RevocationHashes, JWSError>) in
+//            outcome = result
+//            semaphore.signal()
+//        }
+//
+//        semaphore.wait()
+//
+//        return try? outcome.get()
+        let result = try? JSONDecoder().decode(RevocationHashes.self, from: data)
+        
+        return result
     }
 }

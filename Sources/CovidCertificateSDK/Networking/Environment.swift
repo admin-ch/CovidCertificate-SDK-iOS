@@ -26,6 +26,10 @@ public enum SDKEnvironment {
             return Backend("https://www.cc.bit.admin.ch/trust", version: "v1")
         }
     }
+    
+    var hashRevocationBackend: Backend {
+        return Backend("https://covid-cert-revocation-list-poc-ws-dev.ubique.ch", version: "v1")
+    }
 
     public static let applicationJwtPlusJws: String = "application/json+jws"
 
@@ -40,6 +44,12 @@ public enum SDKEnvironment {
                                      queryParameters: queryParameters,
                                      headers: ["Accept": SDKEnvironment.applicationJwtPlusJws],
                                      overwriteVersion: "v2")
+    }
+    
+    //TODO: Temporary function to check if its working
+    func revocationListHashService() -> Endpoint {
+        return hashRevocationBackend.endpoint("dGVzdA/FFAA/all",
+                                              headers: ["Accept": "application/json"])
     }
 
     var nationalRulesListService: Endpoint {

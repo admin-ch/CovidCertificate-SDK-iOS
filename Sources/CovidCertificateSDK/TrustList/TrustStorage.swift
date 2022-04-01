@@ -12,11 +12,14 @@
 import Foundation
 
 protocol TrustStorageProtocol {
+    func updateRevocationHashes(_ hashes: RevocationHashes, nextSince: String) -> Bool
+    func revocationHashesAreValid() -> Bool
+    
     func revokedCertificates() -> Set<String>
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool
     var revocationListNextSince: String? { get }
     func revocationListIsValid() -> Bool
-    func revocationCertIsValid(for holder: CertificateHolder) -> Bool
+    func revocationHashIsValid(for holder: CertificateHolder) -> Bool
 
 
     func activeCertificatePublicKeys() -> [TrustCertificate]
@@ -41,6 +44,7 @@ class TrustStorage: TrustStorageProtocol {
     
     private let revocationDBManager = RevocationDBManager()
 
+    private lazy var revocationHashesStorage = self.revocationDBManager.getAll() ?? RevocationHashesStorage()
     private lazy var revocationStorage = self.revocationSecureStorage.loadSynchronously() ?? RevocationStorage.getBundledStorage()
     private let revocationSecureStorage = SecureStorage<RevocationStorage>(name: "revocations")
 
@@ -66,6 +70,17 @@ class TrustStorage: TrustStorageProtocol {
             self.revocationStorage.revocationList.revokedCerts
         }
     }
+    
+    //This method adds all hashes of certificate (with a specific prefix) that are revoked into the DB
+    func updateRevocationHashes(_ hashes: RevocationHashes, nextSince: String) -> Bool {
+        revocationQueue.sync {
+            hashes.hashFilters?.forEach { self.revocationHashesStorage.hashedRevocationList.append($0) }
+            self.revocationHashesStorage.nextSince = nextSince
+            self.revocationHashesStorage.expires = hashes.expires
+            self.revocationHashesStorage.lastDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
+            return self.revocationDBManager.insert(hashes, nextSince)
+        }
+    }
 
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         revocationQueue.sync {
@@ -76,6 +91,12 @@ class TrustStorage: TrustStorageProtocol {
             return self.revocationSecureStorage.saveSynchronously(self.revocationStorage)
         }
     }
+    
+    func revocationHashesAreValid() -> Bool {
+        revocationQueue.sync {
+            isStillValid(lastDownloadTimeStamp: self.revocationHashesStorage.lastDownload, validDuration: self.revocationHashesStorage.expires)
+        }
+    }
 
     func revocationListIsValid() -> Bool {
         revocationQueue.sync {
@@ -84,12 +105,14 @@ class TrustStorage: TrustStorageProtocol {
     }
     
     //MARK: checks if a certain certificate is currently in the hash-DB and is not expired
-    func revocationCertIsValid(for holder: CertificateHolder) -> Bool {
+    func revocationHashIsValid(for holder: CertificateHolder) -> Bool {
         revocationQueue.sync {
-            //Continue here!
-            //TODO: First check if this specific certificate actually is in the DB, get lastDownload- and Expires-column from DB
             let (lastDownload, validDuration) = revocationDBManager.checkSingleCert(holder)
-            return isStillValid(lastDownloadTimeStamp: lastDownload, validDuration: validDuration)
+            if let lastDownload = lastDownload, let validDuration = validDuration {
+                return isStillValid(lastDownloadTimeStamp: lastDownload, validDuration: validDuration)
+            } else {
+                return true
+            }
         }
     }
 
@@ -171,6 +194,13 @@ class TrustStorage: TrustStorageProtocol {
         let validUntilDate = Date(timeIntervalSince1970: Double(stillValidUntil) / 1000.0)
         return Date().isBefore(validUntilDate)
     }
+}
+
+class RevocationHashesStorage: Codable {
+    var hashedRevocationList = [HashFilter]()
+    var lastDownload: Int64 = 0
+    var expires: Int64 = 0
+    var nextSince: String?
 }
 
 class RevocationStorage: Codable {
