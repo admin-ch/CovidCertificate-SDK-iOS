@@ -17,7 +17,7 @@ class NationalRulesListEntry {
     var lastDownloaded: Int64
     
     var isValid: Bool {
-        return isStillValid(downloadTimeStamp: lastDownloaded, validDuration: nationalRulesList.validDuration)
+        return nationalRulesList.rules != nil && nationalRulesList.valueSets != nil && isStillValid(downloadTimeStamp: lastDownloaded, validDuration: nationalRulesList.validDuration) 
     }
     
     internal init(nationalRulesList: NationalRulesList, lastDownloaded: Int64) {

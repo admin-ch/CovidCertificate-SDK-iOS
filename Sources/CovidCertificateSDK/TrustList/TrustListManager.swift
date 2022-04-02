@@ -170,8 +170,8 @@ class TrustListUpdate {
         nil
     }
     
-    func setArrivalCountry(_ countryCode: String) {
-        // Sets arrivalCountry where validation should happen. Uses Switzerland if no arrivalCountry is set
+    func setCheckCountry(_ countryCode: String) {
+        // Sets country where validation should happen. Uses Switzerland if no checkCountry is set
         return
     }
 

@@ -72,13 +72,13 @@ class CertLogic {
         }
 
         // If the country to check for is not Switzerland, we filter the rules so that only rules in
-        // which the arrivalDate is within the validFrom and validTo range are selected
-        var filteredRules = filterValidRules(rules: rules, countryCode: countryCode, arrivalDate: validationClock)
+        // which the checkDate is within the validFrom and validTo range are selected
+        var filteredRules = filterValidRules(rules: rules, countryCode: countryCode, checkDate: validationClock)
         
-        // If the country to check for is not Switzerland, there might be multiple rules with the same ID but different validFrom
-        // timestamps. We select the one that has the latest validFrom date.
-        // Since we already filtered out rules whose validFrom-validTo range does not include the arrivalDate,
-        // we are guaranteed that the latest validFrom date of a rule is earlier than the arrivalDate
+        // If the country to check for is not Switzerland, there might be multiple rules with the same identifier but different validity
+        // ranges. We select the one that has the latest validFrom date.
+        // Since we already filtered out rules whose validFrom-validTo range does not include the checkDate,
+        // we are guaranteed that the latest validFrom date of a rule is earlier than the checkDate
         filteredRules = filterDuplicateIdentifiers(rules: filteredRules, countryCode: countryCode)
 
         guard !filteredRules.isEmpty else {
@@ -252,7 +252,7 @@ class CertLogic {
         return dateFormatter
     }()
     
-    private func filterValidRules(rules: [JSON], countryCode: String, arrivalDate: Date) ->  [JSON] {
+    private func filterValidRules(rules: [JSON], countryCode: String, checkDate: Date) ->  [JSON] {
         guard !(countryCode == CountryCodes.Switzerland) else {
             // Switzerland has no validity information since only valid rules are served anyways
             return rules
@@ -260,8 +260,8 @@ class CertLogic {
         var validRules: [JSON] = []
         
         for rule in rules {
-            // We need to check if the arrivalDate is within validFrom and validTo.
-            if let validFrom = Self.dateFormatter.date(from: rule["validFrom"].string ?? ""), let validTo = Self.dateFormatter.date(from: rule["validTo"].string ?? ""), (validFrom ... validTo).contains(arrivalDate) {
+            // We need to check if the checkDate is within validFrom and validTo.
+            if let validFrom = Self.dateFormatter.date(from: rule["validFrom"].string ?? ""), let validTo = Self.dateFormatter.date(from: rule["validTo"].string ?? ""), (validFrom ... validTo).contains(checkDate) {
                 validRules.append(rule)
             }
         }

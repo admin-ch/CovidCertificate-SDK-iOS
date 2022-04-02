@@ -25,14 +25,12 @@ protocol TrustStorageProtocol {
 
     func nationalRulesAreStillValid(countryCode: String) -> Bool
     func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool
-    func getNationalRules(countryCode: String) -> NationalRulesList
+    func getNationalRules(countryCode: String) -> NationalRulesList?
 }
 
 class TrustStorage: TrustStorageProtocol {
     
     // MARK: - Storage
-    private lazy var nationalRulesListEntry = NationalRulesListEntry(nationalRulesList: .init(), lastDownloaded: 0)
-
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
 
@@ -154,7 +152,7 @@ class TrustStorage: TrustStorageProtocol {
         }
     }
 
-    func getNationalRules(countryCode: String) -> NationalRulesList {
+    func getNationalRules(countryCode: String) -> NationalRulesList? {
         nationalQueue.sync {
             return NationalListsManager.shared.getNationalRules(countryCode: countryCode)
         }

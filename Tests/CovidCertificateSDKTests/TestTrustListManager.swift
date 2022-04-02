@@ -124,15 +124,15 @@ class TestTrustStorage: TrustStorageProtocol {
 
     // MARK: - National rules
 
-    func nationalRulesListIsStillValid(country: ArrivalCountry) -> Bool {
-        true
+    func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool {
+        return true
+    }
+    
+    func nationalRulesAreStillValid(countryCode: String) -> Bool {
+        return true
     }
 
-    func updateNationalRules(country: ArrivalCountry, _: NationalRulesList) -> Bool {
-        true
-    }
-
-    func nationalRules(country: ArrivalCountry) -> NationalRulesList {
+    func getNationalRules(countryCode: String) -> NationalRulesList? {
         let data = Bundle.module.url(forResource: "nationalrules", withExtension: "json")!
         let nationalRulesData = try? Data(contentsOf: data)
         let nationalRules = NationalRulesList()

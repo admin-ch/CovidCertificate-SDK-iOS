@@ -34,7 +34,7 @@ class NationalListsManager {
         return NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalRulesList, countryCode: countryCode)
     }
     
-    func getNationalRules(countryCode: String) -> NationalRulesList {
+    func getNationalRules(countryCode: String) -> NationalRulesList? {
         guard let listEntry = NationalRulesStorage.shared.getNationalRulesListEntry(countryCode: countryCode), listEntry.isValid else {
             return NationalRulesList()
         }

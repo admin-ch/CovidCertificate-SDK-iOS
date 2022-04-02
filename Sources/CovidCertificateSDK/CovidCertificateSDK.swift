@@ -40,7 +40,7 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: VerifierCertificateHolder, forceUpdate: Bool, mode: CheckMode?, _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            instance.check(countryCode: CountryCodes.Switzerland, arrivalDate: Date(), holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : []) { result in
+            instance.check(countryCode: CountryCodes.Switzerland, checkDate: Date(), holder: holder.value, forceUpdate: forceUpdate, modes: mode != nil ? [mode!] : []) { result in
                 completionHandler(result.anonymized)
             }
         }
@@ -59,12 +59,12 @@ public enum CovidCertificateSDK {
 
         public static func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(countryCode: CountryCodes.Switzerland, arrivalDate: Date(), holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
+            return instance.check(countryCode: CountryCodes.Switzerland, checkDate: Date(), holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
         }
         
-        public static func check(countryCode: String, arrivalDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+        public static func check(countryCode: String, checkDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
-            return instance.check(countryCode: countryCode, arrivalDate: arrivalDate, holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
+            return instance.check(countryCode: countryCode, checkDate: checkDate, holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
         }
         
         

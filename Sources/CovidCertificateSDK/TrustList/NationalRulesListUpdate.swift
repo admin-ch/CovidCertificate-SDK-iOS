@@ -74,7 +74,7 @@ class NationalRulesListUpdate: TrustListUpdate {
         return nil
     }
     
-    override func setArrivalCountry(_ countryCode: String) {
+    override func setCheckCountry(_ countryCode: String) {
         self.countryCode = countryCode
     }
 
