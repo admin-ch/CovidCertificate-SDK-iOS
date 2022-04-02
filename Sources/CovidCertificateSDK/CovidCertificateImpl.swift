@@ -217,7 +217,8 @@ struct CovidCertificateImpl {
                             modes: [CheckMode],
                             _ completionHandler: @escaping (CheckRulesResult) -> Void) {
         
-    
+        let isForeignCountry = countryCode != CountryCodes.Switzerland
+        
         var result = CheckRulesResult()
         var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
@@ -240,25 +241,22 @@ struct CovidCertificateImpl {
 
             // Safe-guard that we have a recent national rules list available at this point
             guard trustListManager.trustStorage.nationalRulesAreStillValid(countryCode: countryCode) else {
-                // TODO: IZ-954: Check if list is "empty". Of so, return COUNTRY_CODE_NOT_SUPPORTED error
+                var error = NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: "")
                 
-                if let e = lastError?.asNationalRulesError() {
+                let list = self.trustListManager.trustStorage.getNationalRules(countryCode: countryCode)
+                if list.rules == nil || list.valueSets == nil {
+                    error = .COUNTRY_CODE_NOT_SUPPORTED
+                } else if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
-                    result.nationalRules = .failure(e)
-                    for mode in modes {
-                        modeResults[mode] = .failure(e)
-                    }
-                    result.modeResults = .init(results: modeResults)
-                    completionHandler(result)
-                } else {
-                    // Otherwise generic offline error
-                    result.nationalRules = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
-                    for mode in modes {
-                        modeResults[mode] = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
-                    }
-                    result.modeResults = .init(results: modeResults)
-                    completionHandler(result)
+                    error = e
+                } 
+                result.nationalRules = .failure(error)
+                for mode in modes {
+                    modeResults[mode] = .failure(error)
                 }
+                result.modeResults = .init(results: modeResults)
+                completionHandler(result)
+                
                 return
             }
 
@@ -266,8 +264,7 @@ struct CovidCertificateImpl {
 
             guard let certLogic = CertLogic(),
                   let valueSets = list.valueSets,
-                  let rules = list.rules,
-                  let displayRules = list.displayRules
+                  let rules = list.rules
             else {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
                 for mode in modes {
@@ -282,8 +279,8 @@ struct CovidCertificateImpl {
 
             if case .failure = certLogic.updateData(rules: rules,
                                                     valueSets: valueSets,
-                                                    displayRules: displayRules,
-                                                    modeRule: modeRule) {
+                                                    displayRules: list.displayRules,
+                                                    modeRule: modeRule, isForeignCountry: isForeignCountry) {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
                 for mode in modes {
                     modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
@@ -332,7 +329,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder).get()
+            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder, isForeignCountry: isForeignCountry).get()
             
             switch certLogic.checkRules(hcert: certificate, validationClock: arrivalDate, countryCode: countryCode) {
             case .success:

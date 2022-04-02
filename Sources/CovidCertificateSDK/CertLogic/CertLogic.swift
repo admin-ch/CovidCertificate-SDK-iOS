@@ -34,7 +34,7 @@ struct DisplayRulesResult {
 class CertLogic {
     var rules: [JSON] = []
     var valueSets: JSON = []
-    var displayRules: [JSON] = []
+    var displayRules: [JSON]?
     var modeRule: JSON?
     let calendar: Calendar
     let formatter = ISO8601DateFormatter()
@@ -48,14 +48,17 @@ class CertLogic {
         calendar = tmpCalendar
     }
 
-    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON, modeRule: JSON?) -> Result<Void, CertLogicCommonError> {
-        guard let rulesArray = rules.array,
-              let displayRulesArray = displayRules.array else {
+    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON?, modeRule: JSON?, isForeignCountry: Bool
+    ) -> Result<Void, CertLogicCommonError> {
+        guard let rulesArray = rules.array else { return .failure(.RULE_PARSING_FAILED)}
+        if let displayRulesArray = displayRules?.array {
+            self.displayRules = displayRulesArray
+        } else if !isForeignCountry {
             return .failure(.RULE_PARSING_FAILED)
         }
+            
         self.rules = rulesArray
         self.valueSets = valueSets
-        self.displayRules = displayRulesArray
         self.modeRule = modeRule
         return .success(())
     }
@@ -101,7 +104,7 @@ class CertLogic {
         }
     }
 
-    func checkDisplayRules(holder: CertificateHolderType, validationClock: Date = Date()) -> Result<DisplayRulesResult, CertLogicValidationError> {
+    func checkDisplayRules(holder: CertificateHolderType, validationClock: Date = Date(), isForeignCountry: Bool) -> Result<DisplayRulesResult, CertLogicValidationError> {
         let external = externalJson(validationClock: validationClock)
 
         guard let payload = createPayload(from: holder),
@@ -115,6 +118,19 @@ class CertLogic {
         var endDate: Date?
         var isSwitzerlandOnly: Bool?
         var eolIdentifier: String?
+
+        guard let displayRules = displayRules else {
+            if isForeignCountry {
+                // If the ruleset contains no display rules but this is a foreign rules check, consider it a success but without any additional information
+                return .success(DisplayRulesResult(validFrom: nil,
+                                                   validUntil: nil,
+                                                   isSwitzerlandOnly: false,
+                                                   eolBannerIdentifier: nil))
+            } else {
+                return .failure(.JSON_ERROR)
+            }
+        }
+        // If the ruleset contains display rules, get the certificate validity range and additional display flags
 
         for displayRule in displayRules {
             switch displayRule["id"] {
