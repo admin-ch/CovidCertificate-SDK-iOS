@@ -500,6 +500,8 @@ struct CovidCertificateImpl {
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
                 result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
                 // TODO: IZ-954 Why is there no completion handler?
+                completionHandler(result)
+
                 return
             case .failure(.COUNTRY_CODE_NOT_SUPPORTED):
                 result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
@@ -510,6 +512,8 @@ struct CovidCertificateImpl {
             default:
                 result.nationalRules = .failure(.NO_VALID_DATE)
                 // TODO: IZ-954 Why is there no completion handler?
+                completionHandler(result)
+
                 return
             }
         })

@@ -9,8 +9,8 @@
  */
 
 
-enum CountryCodes {
-     static let Switzerland: String = "CH"
+public enum CountryCodes {
+     public static let Switzerland: String = "CH"
 }
 
 class ForeignRulesCountryCodes: JWTExtension {    

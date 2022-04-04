@@ -57,16 +57,10 @@ public enum CovidCertificateSDK {
             return instance.decode(encodedData: encodedData)
         }
 
-        public static func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
-            instancePrecondition()
-            return instance.check(countryCode: CountryCodes.Switzerland, checkDate: Date(), holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
-        }
-        
-        public static func check(countryCode: String, checkDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+        public static func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], countryCode: String = CountryCodes.Switzerland, checkDate: Date = Date(), _ completionHandler: @escaping (CheckResults) -> Void) {
             instancePrecondition()
             return instance.check(countryCode: countryCode, checkDate: checkDate, holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
         }
-        
         
         public static func foreignRulesCountryCodes(forceUpdate: Bool = false, _ completionHandler: @escaping (Result<[String], NetworkError>) -> Void) {
             instancePrecondition()
