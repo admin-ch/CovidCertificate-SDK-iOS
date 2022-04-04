@@ -107,7 +107,7 @@ struct CovidCertificateImpl {
     }
     
     func getForeignRulesCountryCodes(forceUpdate: Bool = false, _ completionHandler: @escaping (Result<[String], NetworkError>) -> Void) {
-        NationalListsManager.shared.getForeignRulesCountryCodes(completionHandler)
+        NationalListsManager.shared.getForeignRulesCountryCodes(forceUpdate: forceUpdate, completionHandler)
     }
 
 

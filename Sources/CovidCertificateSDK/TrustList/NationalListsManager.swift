@@ -50,19 +50,19 @@ class NationalListsManager {
             let (data, response, error) = session.synchronousDataTask(with: request)
             
             if error != nil {
-                completionHandler(handleError(error!.asNetworkError()))
+                completionHandler(.failure(error!.asNetworkError()))
                 return
             }
             
             guard let d = data,
                   let httpResponse = response as? HTTPURLResponse else {
-                completionHandler(handleError(.NETWORK_PARSE_ERROR))
+                completionHandler(.failure(.NETWORK_PARSE_ERROR))
                 return
             }
             
             // Make sure HTTP response code is 2xx
             guard httpResponse.statusCode / 100 == 2 else {
-                completionHandler(handleError(.NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)))
+                completionHandler(.failure(.NETWORK_SERVER_ERROR(statusCode: httpResponse.statusCode)))
                 return
             }
             
@@ -77,7 +77,7 @@ class NationalListsManager {
             semaphore.wait()
             
             guard let result = try? outcome.get() else {
-                completionHandler(handleError(.NETWORK_PARSE_ERROR))
+                completionHandler(.failure(.NETWORK_PARSE_ERROR))
                 return
             }
             
@@ -86,14 +86,6 @@ class NationalListsManager {
             completionHandler(.success(foreignRulesCountryCodes))
         } else {
             completionHandler(.success(foreignRulesCountryCodes))
-        }
-    }
-    
-    private func handleError(_ error: NetworkError) -> Swift.Result<[String], NetworkError> {
-        if foreignRulesCountryCodesAreStillValid {
-            return .success(foreignRulesCountryCodes)
-        } else {
-            return .failure(error)
         }
     }
 }
