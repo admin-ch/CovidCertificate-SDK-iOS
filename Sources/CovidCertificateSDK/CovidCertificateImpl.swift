@@ -67,7 +67,7 @@ struct CovidCertificateImpl {
         var nationalRulesResult: CheckRulesResult?
 
         group.enter()
-        checkSignature(holder: holder, forceUpdate: forceUpdate) { result in
+        checkSignature(countryCode: countryCode, holder: holder, forceUpdate: forceUpdate) { result in
             signatureResult = result
             group.leave()
         }
@@ -81,7 +81,7 @@ struct CovidCertificateImpl {
         switch holder.certificate {
         case let certificate as DCCCert:
             group.enter()
-            checkRevocationStatus(certificate: certificate, forceUpdate: forceUpdate) { result in
+            checkRevocationStatus(countryCode: countryCode, certificate: certificate, forceUpdate: forceUpdate) { result in
                 revocationStatusResult = result
                 group.leave()
             }
@@ -111,7 +111,7 @@ struct CovidCertificateImpl {
     }
 
 
-    func checkSignature(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkSignature(countryCode: String, holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch holder.certificate {
         case let certificate as DCCCert:
             if certificate.immunisationType == nil {
@@ -122,7 +122,7 @@ struct CovidCertificateImpl {
             break
         }
 
-        trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+        trustListManager.trustCertificateUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
                 if case .NETWORK_SERVER_ERROR = lastError {
@@ -175,8 +175,8 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+    func checkRevocationStatus(countryCode: String, certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+        trustListManager.revocationListUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
                 if case .NETWORK_SERVER_ERROR = lastError {
@@ -222,8 +222,7 @@ struct CovidCertificateImpl {
         var result = CheckRulesResult()
         var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
-        trustListManager.nationalRulesListUpdater.setCheckCountry(countryCode)
-        trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+        trustListManager.nationalRulesListUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
                 if case .NETWORK_SERVER_ERROR = lastError {
@@ -525,8 +524,8 @@ struct CovidCertificateImpl {
         return list?.modeRules.verifierActiveModes  ?? []
     }
 
-    func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
-        trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+    func restartTrustListUpdate(countryCode: String, completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+        trustListManager.restartTrustListUpdate(countryCode: countryCode, completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
     }
 
     func updateMetadata() {

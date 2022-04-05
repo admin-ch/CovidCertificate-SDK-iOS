@@ -22,7 +22,7 @@ class TrustCertificatesUpdate: TrustListUpdate {
 
     // MARK: - Update
 
-    override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
+    override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode: String) -> NetworkError? {
         // update active certificates service
         let requestActive = CovidCertificateSDK.currentEnvironment.activeCertificatesService.request(reloadRevalidatingCacheData: ignoreLocalCache)
         let (dataActive, response, errorActive) = session.synchronousDataTask(with: requestActive)

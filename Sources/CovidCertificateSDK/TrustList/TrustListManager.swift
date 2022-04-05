@@ -19,7 +19,7 @@ protocol TrustlistManagerProtocol {
 
     var trustStorage: TrustStorageProtocol { get }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval)
+    func restartTrustListUpdate(countryCode: String, completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval)
 }
 
 class TrustlistManager: TrustlistManagerProtocol {
@@ -68,12 +68,12 @@ class TrustlistManager: TrustlistManagerProtocol {
         trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: trustStorage)
     }
 
-    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
+    func restartTrustListUpdate(countryCode: String, completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
         timer = DispatchSource.makeTimerSource(queue: timerQueue)
 
         timer?.setEventHandler(handler: { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.forceUpdate(completionHandler: completionHandler)
+            strongSelf.forceUpdate(countryCode: countryCode,completionHandler: completionHandler)
         })
 
         timer?.schedule(deadline: .now(), repeating: updateTimeInterval)
@@ -81,13 +81,13 @@ class TrustlistManager: TrustlistManagerProtocol {
         timer?.resume()
     }
 
-    private func forceUpdate(completionHandler: @escaping (() -> Void)) {
+    private func forceUpdate(countryCode: String, completionHandler: @escaping (() -> Void)) {
         let group = DispatchGroup()
 
         for updater in [revocationListUpdater, trustCertificateUpdater, nationalRulesListUpdater] {
             group.enter()
 
-            updater.forceUpdate {
+            updater.forceUpdate(countryCode: countryCode) {
                 group.leave()
             }
         }
@@ -122,14 +122,14 @@ class TrustListUpdate {
         forceUpdateQueue.maxConcurrentOperationCount = 1
     }
 
-    func forceUpdate(completion: @escaping (() -> Void)) {
+    func forceUpdate(countryCode: String, completion: @escaping (() -> Void)) {
         internalQueue.sync {
             let updateAlreadyRunnning = forceUpdateOperation != nil
 
             if !updateAlreadyRunnning {
                 forceUpdateOperation = BlockOperation(block: { [weak self] in
                     guard let strongSelf = self else { return }
-                    strongSelf.startForceUpdate()
+                    strongSelf.startForceUpdate(countryCode: countryCode)
                 })
 
                 // !: initialized just above
@@ -142,7 +142,7 @@ class TrustListUpdate {
         }
     }
 
-    func addCheckOperation(forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
+    func addCheckOperation(countryCode: String, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
         internalQueue.async {
             let updateNeeded = !self.isListStillValid() || forceUpdate
             let updateAlreadyRunnning = self.updateOperation != nil
@@ -150,7 +150,7 @@ class TrustListUpdate {
             if updateNeeded, !updateAlreadyRunnning {
                 self.updateOperation = BlockOperation(block: { [weak self] in
                     guard let strongSelf = self else { return }
-                    strongSelf.startUpdate()
+                    strongSelf.startUpdate(countryCode: countryCode)
                 })
 
                 // !: initialized just above
@@ -165,30 +165,25 @@ class TrustListUpdate {
 
     // MARK: - Update
 
-    func synchronousUpdate(ignoreLocalCache _: Bool = false) -> NetworkError? {
+    func synchronousUpdate(ignoreLocalCache _: Bool = false, countryCode _: String) -> NetworkError? {
         // download data and update local storage
         nil
     }
     
-    func setCheckCountry(_ countryCode: String) {
-        // Sets country where validation should happen. Uses Switzerland if no checkCountry is set
-        return
-    }
-
     func isListStillValid() -> Bool {
         true
     }
 
-    private func startUpdate() {
+    private func startUpdate(countryCode: String) {
         internalQueue.sync {
-            lastError = synchronousUpdate(ignoreLocalCache: true)
+            lastError = synchronousUpdate(ignoreLocalCache: true, countryCode: countryCode)
             updateOperation = nil
         }
     }
 
-    private func startForceUpdate() {
+    private func startForceUpdate(countryCode: String) {
         internalQueue.sync {
-            let error = synchronousUpdate(ignoreLocalCache: true)
+            let error = synchronousUpdate(ignoreLocalCache: true, countryCode: countryCode)
             operationQueue.addOperation {
                 self.lastError = error
             }
