@@ -524,8 +524,8 @@ struct CovidCertificateImpl {
         return list?.modeRules.verifierActiveModes  ?? []
     }
 
-    func restartTrustListUpdate(countryCode: String, completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
-        trustListManager.restartTrustListUpdate(countryCode: countryCode, completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
+    func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {
+        trustListManager.restartTrustListUpdate(completionHandler: completionHandler, updateTimeInterval: updateTimeInterval)
     }
 
     func updateMetadata() {

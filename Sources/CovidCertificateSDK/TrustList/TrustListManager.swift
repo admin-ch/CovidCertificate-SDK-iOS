@@ -19,7 +19,7 @@ protocol TrustlistManagerProtocol {
 
     var trustStorage: TrustStorageProtocol { get }
 
-    func restartTrustListUpdate(countryCode: String, completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval)
+    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval)
 }
 
 class TrustlistManager: TrustlistManagerProtocol {
@@ -68,12 +68,12 @@ class TrustlistManager: TrustlistManagerProtocol {
         trustCertificateUpdater = TrustCertificatesUpdate(trustStorage: trustStorage)
     }
 
-    func restartTrustListUpdate(countryCode: String, completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
+    func restartTrustListUpdate(completionHandler: @escaping (() -> Void), updateTimeInterval: TimeInterval) {
         timer = DispatchSource.makeTimerSource(queue: timerQueue)
 
         timer?.setEventHandler(handler: { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.forceUpdate(countryCode: countryCode,completionHandler: completionHandler)
+            strongSelf.forceUpdate(countryCode: CountryCodes.Switzerland, completionHandler: completionHandler)
         })
 
         timer?.schedule(deadline: .now(), repeating: updateTimeInterval)
