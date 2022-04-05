@@ -1126,4 +1126,122 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         waitForExpectations(timeout: 60, handler: nil)
     }
+    
+    func testNationalRulesAgainstDateTooFarInTheFuture() {
+        let hcert = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 0), firstResultWasAgo: DateComponents(day: -10), tg: Disease.SarsCov2.rawValue)
+
+        let successExpectation = expectation(description: "success")
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd HH:mm"
+        let checkDate = formatter.date(from: "3000/12/31 22:31")!
+        
+        verifier.checkNationalRules(countryCode: CountryCodes.Switzerland, checkDate: checkDate,  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: .threeG) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                // SHOULD BE INVALID
+                XCTAssertFalse(r.isValid)
+            default:
+                XCTFail("Should be invalid because too far in the future")
+            }
+            successExpectation.fulfill()
+        }
+    
+        
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+    
+    func testNationalRulesAgainstSpecificDate() {
+        let checkDate = Date()
+
+        
+        let hcertVaccine = generateVacineCert(dn: 2, sd: 2, ma: "ORG-100001699", mp: "EU/1/21/1529", tg: Disease.SarsCov2.rawValue, vp: "J07BX03", todayIsDateComponentsAfterVaccination: DateComponents(day: 0))
+        let successExpectation1 = expectation(description: "success")
+
+        verifier.checkNationalRules(countryCode: CountryCodes.Switzerland, checkDate:  checkDate,  holder: TestCertificateHolder(cert: hcertVaccine), forceUpdate: false, modes: .twoG) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Should be valid")
+            }
+            successExpectation1.fulfill()
+        }
+        
+        let hcertPcr = generateTestCert(testType: TestType.Pcr.rawValue, testResultType: TestResult.Negative, name: "Nucleic acid amplification with probe detection", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -71))
+        
+        let successExpectation2 = expectation(description: "success")
+
+        verifier.checkNationalRules(countryCode: CountryCodes.Switzerland, checkDate:  checkDate,  holder: TestCertificateHolder(cert: hcertPcr), forceUpdate: false, modes: .twoG) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Should be valid")
+            }
+            successExpectation2.fulfill()
+        }
+        
+        let hcertRat = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Negative, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(hour: -23))
+        
+        let successExpectation3 = expectation(description: "success")
+
+        verifier.checkNationalRules(countryCode: CountryCodes.Switzerland, checkDate:  checkDate,  holder: TestCertificateHolder(cert: hcertRat), forceUpdate: false, modes: .twoG) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Should be valid")
+            }
+            successExpectation3.fulfill()
+        }
+        
+        let hcertRecovery = generateRecoveryCert(validSinceNow: DateComponents(day: -10), validFromNow: DateComponents(month: 6), firstResultWasAgo: DateComponents(day: -20), tg: Disease.SarsCov2.rawValue)
+        
+        let successExpectation4 = expectation(description: "success")
+
+        verifier.checkNationalRules(countryCode: CountryCodes.Switzerland, checkDate:  checkDate,  holder: TestCertificateHolder(cert: hcertRecovery), forceUpdate: false, modes: .twoG) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("Should be valid")
+            }
+            successExpectation4.fulfill()
+        }
+        
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+    
+    func testPositiveRatShouldNotBeValidInGermany() {
+
+        let hcert = generateTestCert(testType: TestType.Rat.rawValue, testResultType: TestResult.Positive, name: "1232", disease: Disease.SarsCov2.rawValue, sampleCollectionWasAgo: DateComponents(day: -23))
+        let successExpectation1 = expectation(description: "success")
+        let successExpectation2 = expectation(description: "success")
+        
+        verifier.checkNationalRules(countryCode: CountryCodes.Switzerland, checkDate: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: []) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                // SHOULD BE VALID
+                XCTAssertTrue(r.isValid)
+            default:
+                XCTFail("10 days after should be fine")
+            }
+            successExpectation1.fulfill()
+        }
+        
+        verifier.checkNationalRules(countryCode: "DE", checkDate: Date(),  holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: []) { result in
+            switch result.nationalRules {
+            case let .success(r):
+                // SHOULD BE INVALID
+                XCTAssertFalse(r.isValid)
+            default:
+                XCTFail("Should not be valid in Germany")
+            }
+            successExpectation2.fulfill()
+        }
+    
+        
+        waitForExpectations(timeout: 60, handler: nil)
+    }
 }

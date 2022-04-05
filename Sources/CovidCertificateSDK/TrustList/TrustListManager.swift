@@ -122,7 +122,7 @@ class TrustListUpdate {
         forceUpdateQueue.maxConcurrentOperationCount = 1
     }
 
-    func forceUpdate(countryCode: String, completion: @escaping (() -> Void)) {
+    func forceUpdate(countryCode: String = CountryCodes.Switzerland, completion: @escaping (() -> Void)) {
         internalQueue.sync {
             let updateAlreadyRunnning = forceUpdateOperation != nil
 
@@ -142,7 +142,7 @@ class TrustListUpdate {
         }
     }
 
-    func addCheckOperation(countryCode: String, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
+    func addCheckOperation(countryCode: String = CountryCodes.Switzerland, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
         internalQueue.async {
             let updateNeeded = !self.isListStillValid() || forceUpdate
             let updateAlreadyRunnning = self.updateOperation != nil
@@ -165,7 +165,7 @@ class TrustListUpdate {
 
     // MARK: - Update
 
-    func synchronousUpdate(ignoreLocalCache _: Bool = false, countryCode _: String) -> NetworkError? {
+    func synchronousUpdate(ignoreLocalCache _: Bool = false, countryCode _: String = CountryCodes.Switzerland) -> NetworkError? {
         // download data and update local storage
         nil
     }
@@ -174,14 +174,14 @@ class TrustListUpdate {
         true
     }
 
-    private func startUpdate(countryCode: String) {
+    private func startUpdate(countryCode: String = CountryCodes.Switzerland) {
         internalQueue.sync {
             lastError = synchronousUpdate(ignoreLocalCache: true, countryCode: countryCode)
             updateOperation = nil
         }
     }
 
-    private func startForceUpdate(countryCode: String) {
+    private func startForceUpdate(countryCode: String = CountryCodes.Switzerland) {
         internalQueue.sync {
             let error = synchronousUpdate(ignoreLocalCache: true, countryCode: countryCode)
             operationQueue.addOperation {

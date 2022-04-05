@@ -21,7 +21,7 @@ class NationalRulesListUpdate: TrustListUpdate {
     
     // MARK: - Update
     
-    override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode: String) -> NetworkError? {
+    override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode: String  = CountryCodes.Switzerland) -> NetworkError? {
         let request: URLRequest
         
         if countryCode == CountryCodes.Switzerland {

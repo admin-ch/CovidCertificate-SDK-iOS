@@ -111,7 +111,7 @@ struct CovidCertificateImpl {
     }
 
 
-    func checkSignature(countryCode: String, holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkSignature(countryCode: String = CountryCodes.Switzerland, holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch holder.certificate {
         case let certificate as DCCCert:
             if certificate.immunisationType == nil {
@@ -175,7 +175,7 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkRevocationStatus(countryCode: String, certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func checkRevocationStatus(countryCode: String = CountryCodes.Switzerland, certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         trustListManager.revocationListUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
