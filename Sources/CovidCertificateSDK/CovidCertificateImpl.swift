@@ -288,7 +288,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes) {
+            for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes, validationClock: checkDate) {
                 switch modeResult {
                 case let .success(modeResult):
                     modeResults[mode] = .success(modeResult)
@@ -327,7 +327,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder, isForeignCountry: isForeignCountry).get()
+            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder, validationClock: checkDate, isForeignCountry: isForeignCountry).get()
             
             switch certLogic.checkRules(hcert: certificate, validationClock: checkDate, countryCode: countryCode) {
             case .success:
@@ -499,9 +499,7 @@ struct CovidCertificateImpl {
                 return
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
                 result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
-                // TODO: IZ-954 Why is there no completion handler?
                 completionHandler(result)
-
                 return
             case .failure(.COUNTRY_CODE_NOT_SUPPORTED):
                 result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
@@ -511,9 +509,7 @@ struct CovidCertificateImpl {
                 completionHandler(result)
             default:
                 result.nationalRules = .failure(.NO_VALID_DATE)
-                // TODO: IZ-954 Why is there no completion handler?
                 completionHandler(result)
-
                 return
             }
         })
