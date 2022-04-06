@@ -274,19 +274,37 @@ class CertLogic {
             // Switzerland has no duplicate rules since only non-duplicate rules are served anyways
             return rules
         }
-        
-        let rulesGroupedById = Dictionary(grouping: rules) { $0["identifier"] }
+
+        var rulesById : [[JSON]] = []
+
+        for r in rules {
+            var added = false
+            for i in 0 ..< rulesById.count {
+                if let f = rulesById[i].first, f["identifier"] == r["identifier"] {
+                    rulesById[i].append(r)
+                    added = true
+                    break
+                }
+            }
+
+            if !added {
+                rulesById.append([r])
+            }
+        }
 
         // From all the rules with the same identifier we select the one that has the latest validFrom date.
-        let filteredRules = rulesGroupedById.map({ (_, rulesWithSameID ) in
-            return rulesWithSameID.sorted(by: {
-                guard let date1 = Self.dateFormatter.date(from: $0["validFrom"].string ?? ""), let date2 = Self.dateFormatter.date(from: $1["validFrom"].string ?? "") else {
+        let filteredRules : [JSON] = rulesById.compactMap { rules in
+            guard rules.count > 0 else { return nil }
+
+            return rules.sorted { r1, r2 in
+                guard let d1 = Self.dateFormatter.date(from: r1["validFrom"].string ?? ""),
+                      let d2 = Self.dateFormatter.date(from: r2["validFrom"].string ?? "") else {
                     return true
                 }
-                
-                return date1 > date2
-            }).first!
-        })
+
+                return d1 > d2
+            }.first
+        }
 
         return filteredRules
     }
