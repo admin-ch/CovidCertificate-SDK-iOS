@@ -17,8 +17,6 @@ class NationalRulesListUpdate: TrustListUpdate {
 
     let session = URLSession.certificatePinned
 
-    private var countryCode: String = "CH"
-
     // MARK: - Update
 
     override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode: String = CountryCodes.Switzerland) -> NetworkError? {
@@ -74,7 +72,7 @@ class NationalRulesListUpdate: TrustListUpdate {
         return nil
     }
 
-    override func isListStillValid() -> Bool {
+    override func isListStillValid(countryCode: String = CountryCodes.Switzerland) -> Bool {
         trustStorage.nationalRulesAreStillValid(countryCode: countryCode)
     }
 }

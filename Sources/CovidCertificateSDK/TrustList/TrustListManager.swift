@@ -106,8 +106,8 @@ class TrustListUpdate {
 
     private let internalQueue = DispatchQueue(label: "TrustListUpdateInternalDispatchQueue")
 
-    private var updateOperation: Operation?
-    private var forceUpdateOperation: Operation?
+    private var updateOperation: [String : Operation] = [:]
+    private var forceUpdateOperation: [String : Operation] = [:]
 
     private var lastError: NetworkError?
 
@@ -124,16 +124,16 @@ class TrustListUpdate {
 
     func forceUpdate(countryCode: String = CountryCodes.Switzerland, completion: @escaping (() -> Void)) {
         internalQueue.sync {
-            let updateAlreadyRunnning = forceUpdateOperation != nil
+            let updateAlreadyRunnning = forceUpdateOperation[countryCode] != nil
 
             if !updateAlreadyRunnning {
-                forceUpdateOperation = BlockOperation(block: { [weak self] in
+                forceUpdateOperation[countryCode] = BlockOperation(block: { [weak self] in
                     guard let strongSelf = self else { return }
                     strongSelf.startForceUpdate(countryCode: countryCode)
                 })
 
                 // !: initialized just above
-                forceUpdateQueue.addOperation(forceUpdateOperation!)
+                forceUpdateQueue.addOperation(forceUpdateOperation[countryCode]!)
             }
 
             forceUpdateQueue.addOperation {
@@ -144,17 +144,17 @@ class TrustListUpdate {
 
     func addCheckOperation(countryCode: String = CountryCodes.Switzerland, forceUpdate: Bool, checkOperation: @escaping ((NetworkError?) -> Void)) {
         internalQueue.async {
-            let updateNeeded = !self.isListStillValid() || forceUpdate
-            let updateAlreadyRunnning = self.updateOperation != nil
+            let updateNeeded = !self.isListStillValid(countryCode: countryCode) || forceUpdate
+            let updateAlreadyRunnning = self.updateOperation[countryCode] != nil
 
             if updateNeeded, !updateAlreadyRunnning {
-                self.updateOperation = BlockOperation(block: { [weak self] in
+                self.updateOperation[countryCode] = BlockOperation(block: { [weak self] in
                     guard let strongSelf = self else { return }
                     strongSelf.startUpdate(countryCode: countryCode)
                 })
 
                 // !: initialized just above
-                self.operationQueue.addOperation(self.updateOperation!)
+                self.operationQueue.addOperation(self.updateOperation[countryCode]!)
             }
 
             self.operationQueue.addOperation {
@@ -170,14 +170,14 @@ class TrustListUpdate {
         nil
     }
 
-    func isListStillValid() -> Bool {
+    func isListStillValid(countryCode: String = CountryCodes.Switzerland) -> Bool {
         true
     }
 
     private func startUpdate(countryCode: String = CountryCodes.Switzerland) {
         internalQueue.sync {
             lastError = synchronousUpdate(ignoreLocalCache: true, countryCode: countryCode)
-            updateOperation = nil
+            updateOperation.removeValue(forKey: countryCode)
         }
     }
 
@@ -187,7 +187,7 @@ class TrustListUpdate {
             operationQueue.addOperation {
                 self.lastError = error
             }
-            forceUpdateOperation = nil
+            forceUpdateOperation.removeValue(forKey: countryCode)
         }
     }
 
