@@ -48,15 +48,14 @@ class CertLogic {
         calendar = tmpCalendar
     }
 
-    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON?, modeRule: JSON?, isForeignCountry: Bool
-    ) -> Result<Void, CertLogicCommonError> {
-        guard let rulesArray = rules.array else { return .failure(.RULE_PARSING_FAILED)}
+    func updateData(rules: JSON, valueSets: JSON, displayRules: JSON?, modeRule: JSON?, isForeignCountry: Bool) -> Result<Void, CertLogicCommonError> {
+        guard let rulesArray = rules.array else { return .failure(.RULE_PARSING_FAILED) }
         if let displayRulesArray = displayRules?.array {
             self.displayRules = displayRulesArray
         } else if !isForeignCountry {
             return .failure(.RULE_PARSING_FAILED)
         }
-            
+
         self.rules = rulesArray
         self.valueSets = valueSets
         self.modeRule = modeRule
@@ -74,7 +73,7 @@ class CertLogic {
         // If the country to check for is not Switzerland, we filter the rules so that only rules in
         // which the checkDate is within the validFrom and validTo range are selected
         var filteredRules = filterValidRules(rules: rules, countryCode: countryCode, checkDate: validationClock)
-        
+
         // If the country to check for is not Switzerland, there might be multiple rules with the same identifier but different validity
         // ranges. We select the one that has the latest validFrom date.
         // Since we already filtered out rules whose validFrom-validTo range does not include the checkDate,
@@ -84,7 +83,7 @@ class CertLogic {
         guard !filteredRules.isEmpty else {
             return .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE)
         }
-        
+
         let context = JSON(["external": external, "payload": JSON(dccJson)])
         for rule in filteredRules {
             let logic = rule["logic"]
@@ -245,20 +244,20 @@ class CertLogic {
         external["valueSets"] = valueSets
         return external
     }
-    
+
     private static let dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
         return dateFormatter
     }()
-    
-    private func filterValidRules(rules: [JSON], countryCode: String, checkDate: Date) ->  [JSON] {
+
+    private func filterValidRules(rules: [JSON], countryCode: String, checkDate: Date) -> [JSON] {
         guard !(countryCode == CountryCodes.Switzerland) else {
             // Switzerland has no validity information since only valid rules are served anyways
             return rules
         }
         var validRules: [JSON] = []
-        
+
         for rule in rules {
             // We need to check if the checkDate is within validFrom and validTo.
             if let validFrom = Self.dateFormatter.date(from: rule["validFrom"].string ?? ""), let validTo = Self.dateFormatter.date(from: rule["validTo"].string ?? ""), (validFrom ... validTo).contains(checkDate) {
@@ -268,14 +267,14 @@ class CertLogic {
 
         return rules
     }
-  
-    private func filterDuplicateIdentifiers(rules: [JSON], countryCode: String) ->  [JSON] {
+
+    private func filterDuplicateIdentifiers(rules: [JSON], countryCode: String) -> [JSON] {
         guard !(countryCode == CountryCodes.Switzerland) else {
             // Switzerland has no duplicate rules since only non-duplicate rules are served anyways
             return rules
         }
 
-        var rulesById : [[JSON]] = []
+        var rulesById: [[JSON]] = []
 
         for r in rules {
             var added = false
@@ -293,7 +292,7 @@ class CertLogic {
         }
 
         // From all the rules with the same identifier we select the one that has the latest validFrom date.
-        let filteredRules : [JSON] = rulesById.compactMap { rules in
+        let filteredRules: [JSON] = rulesById.compactMap { rules in
             guard rules.count > 0 else { return nil }
 
             return rules.sorted { r1, r2 in

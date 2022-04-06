@@ -29,8 +29,8 @@ protocol TrustStorageProtocol {
 }
 
 class TrustStorage: TrustStorageProtocol {
-    
     // MARK: - Storage
+
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
 
@@ -52,7 +52,7 @@ class TrustStorage: TrustStorageProtocol {
            FileManager.default.fileExists(atPath: path.path) {
             try? FileManager.default.removeItem(atPath: path.path)
         }
-        
+
         // Previously we stored the national rules in the keychain but have switched to a database after adding foreign natioanl rules
         // If the file of national rules before pre bundeling exists make sure to delete it
         // This makes sure we don't need more disk space than needed
@@ -62,7 +62,7 @@ class TrustStorage: TrustStorageProtocol {
             if let nationalList = SecureStorage<NationalRulesList>(name: "national_rules").loadSynchronously() {
                 _ = NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalList, countryCode: CountryCodes.Switzerland)
             }
-            
+
             try? FileManager.default.removeItem(atPath: path.path)
         }
     }
@@ -148,13 +148,13 @@ class TrustStorage: TrustStorageProtocol {
 
     func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool {
         nationalQueue.sync {
-            return NationalListsManager.shared.updateNationalRules(countryCode: countryCode, nationalRulesList: update)
+            NationalListsManager.shared.updateNationalRules(countryCode: countryCode, nationalRulesList: update)
         }
     }
 
     func getNationalRules(countryCode: String) -> NationalRulesList? {
         nationalQueue.sync {
-            return NationalListsManager.shared.getNationalRules(countryCode: countryCode)
+            NationalListsManager.shared.getNationalRules(countryCode: countryCode)
         }
     }
 

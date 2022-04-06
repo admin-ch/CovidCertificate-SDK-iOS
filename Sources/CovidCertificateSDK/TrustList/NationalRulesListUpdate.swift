@@ -18,18 +18,18 @@ class NationalRulesListUpdate: TrustListUpdate {
     let session = URLSession.certificatePinned
 
     private var countryCode: String = "CH"
-    
+
     // MARK: - Update
-    
-    override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode: String  = CountryCodes.Switzerland) -> NetworkError? {
+
+    override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode: String = CountryCodes.Switzerland) -> NetworkError? {
         let request: URLRequest
-        
+
         if countryCode == CountryCodes.Switzerland {
             request = CovidCertificateSDK.currentEnvironment.nationalRulesListService.request(reloadRevalidatingCacheData: ignoreLocalCache)
         } else {
             request = CovidCertificateSDK.currentEnvironment.foreignRulesListService(countryCode: countryCode).request(reloadRevalidatingCacheData: ignoreLocalCache)
         }
-        
+
         let (data, response, error) = session.synchronousDataTask(with: request)
 
         if error != nil {

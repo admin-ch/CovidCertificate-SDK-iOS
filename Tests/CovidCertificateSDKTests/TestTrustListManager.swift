@@ -61,6 +61,7 @@ class TestTrustlistManager: TrustlistManagerProtocol {
 
 class TestTrustListUpdate: TrustListUpdate {
     // MARK: - Update
+
     override func synchronousUpdate(ignoreLocalCache _: Bool = false, countryCode _: String) -> NetworkError? {
         // update active certificates service
         sleep(1)
@@ -123,12 +124,12 @@ class TestTrustStorage: TrustStorageProtocol {
 
     // MARK: - National rules
 
-    func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool {
-        return true
+    func updateNationalRules(countryCode _: String, _: NationalRulesList) -> Bool {
+        true
     }
-    
-    func nationalRulesAreStillValid(countryCode: String) -> Bool {
-        return true
+
+    func nationalRulesAreStillValid(countryCode _: String) -> Bool {
+        true
     }
 
     func getNationalRules(countryCode: String) -> NationalRulesList? {
@@ -137,7 +138,7 @@ class TestTrustStorage: TrustStorageProtocol {
         if countryCode == "DE" {
             data = Bundle.module.url(forResource: "foreignrules_de", withExtension: "json")!
         }
-        
+
         let nationalRulesData = try? Data(contentsOf: data)
         let nationalRules = NationalRulesList()
         nationalRules.requestData = nationalRulesData!

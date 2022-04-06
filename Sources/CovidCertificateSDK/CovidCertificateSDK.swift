@@ -61,7 +61,7 @@ public enum CovidCertificateSDK {
             instancePrecondition()
             return instance.check(countryCode: countryCode, checkDate: checkDate, holder: holder, forceUpdate: forceUpdate, modes: modes, completionHandler)
         }
-        
+
         public static func foreignRulesCountryCodes(forceUpdate: Bool = false, _ completionHandler: @escaping (Result<[String], NetworkError>) -> Void) {
             instancePrecondition()
             return instance.getForeignRulesCountryCodes(forceUpdate: forceUpdate, completionHandler)

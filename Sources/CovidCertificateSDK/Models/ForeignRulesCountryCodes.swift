@@ -8,11 +8,10 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-
 public enum CountryCodes {
-     public static let Switzerland: String = "CH"
+    public static let Switzerland: String = "CH"
 }
 
-class ForeignRulesCountryCodes: JWTExtension {    
+class ForeignRulesCountryCodes: JWTExtension {
     let countries: [String]
 }

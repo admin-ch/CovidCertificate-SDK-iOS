@@ -105,11 +105,10 @@ struct CovidCertificateImpl {
                                     modeResults: nationalRulesResult.modeResults))
         }
     }
-    
+
     func getForeignRulesCountryCodes(forceUpdate: Bool = false, _ completionHandler: @escaping (Result<[String], NetworkError>) -> Void) {
         NationalListsManager.shared.getForeignRulesCountryCodes(forceUpdate: forceUpdate, completionHandler)
     }
-
 
     func checkSignature(countryCode: String = CountryCodes.Switzerland, holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch holder.certificate {
@@ -216,9 +215,8 @@ struct CovidCertificateImpl {
                             forceUpdate: Bool,
                             modes: [CheckMode],
                             _ completionHandler: @escaping (CheckRulesResult) -> Void) {
-        
         let isForeignCountry = countryCode != CountryCodes.Switzerland
-        
+
         var result = CheckRulesResult()
         var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
@@ -241,21 +239,21 @@ struct CovidCertificateImpl {
             // Safe-guard that we have a recent national rules list available at this point
             guard let list = self.trustListManager.trustStorage.getNationalRules(countryCode: countryCode), trustListManager.trustStorage.nationalRulesAreStillValid(countryCode: countryCode) else {
                 var error = NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: "")
-                
+
                 let list = self.trustListManager.trustStorage.getNationalRules(countryCode: countryCode)
                 if list == nil {
                     error = .COUNTRY_CODE_NOT_SUPPORTED
                 } else if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
                     error = e
-                } 
+                }
                 result.nationalRules = .failure(error)
                 for mode in modes {
                     modeResults[mode] = .failure(error)
                 }
                 result.modeResults = .init(results: modeResults)
                 completionHandler(result)
-                
+
                 return
             }
 
@@ -271,7 +269,7 @@ struct CovidCertificateImpl {
                 completionHandler(result)
                 return
             }
-            
+
             let modeRule = list.modeRules.logic
 
             if case .failure = certLogic.updateData(rules: rules,
@@ -327,7 +325,7 @@ struct CovidCertificateImpl {
             }
 
             let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder, validationClock: checkDate, isForeignCountry: isForeignCountry).get()
-            
+
             switch certLogic.checkRules(hcert: certificate, validationClock: checkDate, countryCode: countryCode) {
             case .success:
                 result.nationalRules = .success(VerificationResult(isValid: true,
@@ -526,7 +524,7 @@ struct CovidCertificateImpl {
 
     func getActiveModesForVerifier() -> [CheckMode] {
         let list = trustListManager.trustStorage.getNationalRules(countryCode: CountryCodes.Switzerland)
-        return list?.modeRules.verifierActiveModes  ?? []
+        return list?.modeRules.verifierActiveModes ?? []
     }
 
     func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {

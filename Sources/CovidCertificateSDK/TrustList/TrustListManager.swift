@@ -169,7 +169,7 @@ class TrustListUpdate {
         // download data and update local storage
         nil
     }
-    
+
     func isListStillValid() -> Bool {
         true
     }
