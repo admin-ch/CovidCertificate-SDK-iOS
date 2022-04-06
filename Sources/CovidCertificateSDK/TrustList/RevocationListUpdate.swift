@@ -88,7 +88,7 @@ class RevocationListUpdate: TrustListUpdate {
         return nil
     }
 
-    override func isListStillValid(countryCode: String = CountryCodes.Switzerland) -> Bool {
+    override func isListStillValid(countryCode _: String = CountryCodes.Switzerland) -> Bool {
         trustStorage.revocationListIsValid()
     }
 }

@@ -106,8 +106,8 @@ class TrustListUpdate {
 
     private let internalQueue = DispatchQueue(label: "TrustListUpdateInternalDispatchQueue")
 
-    private var updateOperation: [String : Operation] = [:]
-    private var forceUpdateOperation: [String : Operation] = [:]
+    private var updateOperation: [String: Operation] = [:]
+    private var forceUpdateOperation: [String: Operation] = [:]
 
     private var lastError: NetworkError?
 
@@ -170,7 +170,7 @@ class TrustListUpdate {
         nil
     }
 
-    func isListStillValid(countryCode: String = CountryCodes.Switzerland) -> Bool {
+    func isListStillValid(countryCode _: String = CountryCodes.Switzerland) -> Bool {
         true
     }
 
