@@ -30,6 +30,7 @@ public enum NationalRulesError: Error, Equatable {
     case TOO_MANY_VACCINE_ENTRIES
     case TOO_MANY_TEST_ENTRIES
     case TOO_MANY_RECOVERY_ENTRIES
+    case UNKNOWN_RULE_FAILED(ruleName: String)
 
     public var errorCode: String {
         switch self {
@@ -51,6 +52,7 @@ public enum NationalRulesError: Error, Equatable {
         case .TOO_MANY_VACCINE_ENTRIES: return "N|TMVE"
         case .TOO_MANY_TEST_ENTRIES: return "N|TMTE"
         case .TOO_MANY_RECOVERY_ENTRIES: return "N|TMRE"
+        case let .UNKNOWN_RULE_FAILED(ruleName): return "N|UNK-\(ruleName)"
         }
     }
 }

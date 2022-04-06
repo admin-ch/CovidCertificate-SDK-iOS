@@ -490,8 +490,9 @@ struct CovidCertificateImpl {
                                                                        eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 default:
-                    if isForeignCountry {
-                        result.nationalRules = .success(VerificationResult(isValid: false, validUntil: displayRulesResult?.validUntil, validFrom: displayRulesResult?.validFrom, dateError: nil, isSwitzerlandOnly: displayRulesResult?.isSwitzerlandOnly, eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
+                    // show unknown rule key only for foreign country checks
+                    if let k = tests.keys.first, isForeignCountry {
+                        result.nationalRules = .failure(.UNKNOWN_RULE_FAILED(ruleName: k))
                     } else {
                         result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
                     }
