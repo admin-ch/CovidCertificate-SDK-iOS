@@ -14,4 +14,5 @@ public enum CountryCodes {
 
 class ForeignRulesCountryCodes: JWTExtension {
     let countries: [String]
+    let validDuration: Int64
 }

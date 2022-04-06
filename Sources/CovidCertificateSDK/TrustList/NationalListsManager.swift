@@ -82,7 +82,7 @@ class NationalListsManager {
                 return
             }
 
-            foreignRulesCountryCodesValidUntil = Date().addingTimeInterval(5 * 60 * 60) // TODO: IZ-954 Read validUntil from request
+            foreignRulesCountryCodesValidUntil = Date().addingTimeInterval(TimeInterval(Double(result.validDuration) / 1000.0))
             foreignRulesCountryCodes = result.countries
             completionHandler(.success(foreignRulesCountryCodes))
         } else {
