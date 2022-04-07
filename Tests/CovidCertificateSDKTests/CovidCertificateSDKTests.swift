@@ -1229,9 +1229,9 @@ final class CovidCertificateSDKTests: XCTestCase {
 
         verifier.checkNationalRules(countryCode: "DE", checkDate: Date(), holder: TestCertificateHolder(cert: hcert), forceUpdate: false, modes: []) { result in
             switch result.nationalRules {
-            case let .success(r):
+            case let .failure(r):
                 // SHOULD BE INVALID
-                XCTAssertFalse(r.isValid)
+                XCTAssertTrue(r.errorCode != "")
             default:
                 XCTFail("Should not be valid in Germany")
             }
