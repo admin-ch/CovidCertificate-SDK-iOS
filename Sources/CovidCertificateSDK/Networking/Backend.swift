@@ -28,8 +28,7 @@ struct Backend {
                   queryParameters: [String: String]? = nil,
                   headers: [String: String]? = nil,
                   body: Encodable? = nil,
-                  overwriteVersion: String? = nil) -> Endpoint
-    {
+                  overwriteVersion: String? = nil) -> Endpoint {
         var components = URLComponents(url: getVersionedURL(overwriteVersion: overwriteVersion).appendingPathComponent(path), resolvingAgainstBaseURL: true)!
         if let queryParameters = queryParameters {
             let sortedKeys = Array(queryParameters.keys).sorted()
