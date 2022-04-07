@@ -23,16 +23,13 @@ protocol TrustStorageProtocol {
     func updateActiveCertificates(_ activeCertificates: ActiveTrustCertificates) -> Bool
     func certificateListIsValid() -> Bool
 
-    func nationalRulesListIsStillValid() -> Bool
-    func updateNationalRules(_ update: NationalRulesList) -> Bool
-    func nationalRules() -> NationalRulesList
+    func nationalRulesAreStillValid(countryCode: String) -> Bool
+    func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool
+    func getNationalRules(countryCode: String) -> NationalRulesList?
 }
 
 class TrustStorage: TrustStorageProtocol {
     // MARK: - Storage
-
-    private lazy var nationalRulesStorage = self.nationalRulesSecureStorage.loadSynchronously() ?? NationalRulesStorage()
-    private let nationalRulesSecureStorage = SecureStorage<NationalRulesStorage>(name: "national_rules")
 
     private lazy var activeCertificatesStorage = self.activeCertificatesSecureStorage.loadSynchronously() ?? ActiveCertificatesStorage()
     private let activeCertificatesSecureStorage = SecureStorage<ActiveCertificatesStorage>(name: "active_certificates")
@@ -53,6 +50,19 @@ class TrustStorage: TrustStorageProtocol {
         // This makes sure we don't need twice the disk space for revocations in the worst case
         if let path = SecureStorage<RevocationStorage>(name: "revocation").path,
            FileManager.default.fileExists(atPath: path.path) {
+            try? FileManager.default.removeItem(atPath: path.path)
+        }
+
+        // Previously we stored the national rules in the keychain but have switched to a database after adding foreign natioanl rules
+        // If the file of national rules before pre bundeling exists make sure to delete it
+        // This makes sure we don't need more disk space than needed
+        if let path = SecureStorage<NationalRulesList>(name: "national_rules").path,
+           FileManager.default.fileExists(atPath: path.path) {
+            // We delete the file no matter if the migration worked or not
+            if let nationalList = SecureStorage<NationalRulesList>(name: "national_rules").loadSynchronously() {
+                _ = NationalRulesStorage.shared.updateOrInsertNationalRulesList(list: nationalList, countryCode: CountryCodes.Switzerland)
+            }
+
             try? FileManager.default.removeItem(atPath: path.path)
         }
     }
@@ -130,23 +140,21 @@ class TrustStorage: TrustStorageProtocol {
 
     // MARK: - National rules
 
-    func nationalRulesListIsStillValid() -> Bool {
+    func nationalRulesAreStillValid(countryCode: String) -> Bool {
         nationalQueue.sync {
-            isStillValid(lastDownloadTimeStamp: self.nationalRulesStorage.lastNationalRulesListDownload, validDuration: self.nationalRulesStorage.nationalRulesList.validDuration)
+            NationalListsManager.shared.nationalRulesAreStillValid(countryCode: countryCode)
         }
     }
 
-    func updateNationalRules(_ update: NationalRulesList) -> Bool {
+    func updateNationalRules(countryCode: String, _ update: NationalRulesList) -> Bool {
         nationalQueue.sync {
-            self.nationalRulesStorage.nationalRulesList = update
-            self.nationalRulesStorage.lastNationalRulesListDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
-            return self.nationalRulesSecureStorage.saveSynchronously(self.nationalRulesStorage)
+            NationalListsManager.shared.updateNationalRules(countryCode: countryCode, nationalRulesList: update)
         }
     }
 
-    func nationalRules() -> NationalRulesList {
+    func getNationalRules(countryCode: String) -> NationalRulesList? {
         nationalQueue.sync {
-            self.nationalRulesStorage.nationalRulesList
+            NationalListsManager.shared.getNationalRules(countryCode: countryCode)
         }
     }
 
@@ -170,11 +178,6 @@ class ActiveCertificatesStorage: Codable {
     var certificateSince: String = ""
     var certificateValidDuration: Int64 = 0
     var lastCertificateListDownload: Int64 = 0
-}
-
-class NationalRulesStorage: Codable {
-    var nationalRulesList = NationalRulesList()
-    var lastNationalRulesListDownload: Int64 = 0
 }
 
 extension RevocationStorage {

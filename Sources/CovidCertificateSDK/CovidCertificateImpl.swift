@@ -59,7 +59,7 @@ struct CovidCertificateImpl {
         return .success(CertificateHolder(cwt: cwt, cose: cose, keyId: keyId))
     }
 
-    func check(holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
+    func check(countryCode: String, checkDate: Date, holder: CertificateHolder, forceUpdate: Bool, modes: [CheckMode], _ completionHandler: @escaping (CheckResults) -> Void) {
         let group = DispatchGroup()
 
         var signatureResult: Result<ValidationResult, ValidationError>?
@@ -67,13 +67,13 @@ struct CovidCertificateImpl {
         var nationalRulesResult: CheckRulesResult?
 
         group.enter()
-        checkSignature(holder: holder, forceUpdate: forceUpdate) { result in
+        checkSignature(countryCode: countryCode, holder: holder, forceUpdate: forceUpdate) { result in
             signatureResult = result
             group.leave()
         }
 
         group.enter()
-        checkNationalRules(holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
+        checkNationalRules(countryCode: countryCode, checkDate: checkDate, holder: holder, forceUpdate: forceUpdate, modes: modes) { result in
             nationalRulesResult = result
             group.leave()
         }
@@ -81,7 +81,7 @@ struct CovidCertificateImpl {
         switch holder.certificate {
         case let certificate as DCCCert:
             group.enter()
-            checkRevocationStatus(certificate: certificate, forceUpdate: forceUpdate) { result in
+            checkRevocationStatus(countryCode: countryCode, certificate: certificate, forceUpdate: forceUpdate) { result in
                 revocationStatusResult = result
                 group.leave()
             }
@@ -106,7 +106,11 @@ struct CovidCertificateImpl {
         }
     }
 
-    func checkSignature(holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+    func getForeignRulesCountryCodes(forceUpdate: Bool = false, _ completionHandler: @escaping (Result<[String], NetworkError>) -> Void) {
+        NationalListsManager.shared.getForeignRulesCountryCodes(forceUpdate: forceUpdate, completionHandler)
+    }
+
+    func checkSignature(countryCode: String = CountryCodes.Switzerland, holder: CertificateHolder, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
         switch holder.certificate {
         case let certificate as DCCCert:
             if certificate.immunisationType == nil {
@@ -117,7 +121,7 @@ struct CovidCertificateImpl {
             break
         }
 
-        trustListManager.trustCertificateUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+        trustListManager.trustCertificateUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
                 if case .NETWORK_SERVER_ERROR = lastError {
@@ -170,8 +174,8 @@ struct CovidCertificateImpl {
         })
     }
 
-    func checkRevocationStatus(certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
-        trustListManager.revocationListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+    func checkRevocationStatus(countryCode: String = CountryCodes.Switzerland, certificate: DCCCert, forceUpdate: Bool, _ completionHandler: @escaping (Result<ValidationResult, ValidationError>) -> Void) {
+        trustListManager.revocationListUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
                 if case .NETWORK_SERVER_ERROR = lastError {
@@ -207,14 +211,16 @@ struct CovidCertificateImpl {
         var modeResults: ModeResults = .init(results: [:])
     }
 
-    func checkNationalRules(holder: CertificateHolderType,
+    func checkNationalRules(countryCode: String, checkDate: Date, holder: CertificateHolderType,
                             forceUpdate: Bool,
                             modes: [CheckMode],
                             _ completionHandler: @escaping (CheckRulesResult) -> Void) {
+        let isForeignCountry = countryCode != CountryCodes.Switzerland
+
         var result = CheckRulesResult()
         var modeResults: [CheckMode: Result<ModeCheckResult, NationalRulesError>] = [:]
 
-        trustListManager.nationalRulesListUpdater.addCheckOperation(forceUpdate: forceUpdate, checkOperation: { lastError in
+        trustListManager.nationalRulesListUpdater.addCheckOperation(countryCode: countryCode, forceUpdate: forceUpdate, checkOperation: { lastError in
 
             if options?.timeshiftDetectionEnabled ?? false {
                 if case .NETWORK_SERVER_ERROR = lastError {
@@ -231,33 +237,29 @@ struct CovidCertificateImpl {
             }
 
             // Safe-guard that we have a recent national rules list available at this point
-            guard trustListManager.trustStorage.nationalRulesListIsStillValid() else {
-                if let e = lastError?.asNationalRulesError() {
+            guard let list = self.trustListManager.trustStorage.getNationalRules(countryCode: countryCode), trustListManager.trustStorage.nationalRulesAreStillValid(countryCode: countryCode) else {
+                var error = NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: "")
+
+                let list = self.trustListManager.trustStorage.getNationalRules(countryCode: countryCode)
+                if list == nil {
+                    error = .COUNTRY_CODE_NOT_SUPPORTED
+                } else if let e = lastError?.asNationalRulesError() {
                     // If available, return specific last (networking) error
-                    result.nationalRules = .failure(e)
-                    for mode in modes {
-                        modeResults[mode] = .failure(e)
-                    }
-                    result.modeResults = .init(results: modeResults)
-                    completionHandler(result)
-                } else {
-                    // Otherwise generic offline error
-                    result.nationalRules = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
-                    for mode in modes {
-                        modeResults[mode] = .failure(NationalRulesError.NETWORK_NO_INTERNET_CONNECTION(errorCode: ""))
-                    }
-                    result.modeResults = .init(results: modeResults)
-                    completionHandler(result)
+                    error = e
                 }
+                result.nationalRules = .failure(error)
+                for mode in modes {
+                    modeResults[mode] = .failure(error)
+                }
+                result.modeResults = .init(results: modeResults)
+                completionHandler(result)
+
                 return
             }
 
-            let list = self.trustListManager.trustStorage.nationalRules()
-
             guard let certLogic = CertLogic(),
                   let valueSets = list.valueSets,
-                  let rules = list.rules,
-                  let displayRules = list.displayRules
+                  let rules = list.rules
             else {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
                 for mode in modes {
@@ -272,8 +274,8 @@ struct CovidCertificateImpl {
 
             if case .failure = certLogic.updateData(rules: rules,
                                                     valueSets: valueSets,
-                                                    displayRules: displayRules,
-                                                    modeRule: modeRule) {
+                                                    displayRules: list.displayRules,
+                                                    modeRule: modeRule, isForeignCountry: isForeignCountry) {
                 result.nationalRules = .failure(.NETWORK_PARSE_ERROR)
                 for mode in modes {
                     modeResults[mode] = .failure(.NETWORK_PARSE_ERROR)
@@ -283,7 +285,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes) {
+            for (mode, modeResult) in certLogic.checkModeRules(holder: holder, modes: modes, validationClock: checkDate) {
                 switch modeResult {
                 case let .success(modeResult):
                     modeResults[mode] = .success(modeResult)
@@ -322,9 +324,9 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder).get()
+            let displayRulesResult = try? certLogic.checkDisplayRules(holder: holder, validationClock: checkDate, isForeignCountry: isForeignCountry).get()
 
-            switch certLogic.checkRules(hcert: certificate) {
+            switch certLogic.checkRules(hcert: certificate, validationClock: checkDate, countryCode: countryCode) {
             case .success:
                 result.nationalRules = .success(VerificationResult(isValid: true,
                                                                    validUntil: displayRulesResult?.validUntil,
@@ -488,28 +490,42 @@ struct CovidCertificateImpl {
                                                                        eolBannerIdentifier: displayRulesResult?.eolBannerIdentifier))
                     completionHandler(result)
                 default:
-                    result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                    // show unknown rule key only for foreign country checks
+                    if let k = tests.keys.first, isForeignCountry {
+                        result.nationalRules = .failure(.UNKNOWN_RULE_FAILED(ruleName: k))
+                    } else {
+                        result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                    }
+
                     completionHandler(result)
                 }
                 return
             case .failure(.TEST_COULD_NOT_BE_PERFORMED(_)):
                 result.nationalRules = .failure(.UNKNOWN_CERTLOGIC_FAILURE)
+                completionHandler(result)
                 return
+            case .failure(.COUNTRY_CODE_NOT_SUPPORTED):
+                result.nationalRules = .failure(.COUNTRY_CODE_NOT_SUPPORTED)
+                completionHandler(result)
+            case .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE):
+                result.nationalRules = .failure(.NO_VALID_RULE_FOR_SPECIFIC_DATE)
+                completionHandler(result)
             default:
                 result.nationalRules = .failure(.NO_VALID_DATE)
+                completionHandler(result)
                 return
             }
         })
     }
 
     func getActiveModesForWallet() -> [CheckMode] {
-        let list = trustListManager.trustStorage.nationalRules()
-        return list.modeRules.walletActiveModes ?? list.modeRules.activeModes
+        let list = trustListManager.trustStorage.getNationalRules(countryCode: CountryCodes.Switzerland)
+        return list?.modeRules.walletActiveModes ?? list?.modeRules.activeModes ?? []
     }
 
     func getActiveModesForVerifier() -> [CheckMode] {
-        let list = trustListManager.trustStorage.nationalRules()
-        return list.modeRules.verifierActiveModes
+        let list = trustListManager.trustStorage.getNationalRules(countryCode: CountryCodes.Switzerland)
+        return list?.modeRules.verifierActiveModes ?? []
     }
 
     func restartTrustListUpdate(completionHandler: @escaping () -> Void, updateTimeInterval: TimeInterval) {

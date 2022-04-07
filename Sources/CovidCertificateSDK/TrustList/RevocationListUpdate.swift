@@ -32,7 +32,7 @@ class RevocationListUpdate: TrustListUpdate {
 
     // MARK: - Update
 
-    override func synchronousUpdate(ignoreLocalCache: Bool = false) -> NetworkError? {
+    override func synchronousUpdate(ignoreLocalCache: Bool = false, countryCode _: String = CountryCodes.Switzerland) -> NetworkError? {
         var listNeedsUpdate = true
         var requestsCount = 0
 
@@ -88,7 +88,7 @@ class RevocationListUpdate: TrustListUpdate {
         return nil
     }
 
-    override func isListStillValid() -> Bool {
+    override func isListStillValid(countryCode _: String = CountryCodes.Switzerland) -> Bool {
         trustStorage.revocationListIsValid()
     }
 }
