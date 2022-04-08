@@ -265,7 +265,7 @@ class CertLogic {
             }
         }
 
-        return rules
+        return validRules
     }
 
     private func filterDuplicateIdentifiers(rules: [JSON], countryCode: String) -> [JSON] {
