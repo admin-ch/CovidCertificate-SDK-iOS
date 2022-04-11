@@ -288,9 +288,9 @@ class CertLogic {
         // From all the rules with the same identifier we select the one that has the latest validFrom date.
         let filteredRules: [JSON] = rulesById.compactMap { rules in
             guard rules.count > 0 else { return nil }
-            
+
             return rules.sorted { r1, r2 in
-                guard let d1 = r1["validFrom"].date ,
+                guard let d1 = r1["validFrom"].date,
                       let d2 = r2["validFrom"].date else {
                     return true
                 }
