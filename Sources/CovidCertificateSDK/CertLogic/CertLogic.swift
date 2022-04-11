@@ -245,12 +245,6 @@ class CertLogic {
         return external
     }
 
-    private static let dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        return dateFormatter
-    }()
-
     private func filterValidRules(rules: [JSON], countryCode: String, checkDate: Date) -> [JSON] {
         guard !(countryCode == CountryCodes.Switzerland) else {
             // Switzerland has no validity information since only valid rules are served anyways
@@ -260,7 +254,7 @@ class CertLogic {
 
         for rule in rules {
             // We need to check if the checkDate is within validFrom and validTo.
-            if let validFrom = Self.dateFormatter.date(from: rule["validFrom"].string ?? ""), let validTo = Self.dateFormatter.date(from: rule["validTo"].string ?? ""), (validFrom ... validTo).contains(checkDate) {
+            if let validFrom = rule["validFrom"].date, let validTo = rule["validTo"].date, (validFrom ... validTo).contains(checkDate) {
                 validRules.append(rule)
             }
         }
@@ -294,10 +288,10 @@ class CertLogic {
         // From all the rules with the same identifier we select the one that has the latest validFrom date.
         let filteredRules: [JSON] = rulesById.compactMap { rules in
             guard rules.count > 0 else { return nil }
-
+            
             return rules.sorted { r1, r2 in
-                guard let d1 = Self.dateFormatter.date(from: r1["validFrom"].string ?? ""),
-                      let d2 = Self.dateFormatter.date(from: r2["validFrom"].string ?? "") else {
+                guard let d1 = r1["validFrom"].date ,
+                      let d2 = r2["validFrom"].date else {
                     return true
                 }
 
