@@ -16,5 +16,8 @@ jobs:
     - name: Switch to Xcode 13.3.1
       run: sudo xcode-select --switch /Applications/Xcode_13.2.1.app
 
+    - name: Install swiftformat
+      run: brew install swiftformat
+
     - name: swiftformat
       run: swiftformat Sources,Tests --lint
