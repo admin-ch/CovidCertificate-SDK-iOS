@@ -8,13 +8,13 @@ on:
 jobs:
   build-and-test:
     name: Build & Tests
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - name: Switch to Xcode 13.2.1
+    - name: Switch to Xcode 13.3.1
       run: sudo xcode-select --switch /Applications/Xcode_13.2.1.app
 
     - name: Fastlane
