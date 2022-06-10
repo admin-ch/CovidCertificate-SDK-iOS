@@ -222,7 +222,7 @@ class CertLogic {
                                     v: certificate.vaccinations,
                                     t: tests,
                                     r: certificate.pastInfections,
-                                    h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: false, mode: mode))
+                                    h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: false, mode: mode, iss: holder.issuer, kid: holder.keyId.base64EncodedString()))
         case is LightCert:
             return CertLogicPayload(nam: nil,
                                     dob: nil,
@@ -230,7 +230,7 @@ class CertLogic {
                                     v: nil,
                                     t: nil,
                                     r: nil,
-                                    h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: true, mode: mode))
+                                    h: CertLogicPayloadHeader(iat: issuedAt, exp: expires, isLight: true, mode: mode, iss: holder.issuer, kid: holder.keyId.base64EncodedString()))
         default:
             assertionFailure("Unexpected Certificate type")
             return nil
