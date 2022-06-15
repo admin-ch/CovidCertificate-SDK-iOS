@@ -29,6 +29,7 @@ struct DisplayRulesResult {
     let validUntil: Date?
     let isSwitzerlandOnly: Bool?
     let eolBannerIdentifier: String?
+    let renewBanner: String?
 }
 
 class CertLogic {
@@ -117,6 +118,7 @@ class CertLogic {
         var endDate: Date?
         var isSwitzerlandOnly: Bool?
         var eolIdentifier: String?
+        var renewBanner: String?
 
         guard let displayRules = displayRules else {
             if isForeignCountry {
@@ -124,7 +126,8 @@ class CertLogic {
                 return .success(DisplayRulesResult(validFrom: nil,
                                                    validUntil: nil,
                                                    isSwitzerlandOnly: false,
-                                                   eolBannerIdentifier: nil))
+                                                   eolBannerIdentifier: nil,
+                                                   renewBanner: nil))
             } else {
                 return .failure(.JSON_ERROR)
             }
@@ -154,7 +157,10 @@ class CertLogic {
                 if let result: String = try? applyRule(displayRule["logic"], to: context) {
                     eolIdentifier = result
                 }
-
+            case "renew-banner":
+                if let result: String = try? applyRule(displayRule["logic"], to: context) {
+                    renewBanner = result
+                }
             default:
                 break
             }
@@ -163,7 +169,8 @@ class CertLogic {
         return .success(DisplayRulesResult(validFrom: startDate,
                                            validUntil: endDate,
                                            isSwitzerlandOnly: isSwitzerlandOnly,
-                                           eolBannerIdentifier: eolIdentifier))
+                                           eolBannerIdentifier: eolIdentifier,
+                                           renewBanner: renewBanner))
     }
 
     func checkModeRules(holder: CertificateHolderType, modes: [CheckMode], validationClock: Date = Date()) -> [CheckMode: Result<ModeCheckResult, CertLogicValidationError>] {
