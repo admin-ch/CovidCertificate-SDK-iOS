@@ -42,8 +42,8 @@ class TrustListPublicKey {
                                            kSecAttrKeyType: kSecAttrKeyTypeEC]
 
         guard let x = x, let y = y,
-              let xData = Data(base64Encoded: x),
-              let yData = Data(base64Encoded: y),
+              let xData = Data(base64Encoded: x)?.suffix(32),
+              let yData = Data(base64Encoded: y)?.suffix(32),
               let key = SecKeyCreateWithData(Data([0x4] + xData + yData) as CFData, attributes as CFDictionary, nil) else {
             return nil
         }
