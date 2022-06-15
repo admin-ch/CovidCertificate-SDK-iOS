@@ -1,7 +1,7 @@
 //
 @testable import CovidCertificateSDK
 import JSON
-import jsonlogic
+import JsonLogic
 import XCTest
 
 private extension CheckMode {

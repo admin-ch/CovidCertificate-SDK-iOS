@@ -10,7 +10,7 @@
 
 import Foundation
 import JSON
-import jsonlogic
+import JsonLogic
 
 enum CertLogicCommonError: String, Error {
     case RULE_PARSING_FAILED

@@ -22,7 +22,7 @@ let package = Package(
         .package(name: "SwiftJWT", url: "https://github.com/Kitura/Swift-JWT.git", from: "3.6.1"),
         .package(url: "https://github.com/eu-digital-green-certificates/SwiftCBOR", from: "0.4.4"),
         .package(url: "https://github.com/ehn-digital-green-development/base45-swift", from: "1.0.1"),
-        .package(name: "jsonlogic", url: "https://github.com/eu-digital-green-certificates/json-logic-swift", .upToNextMajor(from: "1.1.8")),
+        .package(name: "JsonLogic", url: "https://github.com/eu-digital-green-certificates/json-logic-swift", .upToNextMajor(from: "1.1.8")),
         .package(name: "SQLite.swift", url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.13.2"),
     ],
     targets: [
@@ -30,7 +30,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "CovidCertificateSDK",
-            dependencies: ["Gzip", "SwiftCBOR", "base45-swift", "SwiftJWT", "jsonlogic", .product(name: "SQLite", package: "SQLite.swift")],
+            dependencies: ["Gzip", "SwiftCBOR", "base45-swift", "SwiftJWT", "JsonLogic", .product(name: "SQLite", package: "SQLite.swift")],
             exclude: ["ehn/LICENSE.txt", "Helpers/Bundle+Loader.swift"],
             resources: [
                 .process("Resources"),
@@ -38,7 +38,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CovidCertificateSDKTests",
-            dependencies: ["CovidCertificateSDK", "jsonlogic"],
+            dependencies: ["CovidCertificateSDK", "JsonLogic"],
             resources: [
                 .process("NationalRules"),
             ]
