@@ -150,8 +150,8 @@ class StaticTestTrustList {
     // MARK: - RSA
 
     private var devCert: TrustCertificate = {
-        let certificate = TrustCertificate(keyId: "mmrfzpMU6xc=", use: "sig", alg: "RS256")
-        certificate.subjectPublicKeyInfo = "MIIBCgKCAQEA4uZO4/7tneZ3XD5OAiTyoANOohQZC+DzZ4YC0AoLnEO+Z3PcTialCuRKS1zHfujNPI0GGG09DRVVXdv+tcKNXFDt/nRU1zlWDGFf4/63l5RIjkWFD3JFKqR8IlcJjrYYxstuZs3May3SGQJ+kZaeH5GFZMRvE0waHqMxbfwakvjf8qyBXCrZ1WsK+XJf7iYbJS2dO1a5HnegxPuRA7Zz8ikO7QRzmSongqOlkejEaIkFjx7gLGTUsOrBPYa5sdZqinDwmnjtKi52HLWarMXs+t1MN4etIp7GE7/zarjBNxk1Efiiwl+RdcwJ2uVwfrgzxfv3/TekZF8IUykV2Geu3QIDAQAB"
+        let certificate = TrustCertificate(keyId: "Ov9pjL/TkIw=", use: "sig", alg: "RS256")
+        certificate.subjectPublicKeyInfo = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwM6Z2BMSEwEBx/VWguojfIOaHh9m2KehccXP4zRS4O2jwLR4tnC4/voKZ3jN6+h7iHsq/H+HdG0SygkqWJh9rt2qQMm0umu/6HVXEoMmPr/nVb6COae3ao7pKFYfJHYZ361r6kvgbbR8wKzsWoVSXnkKZdNG7w0/10TfwP+bfcVZsSBE4ch1wTtx5vbKwdDPDIIKE3Vn2uyIIaP9fpEpxsNI4NNzz1CsxcSw2pjNXlqKSEuvyEF3AZUm3/+PWPSwjeSfSEIqc/PoBW59Js8oygPuqEsWbMg9A44f7zmEen+4i179Sp8g7CxAMIGt/wWzi7+RdYn2w05y9ZBA48AmlwIDAQAB"
         return certificate
     }()
 

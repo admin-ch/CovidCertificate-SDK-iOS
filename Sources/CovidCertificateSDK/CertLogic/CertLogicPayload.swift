@@ -25,4 +25,6 @@ struct CertLogicPayloadHeader: Codable {
     let exp: String?
     let isLight: Bool
     let mode: String?
+    let iss: String?
+    let kid: String?
 }
