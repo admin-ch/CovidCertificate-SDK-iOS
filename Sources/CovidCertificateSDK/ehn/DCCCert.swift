@@ -59,7 +59,7 @@ public struct Person: Codable {
     public let givenName: String?
     public let standardizedGivenName: String?
     public let familyName: String?
-    public let standardizedFamilyName: String
+    public let standardizedFamilyName: String?
 
     private enum CodingKeys: String, CodingKey {
         case givenName = "gn"
@@ -73,7 +73,7 @@ public struct Person: Codable {
         givenName = try? container.decode(String.self, forKey: .givenName).trimmed
         standardizedGivenName = try? container.decode(String.self, forKey: .standardizedGivenName).trimmed
         familyName = try? container.decode(String.self, forKey: .familyName).trimmed
-        standardizedFamilyName = try container.decode(String.self, forKey: .standardizedFamilyName).trimmed
+        standardizedFamilyName = try? container.decode(String.self, forKey: .standardizedFamilyName).trimmed
     }
 }
 
