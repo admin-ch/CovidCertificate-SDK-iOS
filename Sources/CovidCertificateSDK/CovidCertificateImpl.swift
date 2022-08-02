@@ -194,8 +194,7 @@ struct CovidCertificateImpl {
                 return
             }
 
-            let list = self.trustListManager.trustStorage.revokedCertificates()
-            let isRevoked = certificate.certIdentifiers().contains { list.contains($0) }
+            let isRevoked = certificate.certIdentifiers().contains { self.trustListManager.trustStorage.isCertificateRevoced(uvci: $0) }
             let error: ValidationError? = isRevoked ? .REVOKED : nil
 
             completionHandler(.success(ValidationResult(isValid: !isRevoked, payload: certificate, error: error)))
