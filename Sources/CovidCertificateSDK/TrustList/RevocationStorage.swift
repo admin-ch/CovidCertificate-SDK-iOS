@@ -27,14 +27,16 @@ class RevocationStorage {
     private let nextSinceColumn = Expression<String?>("nextSince")
 
     init() {
-        // replace database if a newer datase file is bundled with the app
+        // replace database if a newer database file is bundled with the app
         if let bundleRevocations = Bundle.module.url(forResource: "revocations", withExtension: "sqlite"),
            CovidCertificateSDK.currentEnvironment == .prod,
            (bundleRevocations.lastModified ?? .distantFuture) > (databasePath.lastModified ?? .distantPast)
         {
+            // first delete existing file if it exists
             if (FileManager.default.fileExists(atPath: databasePath.path)) {
                 try! FileManager.default.removeItem(at: databasePath)
             }
+            // then copy the bundled file
             try! FileManager.default.copyItem(at: bundleRevocations, to: databasePath)
         }
 
@@ -44,6 +46,8 @@ class RevocationStorage {
     }
 
     private func createTableIfNeeded() {
+        // fallback if no database was bundled we create the schema
+        // this is only used for non production enviroments
         _ = try? database.run(revocationsTable.create(ifNotExists: true) { t in
             t.column(uvciColumn)
         })
@@ -63,12 +67,7 @@ class RevocationStorage {
 
     var lastDownload: Int64 {
         get {
-            do {
-                for row in try database.prepare(metadataTable) {
-                    return row[lastDownloadColumn]
-                }
-            } catch {}
-            return 0
+            return getMetadataColumn(lastDownloadColumn, defaultValue: 0)
         }
         set {
             _ = try? database.run(metadataTable.update(lastDownloadColumn <- newValue))
@@ -76,12 +75,7 @@ class RevocationStorage {
     }
     var validDuration: Int64 {
         get {
-            do {
-                for row in try database.prepare(metadataTable) {
-                    return row[validDurationColumn]
-                }
-            } catch {}
-            return 0
+            return getMetadataColumn(validDurationColumn, defaultValue: 0)
         }
         set {
             _ = try? database.run(metadataTable.update(validDurationColumn <- newValue))
@@ -89,19 +83,32 @@ class RevocationStorage {
     }
     var nextSince: String? {
         get {
-            do {
-                for row in try database.prepare(metadataTable) {
-                    let value = row[nextSinceColumn]
-                    return value
-                }
-            } catch {}
-            return nil
+            return getMetadataColumn(nextSinceColumn, defaultValue: nil)
         }
         set {
             _ = try? database.run(metadataTable.update(nextSinceColumn <- newValue))
         }
     }
 
+    private func getMetadataColumn<Datatype: Value>(_ column: Expression<Datatype>, defaultValue: Datatype) -> Datatype {
+        do {
+            for row in try database.prepare(metadataTable) {
+                let value = row[column]
+                return value
+            }
+        } catch {}
+        return defaultValue
+    }
+
+    private func getMetadataColumn<Datatype: Value>(_ column: Expression<Datatype?>, defaultValue: Datatype?) -> Datatype? {
+        do {
+            for row in try database.prepare(metadataTable) {
+                let value = row[column]
+                return value
+            }
+        } catch {}
+        return defaultValue
+    }
 
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         let success = list.revokedCerts.allSatisfy { uvci in
