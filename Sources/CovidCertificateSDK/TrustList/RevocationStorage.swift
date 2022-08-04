@@ -16,7 +16,7 @@ class RevocationStorage {
 
     private var databasePath = getDatabasePath()
 
-    private let database: Connection
+    private let database: Connection!
 
     private let revocationsTable = Table("revocations")
     private let uvciColumn = Expression<String>("uvci")
@@ -34,13 +34,13 @@ class RevocationStorage {
         {
             // first delete existing file if it exists
             if (FileManager.default.fileExists(atPath: databasePath.path)) {
-                try! FileManager.default.removeItem(at: databasePath)
+                try? FileManager.default.removeItem(at: databasePath)
             }
             // then copy the bundled file
-            try! FileManager.default.copyItem(at: bundleRevocations, to: databasePath)
+            try? FileManager.default.copyItem(at: bundleRevocations, to: databasePath)
         }
 
-        database = try! Connection(databasePath.absoluteString, readonly: false)
+        database = try? Connection(databasePath.absoluteString, readonly: false)
 
         createTableIfNeeded()
     }
