@@ -92,20 +92,14 @@ class RevocationStorage {
 
     private func getMetadataColumn<Datatype: Value>(_ column: Expression<Datatype>, defaultValue: Datatype) -> Datatype {
         do {
-            for row in try database.prepare(metadataTable) {
-                let value = row[column]
-                return value
-            }
+            return try database.pluck(metadataTable)?.get(column) ?? defaultValue
         } catch {}
         return defaultValue
     }
 
     private func getMetadataColumn<Datatype: Value>(_ column: Expression<Datatype?>, defaultValue: Datatype?) -> Datatype? {
         do {
-            for row in try database.prepare(metadataTable) {
-                let value = row[column]
-                return value
-            }
+            return try database.pluck(metadataTable)?.get(column) ?? defaultValue
         } catch {}
         return defaultValue
     }
