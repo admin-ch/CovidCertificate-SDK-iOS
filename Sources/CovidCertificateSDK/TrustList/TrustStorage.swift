@@ -42,12 +42,10 @@ class TrustStorage: TrustStorageProtocol {
 
     // MARK: - Revocation List
 
-
     init() {
-
         // Revocations used to be stored in a encryped json file. Since we moved to a sqlite storage we can delete the json file.
         struct DummyClass: Codable {}
-        if let path = SecureStorage<DummyClass>(name: "revocation").path  {
+        if let path = SecureStorage<DummyClass>(name: "revocation").path {
             try? FileManager.default.removeItem(atPath: path.path)
         }
 
@@ -73,7 +71,7 @@ class TrustStorage: TrustStorageProtocol {
 
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         revocationQueue.sync {
-            return self.revocationStorage.updateRevocationList(list, nextSince: nextSince)
+            self.revocationStorage.updateRevocationList(list, nextSince: nextSince)
         }
     }
 

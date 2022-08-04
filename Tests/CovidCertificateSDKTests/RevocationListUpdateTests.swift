@@ -57,7 +57,6 @@ final class RevocationListUpdateTests: XCTestCase {
     }
 
     func testPrePackagedDecoding() {
-
         let storage = RevocationStorage(enviroment: .prod)
 
         XCTAssertNotNil(storage.nextSince)

@@ -13,7 +13,6 @@ import Foundation
 import SQLite
 
 class RevocationStorage {
-
     private var databasePath = getDatabasePath()
 
     private let database: Connection!
@@ -33,7 +32,7 @@ class RevocationStorage {
            (bundleRevocations.lastModified ?? .distantFuture) > (databasePath.lastModified ?? .distantPast)
         {
             // first delete existing file if it exists
-            if (FileManager.default.fileExists(atPath: databasePath.path)) {
+            if FileManager.default.fileExists(atPath: databasePath.path) {
                 try? FileManager.default.removeItem(at: databasePath)
             }
             // then copy the bundled file
@@ -58,7 +57,7 @@ class RevocationStorage {
             t.column(nextSinceColumn)
         })
 
-        if ((try? database.scalar(metadataTable.count)) ?? 0 == 0) {
+        if (try? database.scalar(metadataTable.count)) ?? 0 == 0 {
             _ = try? database.run(metadataTable.insert(validDurationColumn <- 0, lastDownloadColumn <- 0))
         }
 
@@ -67,23 +66,25 @@ class RevocationStorage {
 
     var lastDownload: Int64 {
         get {
-            return getMetadataColumn(lastDownloadColumn, defaultValue: 0)
+            getMetadataColumn(lastDownloadColumn, defaultValue: 0)
         }
         set {
             _ = try? database.run(metadataTable.update(lastDownloadColumn <- newValue))
         }
     }
+
     var validDuration: Int64 {
         get {
-            return getMetadataColumn(validDurationColumn, defaultValue: 0)
+            getMetadataColumn(validDurationColumn, defaultValue: 0)
         }
         set {
             _ = try? database.run(metadataTable.update(validDurationColumn <- newValue))
         }
     }
+
     var nextSince: String? {
         get {
-            return getMetadataColumn(nextSinceColumn, defaultValue: nil)
+            getMetadataColumn(nextSinceColumn, defaultValue: nil)
         }
         set {
             _ = try? database.run(metadataTable.update(nextSinceColumn <- newValue))
@@ -107,7 +108,7 @@ class RevocationStorage {
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         let success = list.revokedCerts.allSatisfy { uvci in
             do {
-                try database.run(revocationsTable.insert(or: .replace,uvciColumn <- uvci))
+                try database.run(revocationsTable.insert(or: .replace, uvciColumn <- uvci))
                 return true
             } catch {
                 return false
@@ -120,7 +121,7 @@ class RevocationStorage {
         }
         return success
     }
-    
+
     func isCertificateRevoced(uvci: String) -> Bool {
         do {
             return try database.scalar(revocationsTable.filter(uvciColumn == uvci).exists)
@@ -136,8 +137,7 @@ class RevocationStorage {
     }
 }
 
-
-fileprivate extension URL {
+private extension URL {
     var lastModified: Date? {
         do {
             let attr = try FileManager.default.attributesOfItem(atPath: path)
