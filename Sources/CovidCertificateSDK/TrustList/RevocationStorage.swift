@@ -26,10 +26,10 @@ class RevocationStorage {
     private let lastDownloadColumn = Expression<Int64>("lastDownload")
     private let nextSinceColumn = Expression<String?>("nextSince")
 
-    init() {
+    init(enviroment: SDKEnvironment = CovidCertificateSDK.currentEnvironment) {
         // replace database if a newer database file is bundled with the app
         if let bundleRevocations = Bundle.module.url(forResource: "revocations", withExtension: "sqlite"),
-           CovidCertificateSDK.currentEnvironment == .prod,
+           enviroment == .prod,
            (bundleRevocations.lastModified ?? .distantFuture) > (databasePath.lastModified ?? .distantPast)
         {
             // first delete existing file if it exists

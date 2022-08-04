@@ -47,16 +47,22 @@ final class RevocationListUpdateTests: XCTestCase {
         let update = RevocationListUpdate(trustStorage: storage, decoder: RevocationListJSONDecoder(), session: session)
         _ = update.synchronousUpdate()
         XCTAssertEqual(storage.nextSince, "100000")
-        XCTAssertEqual(storage.revokedCertificates(), Set<String>(revs + ["a", "b", "c"]))
+        XCTAssert(storage.isCertificateRevoced(uvci: "a"))
+        XCTAssert(storage.isCertificateRevoced(uvci: "b"))
+        XCTAssert(storage.isCertificateRevoced(uvci: "c"))
+        revs.forEach { uvci in
+            XCTAssert(storage.isCertificateRevoced(uvci: uvci))
+        }
         XCTAssertEqual(session.requests.count, 20)
     }
 
     func testPrePackagedDecoding() {
-        let storage = RevocationStorage.getBundledStorage(environment: .prod)
-        XCTAssertEqual(storage.nextSince, "11743455")
-        XCTAssertEqual(storage.lastRevocationListDownload, 1_641_452_551_535)
-        XCTAssertEqual(storage.revocationList.validDuration, 172_800_000)
-        XCTAssertEqual(storage.revocationList.revokedCerts.count, 353_501)
+
+        let storage = RevocationStorage(enviroment: .prod)
+
+        XCTAssertNotNil(storage.nextSince)
+        XCTAssertNotEqual(storage.lastDownload, 0)
+        XCTAssertNotEqual(storage.validDuration, 0)
     }
 }
 
