@@ -80,8 +80,8 @@ class TestTrustStorage: TrustStorageProtocol {
 
     // MARK: - Revocation list
 
-    func revokedCertificates() -> Set<String> {
-        revokedCerts
+    func isCertificateRevoced(uvci: String) -> Bool {
+        revokedCerts.contains(uvci)
     }
 
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
