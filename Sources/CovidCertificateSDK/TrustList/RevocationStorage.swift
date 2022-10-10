@@ -60,6 +60,9 @@ class RevocationStorage {
         if (try? database.scalar(metadataTable.count)) ?? 0 == 0 {
             _ = try? database.run(metadataTable.insert(validDurationColumn <- 0, lastDownloadColumn <- 0))
         }
+
+        // make sure there is a index on the uvci column, this way we have fast lookups
+        _ = try? database.run(revocationsTable.createIndex(uvciColumn, unique: true, ifNotExists: true))
     }
 
     var lastDownload: Int64 {
