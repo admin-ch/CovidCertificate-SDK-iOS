@@ -50,6 +50,13 @@ class NationalRulesStorage {
     let lastDownloadColumn = Expression<Int64>("lastDownload")
     let nationalListColumn = Expression<Data?>("nationalListData")
 
+    private lazy var decodedNationalRulesCache: NSCache<NSString, NationalRulesListEntry> = {
+        let cache = NSCache<NSString, NationalRulesListEntry>()
+        cache.countLimit = 50
+        return cache
+    }()
+
+
     /// get database path
     private static func getDatabasePath() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
@@ -86,6 +93,7 @@ class NationalRulesStorage {
             )
             do {
                 _ = try self.database.run(insertOrReplace)
+                decodedNationalRulesCache.removeAllObjects()
                 return true
             } catch {
                 return false
@@ -95,12 +103,21 @@ class NationalRulesStorage {
 
     public func getNationalRulesListEntry(countryCode: String) -> NationalRulesListEntry? {
         queue.sync {
+            if let entry = decodedNationalRulesCache.object(forKey: countryCode as NSString) {
+                return entry
+            }
+
             let query = table.filter(countryCodeColumn == countryCode).limit(1).select(nationalListColumn, lastDownloadColumn)
 
             if let row = try? database.pluck(query) {
                 guard let data = row[nationalListColumn],
-                      let nationalList = try? JSONDecoder().decode(NationalRulesList.self, from: data) else { return nil }
-                return NationalRulesListEntry(nationalRulesList: nationalList, lastDownloaded: row[lastDownloadColumn])
+                      let nationalList = try? JSONDecoder().decode(NationalRulesList.self, from: data) else {
+                    return nil
+                }
+
+                let entry = NationalRulesListEntry(nationalRulesList: nationalList, lastDownloaded: row[lastDownloadColumn])
+                decodedNationalRulesCache.setObject(entry, forKey: countryCode as NSString)
+                return entry
             }
 
             return nil
