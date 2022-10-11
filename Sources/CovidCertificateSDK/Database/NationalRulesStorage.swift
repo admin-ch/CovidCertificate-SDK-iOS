@@ -56,7 +56,6 @@ class NationalRulesStorage {
         return cache
     }()
 
-
     /// get database path
     private static func getDatabasePath() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
