@@ -107,14 +107,23 @@ class RevocationStorage {
     }
 
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
-        let success = list.revokedCerts.allSatisfy { uvci in
-            do {
-                try database.run(revocationsTable.insert(or: .replace, uvciColumn <- uvci))
-                return true
-            } catch {
-                return false
-            }
+        var success = false
+
+        let newUvciEntries = list.revokedCerts.map { uvci in
+            [uvciColumn <- uvci]
         }
+
+        if !newUvciEntries.isEmpty {
+            do {
+                try database.run(revocationsTable.insertMany(or: .ignore, newUvciEntries))
+                success = true
+            } catch {
+                success = false
+            }
+        } else {
+            success = true
+        }
+
         if success {
             self.validDuration = list.validDuration
             self.lastDownload = Int64(Date().timeIntervalSince1970 * 1000.0)
