@@ -109,9 +109,9 @@ class RevocationStorage {
     func updateRevocationList(_ list: RevocationList, nextSince: String) -> Bool {
         var success = false
 
-        let newUvciEntries = list.revokedCerts.map({ uvci in
-            return [uvciColumn <- uvci]
-        })
+        let newUvciEntries = list.revokedCerts.map { uvci in
+            [uvciColumn <- uvci]
+        }
 
         do {
             try database.run(revocationsTable.insertMany(or: .ignore, newUvciEntries))
