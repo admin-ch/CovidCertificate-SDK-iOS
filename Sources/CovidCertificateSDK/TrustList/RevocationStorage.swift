@@ -113,11 +113,15 @@ class RevocationStorage {
             [uvciColumn <- uvci]
         }
 
-        do {
-            try database.run(revocationsTable.insertMany(or: .ignore, newUvciEntries))
+        if !newUvciEntries.isEmpty {
+            do {
+                try database.run(revocationsTable.insertMany(or: .ignore, newUvciEntries))
+                success = true
+            } catch {
+                success = false
+            }
+        } else {
             success = true
-        } catch {
-            success = false
         }
 
         if success {
