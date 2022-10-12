@@ -19,21 +19,18 @@ final class RevocationListUpdateTests: XCTestCase {
     }
 
     func testUpdate() {
-        let storage = TestTrustStorage(publicKeys: [])
-        storage.revokedCerts.insert("a")
-        storage.revokedCerts.insert("b")
-        storage.revokedCerts.insert("c")
+        let storage = TrustStorage()
         var lastNextSince: String?
-        let revs = (0 ... 100_000).map(String.init)
+        let revs = (0 ... 100).map(String.init)
         let session = MockSession { request in
             URLComponents(url: request.url!, resolvingAgainstBaseURL: true)?.queryItems?.forEach { item in
-                if item.name == "since" {
+                if item.name == "since", lastNextSince != nil {
                     XCTAssertEqual(item.value, lastNextSince)
                 }
             }
 
             let since: Int = lastNextSince == nil ? 0 : Int(lastNextSince!)!
-            let nextSince = min(since + 5000, revs.count)
+            let nextSince = min(since + (revs.count / 20), revs.count)
             let list = RevocationList()
             list.revokedCerts = Set<String>(revs[since ... nextSince])
             let data = try! JSONEncoder().encode(list)
@@ -46,14 +43,33 @@ final class RevocationListUpdateTests: XCTestCase {
         }
         let update = RevocationListUpdate(trustStorage: storage, decoder: RevocationListJSONDecoder(), session: session)
         _ = update.synchronousUpdate()
-        XCTAssertEqual(storage.nextSince, "100000")
-        XCTAssert(storage.isCertificateRevoced(uvci: "a"))
-        XCTAssert(storage.isCertificateRevoced(uvci: "b"))
-        XCTAssert(storage.isCertificateRevoced(uvci: "c"))
-        revs.forEach { uvci in
-            XCTAssert(storage.isCertificateRevoced(uvci: uvci))
+        for i in 0 ... revs.count / (revs.count / 20) {
+            XCTAssert(storage.isCertificateRevoced(uvci: revs[i * (revs.count / 20)]))
         }
         XCTAssertEqual(session.requests.count, 20)
+    }
+
+    func testUpdateEmptyList(){
+        let storage = TrustStorage()
+        let session = MockSession { request in
+            var since: String = ""
+            URLComponents(url: request.url!, resolvingAgainstBaseURL: true)?.queryItems?.forEach { item in
+                if item.name == "since" {
+                    since = item.value ?? ""
+                }
+            }
+
+            let list = RevocationList()
+            list.revokedCerts = Set<String>()
+            let data = try! JSONEncoder().encode(list)
+            let httpResponse = HTTPURLResponse(url: URL(string: "http://ubique.ch")!, statusCode: 200, httpVersion: nil, headerFields: [
+                "up-to-date": "true",
+                "x-next-since": since,
+            ])
+            return (data, httpResponse, nil)
+        }
+        let update = RevocationListUpdate(trustStorage: storage, decoder: RevocationListJSONDecoder(), session: session)
+        _ = update.synchronousUpdate()
     }
 
     func testPrePackagedDecoding() {
