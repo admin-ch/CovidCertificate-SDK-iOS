@@ -25,11 +25,14 @@ class RevocationStorage {
     private let lastDownloadColumn = Expression<Int64>("lastDownload")
     private let nextSinceColumn = Expression<String?>("nextSince")
 
+    @UBUserDefault(key: "covidcertificate.revocationstorage.lastimported.lastmodified", defaultValue: nil)
+    static var lastImportedLastModified: Date?
+
     init(enviroment: SDKEnvironment = CovidCertificateSDK.currentEnvironment) {
         // replace database if a newer database file is bundled with the app
         if let bundleRevocations = Bundle.module.url(forResource: "revocations", withExtension: "sqlite"),
            enviroment == .prod,
-           (bundleRevocations.lastModified ?? .distantFuture) > (databasePath.lastModified ?? .distantPast)
+           (bundleRevocations.lastModified ?? .distantFuture) > (Self.lastImportedLastModified ?? .distantPast)
         {
             // first delete existing file if it exists
             if FileManager.default.fileExists(atPath: databasePath.path) {
@@ -37,6 +40,9 @@ class RevocationStorage {
             }
             // then copy the bundled file
             try? FileManager.default.copyItem(at: bundleRevocations, to: databasePath)
+
+            // and update the saved time stamp
+            Self.lastImportedLastModified = bundleRevocations.lastModified
         }
 
         database = try? Connection(databasePath.absoluteString, readonly: false)
