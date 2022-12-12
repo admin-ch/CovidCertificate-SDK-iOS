@@ -24,8 +24,7 @@ class RevocationStorage {
     private let validDurationColumn = Expression<Int64>("validDuration")
     private let lastDownloadColumn = Expression<Int64>("lastDownload")
     private let nextSinceColumn = Expression<String?>("nextSince")
-    
-    
+
     @UBUserDefault(key: "covidcertificate.revocationstorage.lastimported.lastmodified", defaultValue: nil)
     static var lastImportedLastModified: Date?
 
@@ -41,7 +40,7 @@ class RevocationStorage {
             }
             // then copy the bundled file
             try? FileManager.default.copyItem(at: bundleRevocations, to: databasePath)
-            
+
             // and update the saved time stamp
             Self.lastImportedLastModified = bundleRevocations.lastModified
         }
